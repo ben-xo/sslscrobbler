@@ -1,0 +1,45 @@
+<?php
+
+require_once('SSLChunkFactory.php');
+require_once('SSLChunkParser.php');
+
+class SSLChunkReader
+{
+    protected $fp;
+    
+    public function __construct($fp)
+    { 
+        $this->fp = $fp;
+    }
+    
+    public function getChunks()
+    {
+        $chunks = array();
+        while($this->hasMore())
+        {
+            $chunk = $this->readChunk();
+            if($chunk !== false)
+            {
+                $chunks[] = $chunk;
+            }
+        }
+        return $chunks;
+    }
+
+    protected function hasMore()
+    {
+        return !feof($this->fp);
+    }
+    
+    /**
+     * Reads an SSL data file chunk from the filepointer. Chunks have an 8 byte header
+     * consisting of 4 byte type string and 4 byte length.
+     * 
+     * @return SSLChunk
+     */
+    protected function readChunk()
+    {
+        $cp = new SSLChunkParser();
+        return $cp->parseFromFile($this->fp);
+    }
+}

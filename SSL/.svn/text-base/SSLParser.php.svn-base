@@ -1,0 +1,56 @@
+<?php
+
+require_once 'SSLDom.php';
+require_once 'SSLChunkReader.php';
+
+class SSLParser
+{
+    protected $fp;
+    
+    /**
+     * @var SSLDom
+     */
+    protected $dom;
+
+    public function __construct(SSLDom $dom = null)
+    {
+        if(isset($dom))
+        {
+            $this->dom = $dom;
+        }
+        else
+        {
+            $this->newDom();        
+        }
+    }
+    
+    /**
+     * @return SSLDom
+     */
+    public function parse($filename)
+    {
+        $this->fp = fopen($filename, 'r');
+        if(!$this->fp)
+            throw new RuntimeException("Opening file $filename failed.");
+
+        $this->readChunks();
+        
+        return $this->dom;
+    }
+    
+    public function close()
+    {
+        fclose($this->fp);
+    }
+
+    protected function readChunks()
+    {
+        $reader = new SSLChunkReader($this->fp);
+        $this->dom->addChunks( $reader->getChunks() );
+    }
+    
+    protected function newDom()
+    {
+        $this->dom = new SSLDom();
+    }
+}

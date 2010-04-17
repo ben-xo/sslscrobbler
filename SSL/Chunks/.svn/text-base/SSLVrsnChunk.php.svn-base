@@ -1,0 +1,21 @@
+<?php
+
+class SSLVrsnChunk extends SSLChunk
+{
+    public function __construct($data)
+    {
+        parent::__construct('vrsn', $data);
+    }
+    
+    public function chunkDebugBody($indent=0)
+    {
+        try {
+            $up = new Unpacker('main: r*b>sversion');
+            $context = $up->unpack($this->data);
+            $version = $context['version'];
+        } catch (Exception $e) {
+            $version = '**EXCEPTION**: ' . $e->getMessage();
+        }
+        return str_repeat("\t", $indent) . '>>> ' . $version . "\n";
+    }
+}

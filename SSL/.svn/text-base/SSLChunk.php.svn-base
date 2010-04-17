@@ -1,0 +1,51 @@
+<?php
+
+require_once 'Hexdumper.php';
+
+class SSLChunk
+{
+    protected $type;
+    protected $data;
+    
+    public function __construct($type, $data)
+    {
+        $this->type = $type;
+        $this->data = $data;
+    }
+    
+    public function __toString()
+    {
+        return $this->toString();
+    }
+
+    public function toString($indent=0)
+    {
+        $string = $this->chunkDebugHeader($indent);
+        $string .= $this->chunkDebugBody($indent+1);
+        return $string;        
+    }
+    
+    protected function chunkDebugBody($indent=0)
+    {
+        return $this->hexdump($indent);
+    }
+    
+    protected function chunkDebugHeader($indent=0)
+    {
+        return str_repeat("\t", $indent) . "CHUNK<{$this->type}>: \n";
+    }
+    
+    protected function hexdump($indent=0)
+    {
+        $width = 32;
+        $out = '';
+        $rows = ceil(strlen($this->data) / $width);
+        $hd = new Hexdumper();
+        for($i = 0; $i < $rows; $i++)
+        {
+            $row = substr($this->data, ($i*$width), $width);
+            $out .= $hd->hexdump($row, $indent, $width);
+        }
+        return $out;
+    }    
+}
