@@ -1,5 +1,0 @@
-<?php
-
-class SSLUnknownChunk extends SSLChunk
-{
-}
