@@ -47,8 +47,20 @@ class HistoryReader
             if($argc < 2)
                 throw new RuntimeException("No filename specified"); 
             
-            $filename = $argv[1];
+            $appname = array_shift($argv);
             
+            while($arg = array_shift($argv))
+            {
+                if($arg == '--debug')
+                {
+                    $this->debug = true;
+                    continue;
+                }
+                
+                $filename = $arg;
+                break;
+            }
+                            
             if(!file_exists($filename))
                 throw new InvalidArgumentException("No such file $filename.");
                 
@@ -81,7 +93,7 @@ class HistoryReader
         {   
             echo $e->getMessage() . "\n";  
             echo $e->getTraceAsString() . "\n";  
-            $this->usage($argv);
+            $this->usage($appname, $argv);
         }
     }
     
@@ -91,9 +103,9 @@ class HistoryReader
         $sp->printOut($tree);        
     }
     
-    public function usage(array $argv)
+    public function usage($appname, array $argv)
     {
-        echo "Usage: {$argv[0]} <session file>\n";
+        echo "Usage: {$appname} [--debug] <session file>\n";
     }
     
     protected function read($filename)
