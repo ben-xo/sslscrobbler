@@ -284,7 +284,7 @@ class Unpacker
     
     private function unpackstr($datum)
     {
-       return implode('', explode("\0", $datum));
+        return mb_convert_encoding($datum, 'UTF-8', 'UTF-16');
     }
     
     private function unpackint($datum)

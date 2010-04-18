@@ -133,5 +133,5 @@ class SSLAdatChunk extends SSLChunk
             $s = str_repeat("\t", $indent) . 'Exception: ' . $e->getMessage();
         }
         return $s;
-    }    
+    }  
 }
