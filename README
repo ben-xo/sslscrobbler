@@ -1,0 +1,13 @@
+SSLScrobbler
+============
+
+SSLScrobbler is a Scrobbler for Serato ScratchLive! (http://www.serato.com/) written in PHP.
+See http://www.last.fm/help/faq?category=99 for an explanation of Scrobbling.
+
+ScratchLive! logs plays to a binary history file during playback. The bulk of this app
+is concerned with decoding the binary history file to retrieve the metadata.
+
+So far this app is designed for use on OS X, although it may also work on Windows.
+
+*** SSLScrobbler is currently incomplete, and makes no effort (yet) to be easy to install and use. ***
+
