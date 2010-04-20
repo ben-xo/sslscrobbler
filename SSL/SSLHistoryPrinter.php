@@ -28,7 +28,6 @@ class SSLHistoryPrinter
 {
     protected $unplayed = false;
     
-    // TODO
     public function printOut(SSLHistoryDom $tree)
     {
         $tracks = $tree->getTracks();
@@ -37,57 +36,36 @@ class SSLHistoryPrinter
         {
             $tracks = $this->eliminateUnplayed($tracks);
         }
-        
-        $tracks = $this->mergeRows($tracks);
-        
+                
         foreach($tracks as $track)
         {
+            if($track)
             $this->outputRow($track);
         }
     }
     
+    /**
+     * @param array of SSLTrack $tracks
+     * @return array of SSLTrack
+     */
     protected function eliminateUnplayed(array $tracks)
     {
         $played = array();
+
         foreach($tracks as $track)
         {
-            try
-            {
-                $data = $track->getData();
-            }
-            catch(Exception $e)
-            {
-                continue;
-            }
+        	/* @var $track SSLTrack */
             
-            $is_played = false;
-            
-            if(isset($data['playedOne']))
-            {
-                $is_played = (bool) $data['playedOne'];
-            }
-            
-            if(isset($data['playedTwo']))
-            {
-                $is_played = (bool) $data['playedTwo'];
-            }
-            
-            if($is_played)
+            if($track->isPlayed())
             {
                 $played[] = $track;
             }
         }
         return $played;
     }
-
-    protected function mergeRows(array $tracks)
-    {
-        return $tracks;
-    }
     
-    protected function outputRow(SSLOentChunk $track)
+    protected function outputRow(SSLTrack $track)
     {
-        $track = $track->getData();
-        echo "{$track['artist']} - {$track['title']}\n";
+        echo "{$track}\n";
     }
 }

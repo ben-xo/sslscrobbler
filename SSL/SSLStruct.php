@@ -1,5 +1,6 @@
 <?php
 
+
 /**
  *  @author      Ben XO (me@ben-xo.com)
  *  @copyright   Copyright (c) 2010 Ben XO
@@ -24,30 +25,7 @@
  *  THE SOFTWARE.
  */
 
-class SSLVrsnChunk extends SSLChunk
+abstract class SSLStruct
 {
-    protected $version;
-    
-    public function __construct($data)
-    {
-        parent::__construct('vrsn', '');
-        
-        try {
-            $up = new Unpacker('main: r*b>sversion');
-            $context = $up->unpack($data);
-            $this->version = $context['version'];
-        } catch (Exception $e) {
-            $this->version = '**EXCEPTION**: ' . $e->getMessage();
-        }
-    }
-    
-    public function chunkDebugBody($indent=0)
-    {
-        return str_repeat("\t", $indent) . '>>> ' . $this->version . "\n";
-    }
-    
-    public function getData()
-    {
-        return array('version' => $this->version);
-    }
+    abstract public function populateFrom(array $fields);
 }

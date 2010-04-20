@@ -24,30 +24,24 @@
  *  THE SOFTWARE.
  */
 
-class SSLVrsnChunk extends SSLChunk
+require_once dirname(__FILE__) . '/../SSLStruct.php';
+
+class SSLTrackDelete extends SSLStruct
 {
-    protected $version;
+    protected $row;
     
-    public function __construct($data)
+    public function populateFrom(array $fields)
     {
-        parent::__construct('vrsn', '');
-        
-        try {
-            $up = new Unpacker('main: r*b>sversion');
-            $context = $up->unpack($data);
-            $this->version = $context['version'];
-        } catch (Exception $e) {
-            $this->version = '**EXCEPTION**: ' . $e->getMessage();
-        }
+        isset($fields['row']) && $this->row = $fields['row'];
     }
     
-    public function chunkDebugBody($indent=0)
+    public function getRow()
     {
-        return str_repeat("\t", $indent) . '>>> ' . $this->version . "\n";
+        return $this->row;
     }
-    
-    public function getData()
+       
+    public function __toString()
     {
-        return array('version' => $this->version);
+        return sprintf("DELETED %d", $this->row);
     }
 }

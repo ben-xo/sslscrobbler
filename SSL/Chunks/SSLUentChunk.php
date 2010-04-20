@@ -24,30 +24,52 @@
  *  THE SOFTWARE.
  */
 
-class SSLVrsnChunk extends SSLChunk
+require_once dirname(__FILE__) . '/../Unpacker.php';
+require_once dirname(__FILE__) . '/../SSLStruct.php';
+
+class SSLUentChunk extends SSLChunk
 {
-    protected $version;
+    const PROGRAM = "main: r*b>irow";
+    
+    protected $fields = array();
     
     public function __construct($data)
     {
-        parent::__construct('vrsn', '');
-        
-        try {
-            $up = new Unpacker('main: r*b>sversion');
-            $context = $up->unpack($data);
-            $this->version = $context['version'];
-        } catch (Exception $e) {
-            $this->version = '**EXCEPTION**: ' . $e->getMessage();
-        }
-    }
-    
-    public function chunkDebugBody($indent=0)
-    {
-        return str_repeat("\t", $indent) . '>>> ' . $this->version . "\n";
+        parent::__construct('uent', '');
+        $this->fields = $this->parse($data);
     }
     
     public function getData()
     {
-        return array('version' => $this->version);
+        return $this->fields;
     }
+    
+    public function getDataInto(SSLStruct $s)
+    {        
+        $s->populateFrom($this->fields);
+        return $s;
+    }
+    
+    protected function parse($data)
+    {
+        $up = new Unpacker(self::PROGRAM);
+        return $up->unpack($data);
+    }
+    
+    protected function chunkDebugBody($indent=0)
+    {
+        $s = '';
+        try
+        {
+            foreach($this->fields as $k => $v)
+            {
+                $s .= str_repeat("\t", $indent) . $k . ' => ' . $v . "\n";
+            }
+        }
+        catch(Exception $e)
+        {
+            $s = str_repeat("\t", $indent) . 'Exception: ' . $e->getMessage();
+        }
+        return $s;
+    }  
 }

@@ -25,8 +25,6 @@
  *  THE SOFTWARE.
  */
 
-define('DEBUG', 1);
-
 require_once 'SSL/SSLParser.php';
 require_once 'SSL/SSLHistoryDom.php';
 require_once 'SSL/SSLHistoryPrinter.php';
@@ -121,6 +119,28 @@ class HistoryReader
     {
         return $tree;
     }
+    
+    protected function getMostRecentFile($from_dir, $type)
+    {
+        $newest_mtime = 0;
+        $fp = '';
+        
+        $di = new DirectoryIterator($from_dir);
+        foreach($di as $f)
+        {
+            if(!$f->isFile() || !substr($f->getFilename(), -4) == '.' . $type)
+                continue;
+    
+            $mtime = $f->getMTime();
+            if($mtime > $newest_mtime)
+            {
+                $newest_mtime = $mtime;
+                $fp = $f->getPathname();
+            }
+        }
+        if($fp) return $fp;
+        throw new RuntimeException("No $type file found in $from_dir");
+    }    
 }
 
 $h = new HistoryReader();

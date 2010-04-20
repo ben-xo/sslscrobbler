@@ -27,7 +27,9 @@
 require_once 'SSLChunk.php';
 require_once 'Chunks/SSLVrsnChunk.php';
 require_once 'Chunks/SSLOentChunk.php';
+require_once 'Chunks/SSLOrenChunk.php';
 require_once 'Chunks/SSLAdatChunk.php';
+require_once 'Chunks/SSLUentChunk.php';
 require_once 'Chunks/SSLUnknownChunk.php';
 
 class SSLChunkFactory
@@ -40,8 +42,12 @@ class SSLChunkFactory
                 return new SSLVrsnChunk($bin); 
             case 'oent':
                 return new SSLOentChunk($bin);
+            case 'oren':
+                return new SSLOrenChunk($bin);
             case 'adat':
                 return new SSLAdatChunk($bin);
+            case 'uent':
+                return new SSLUentChunk($bin);
             default:
                 return new SSLUnknownChunk($type, $bin);
         }

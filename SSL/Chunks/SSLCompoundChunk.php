@@ -24,30 +24,64 @@
  *  THE SOFTWARE.
  */
 
-class SSLVrsnChunk extends SSLChunk
+class SSLCompoundChunk extends SSLChunk
 {
-    protected $version;
+    /**
+     * @var array of SSLChunk
+     */
+    protected $chunks = array();
     
-    public function __construct($data)
+    /**
+     * @var SSLChunk
+     */
+    protected $last_inner_chunk = null;
+    
+    public function __construct($type, $data)
     {
-        parent::__construct('vrsn', '');
+        parent::__construct($type, '');
         
-        try {
-            $up = new Unpacker('main: r*b>sversion');
-            $context = $up->unpack($data);
-            $this->version = $context['version'];
-        } catch (Exception $e) {
-            $this->version = '**EXCEPTION**: ' . $e->getMessage();
+        $cp = new SSLChunkParser($data);
+        while($cp->hasMore())
+        {
+            $chunk = $cp->parse();
+            $this->chunks[] =& $chunk;
+            $this->last_inner_chunk =& $chunk;
         }
     }
     
-    public function chunkDebugBody($indent=0)
+    protected function chunkDebugBody($indent=0)
     {
-        return str_repeat("\t", $indent) . '>>> ' . $this->version . "\n";
+        $string = '';
+        foreach($this->chunks as $chunk)
+        {
+            $string .= $chunk->toString($indent+1);
+        }
+        return $string;
     }
-    
+
+    /**
+     * @return array
+     */
     public function getData()
     {
-        return array('version' => $this->version);
+        if(isset($this->last_inner_chunk))
+        {
+            return $this->last_inner_chunk->getData();
+        }
+        
+        throw new OutOfBoundException("This {$this->type} chunk contains no inner chunk");
+    }
+    
+    /**
+     * @return SSLStruct $struct
+     */
+    public function getDataInto(SSLStruct $struct)
+    {
+        if(isset($this->last_inner_chunk))
+        {
+            return $this->last_inner_chunk->getDataInto($struct);
+        }
+        
+        throw new OutOfBoundException("This {$this->type} chunk contains no inner chunk");
     }
 }

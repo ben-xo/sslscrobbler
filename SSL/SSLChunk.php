@@ -26,7 +26,7 @@
 
 require_once 'Hexdumper.php';
 
-class SSLChunk
+abstract class SSLChunk
 {
     protected $type;
     protected $data;
@@ -36,6 +36,8 @@ class SSLChunk
         $this->type = $type;
         $this->data = $data;
     }
+    
+    abstract public function getData();    
     
     public function __toString()
     {

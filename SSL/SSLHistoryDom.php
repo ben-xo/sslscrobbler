@@ -25,6 +25,8 @@
  */
 
 require_once 'SSLDom.php';
+require_once 'Structs/SSLTrack.php';
+require_once 'Structs/SSLTrackDelete.php';
 
 class SSLHistoryDom extends SSLDom
 {
@@ -38,14 +40,62 @@ class SSLHistoryDom extends SSLDom
             throw new RuntimeException("HistoryDom empty");
         }
         
-        $chunks = array();
+        $tracks = array();
+        $deletes = array();
         foreach($this as $chunk)
         {
             if($chunk instanceof SSLOentChunk)
             {
-                $chunks[] = $chunk;
+                $tracks[] = $chunk->getDataInto(new SSLTrack());
+            }
+            
+            if($chunk instanceof SSLOrenChunk)
+            {
+                $deletes[] = $chunk->getDataInto(new SSLTrackDelete());
             }
         }
-        return $chunks;
+        
+        $tracks = $this->mergeRows($tracks); // this will re-key everything by row number
+        $tracks = $this->applyDeletes($tracks, $deletes); // this relies on the row numbering
+        
+        return $tracks;
+    }
+    
+    /**
+     * SSL often writes updates to rows to the end of the binary file, which
+     * means that the file can contain several blocks referring to the same item
+     * in the tracklisting. The last one always takes precedence.
+     * 
+     * SSL will usually clean the file up at exit time, replacing all identically 
+     * numbered rows with the most recent.
+     * 
+     * @param array $tracks
+     */
+    protected function mergeRows(array $tracks)
+    {
+        $merged = array();
+        foreach($tracks as $track)
+        {
+            /* @var $track SSLTrack */
+            $merged[$track->getRow()] = $track;
+        }
+        return $merged;
+    }
+    
+    /**
+     * SSL writes deletes out to the stream as action chunks.
+     * 
+     * @param array $tracks
+     * @param array $deletes
+     */
+    protected function applyDeletes(array $tracks, array $deletes)
+    {
+        foreach($deletes as $delete)
+        {
+            /* @var $delete SSLTrackDelete */
+            $deleted_row = $delete->getRow();
+            unset($tracks[$deleted_row]);
+        }
+        return $tracks;
     }
 }

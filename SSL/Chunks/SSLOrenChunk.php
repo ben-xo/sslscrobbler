@@ -24,30 +24,13 @@
  *  THE SOFTWARE.
  */
 
-class SSLVrsnChunk extends SSLChunk
+require_once 'SSLCompoundChunk.php';
+require_once 'SSLUentChunk.php';
+
+class SSLOrenChunk extends SSLCompoundChunk
 {
-    protected $version;
-    
     public function __construct($data)
     {
-        parent::__construct('vrsn', '');
-        
-        try {
-            $up = new Unpacker('main: r*b>sversion');
-            $context = $up->unpack($data);
-            $this->version = $context['version'];
-        } catch (Exception $e) {
-            $this->version = '**EXCEPTION**: ' . $e->getMessage();
-        }
-    }
-    
-    public function chunkDebugBody($indent=0)
-    {
-        return str_repeat("\t", $indent) . '>>> ' . $this->version . "\n";
-    }
-    
-    public function getData()
-    {
-        return array('version' => $this->version);
-    }
+        parent::__construct('oren', $data);
+    }    
 }
