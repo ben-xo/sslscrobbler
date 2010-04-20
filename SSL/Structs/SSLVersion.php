@@ -24,31 +24,35 @@
  *  THE SOFTWARE.
  */
 
-class SSLVrsnChunk extends SSLChunk
+require_once dirname(__FILE__) . '/../SSLStruct.php';
+
+class SSLVersion extends SSLStruct
 {
     protected $version;
-    
-    public function __construct($data)
+
+    public function getParser()
     {
-        parent::__construct('vrsn', '');
-        
-        // the format of VRSN chunks is fixed across all SSL data files
-        try {
-            $up = new Unpacker('main: r*b>sversion');
-            $context = $up->unpack($data);
-            $this->version = $context['version'];
-        } catch (Exception $e) {
-            $this->version = '**EXCEPTION**: ' . $e->getMessage();
+        $parser = file_get_contents( dirname(__FILE__) . '/SSLVersionVrsn.xoup');
+        if(empty($parser)) 
+        {
+            throw new RuntimeException('Could not load SSLVersionVrsn.xoup');
         }
+        var_dump($parser);
+        return $parser;
+    }
+        
+    public function populateFrom(array $fields)
+    {
+        isset($fields['version']) && $this->version = $fields['version'];
     }
     
-    public function chunkDebugBody($indent=0)
+    public function getVersion()
     {
-        return str_repeat("\t", $indent) . '>>> ' . $this->version . "\n";
+        return $this->version;
     }
-    
-    public function getData()
+       
+    public function __toString()
     {
-        return array('version' => $this->version);
+        return '>>> ' . $this->version;
     }
 }

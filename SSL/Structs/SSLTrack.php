@@ -38,6 +38,16 @@ class SSLTrack extends SSLStruct
         $end_time
     ;
     
+    public function getParser()
+    {
+        $parser = file_get_contents(dirname(__FILE__) . '/SSLTrackAdat.xoup');
+        if(empty($parser)) 
+        {
+            throw new RuntimeException('Could not load SSLTrackAdat.xoup');
+        }
+        return $parser;
+    }
+    
     public function populateFrom(array $fields)
     {
         isset($fields['row']) && $this->row = $fields['row'];

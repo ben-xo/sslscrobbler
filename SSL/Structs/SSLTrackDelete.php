@@ -29,7 +29,17 @@ require_once dirname(__FILE__) . '/../SSLStruct.php';
 class SSLTrackDelete extends SSLStruct
 {
     protected $row;
-    
+
+    public function getParser()
+    {
+        $parser = file_get_contents( dirname(__FILE__) . '/SSLTrackDeleteUent.xoup');
+        if(empty($parser)) 
+        {
+            throw new RuntimeException('Could not load SSLTrackDeleteUent.xoup');
+        }
+        return $parser;
+    }
+        
     public function populateFrom(array $fields)
     {
         isset($fields['row']) && $this->row = $fields['row'];

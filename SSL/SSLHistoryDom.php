@@ -25,6 +25,7 @@
  */
 
 require_once 'SSLDom.php';
+require_once 'Structs/SSLVersion.php';
 require_once 'Structs/SSLTrack.php';
 require_once 'Structs/SSLTrackDelete.php';
 
@@ -49,7 +50,7 @@ class SSLHistoryDom extends SSLDom
                 $tracks[] = $chunk->getDataInto(new SSLTrack());
             }
             
-            if($chunk instanceof SSLOrenChunk)
+            elseif($chunk instanceof SSLOrenChunk)
             {
                 $deletes[] = $chunk->getDataInto(new SSLTrackDelete());
             }
@@ -98,4 +99,5 @@ class SSLHistoryDom extends SSLDom
         }
         return $tracks;
     }
+
 }

@@ -39,6 +39,7 @@ class SSLDom extends ArrayObject
         $string = '';
         foreach($this as $chunk)
         {
+            /* @var $chunk SSLChunk */
             $string .= $chunk->toString();
             $string .= "\n";
         }

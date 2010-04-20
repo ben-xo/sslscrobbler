@@ -34,6 +34,9 @@ class HistoryReader
     protected $debug = false;
     protected $sleep = 5;
     
+    /**
+     * @var SSLHistoryDom
+     */
     protected $tree;
     
     public function main($argc, array $argv)
@@ -69,7 +72,20 @@ class HistoryReader
             
             if($this->debug)
             {
+                // Sets up all the right parsing.
+                //
+                // There's no particular reason to assume that e.g. all Adat chunks 
+                // encountered are going to be tracks, so the assumption-of-trackiness
+                // is only made in the SSLHistoryDom and a Track Parser passed in to the
+                // Adat chunk during the getTracks() call on the SSLHistoryDom.
+                //
+                // Basically, what I'm saying, is that without this line you'll just get
+                // hexdumps, which is not very exciting.
+                $this->tree->getTracks(); 
+                
+                // After the parsing has occurred, we get much more exciting debug output.
                 echo $this->tree;
+                
                 echo "Memory usage: " . memory_get_peak_usage() . " bytes\n";
                 return;
             }

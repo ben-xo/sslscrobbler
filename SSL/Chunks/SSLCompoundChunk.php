@@ -66,6 +66,8 @@ class SSLCompoundChunk extends SSLChunk
     {
         if(isset($this->last_inner_chunk))
         {
+            $parser = $struct->getParser();
+            $this->last_inner_chunk->parseWith( $struct->getParser() );
             return $this->last_inner_chunk->getData();
         }
         
@@ -79,6 +81,8 @@ class SSLCompoundChunk extends SSLChunk
     {
         if(isset($this->last_inner_chunk))
         {
+            $parser = $struct->getParser();
+            $this->last_inner_chunk->parseWith( $struct->getParser() );
             return $this->last_inner_chunk->getDataInto($struct);
         }
         
