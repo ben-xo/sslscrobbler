@@ -33,6 +33,7 @@ class HistoryReader
 {
     protected $debug = false;
     protected $sleep = 5;
+    protected $history_dir;
     
     /**
      * @var SSLHistoryDom
@@ -45,9 +46,6 @@ class HistoryReader
     
         try
         {
-            if($argc < 2)
-                throw new RuntimeException("No filename specified"); 
-            
             $appname = array_shift($argv);
             
             while($arg = array_shift($argv))
@@ -60,6 +58,14 @@ class HistoryReader
                 
                 $filename = $arg;
                 break;
+            }
+            
+            if(empty($filename))
+            {
+                // guess history file (always go for the most recently modified)
+                $historydir = getenv('HOME') . '/Music/ScratchLIVE/History/Sessions';
+                $filename = $this->getMostRecentFile($historydir, '.session');
+                echo "Using file $filename ...\n";
             }
                             
             if(!file_exists($filename))
