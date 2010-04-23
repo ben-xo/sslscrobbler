@@ -24,9 +24,10 @@
  *  THE SOFTWARE.
  */
 
-require_once 'SSLStructChunk.php';
+require_once 'SSLCompoundChunk.php';
+require_once 'SSLUentChunk.php';
 
-class SSLOrenChunk extends SSLStructChunk
+class SSLOrenChunk extends SSLCompoundChunk
 {
     public function __construct($data)
     {
