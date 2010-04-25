@@ -28,17 +28,23 @@
 require_once 'SSL/SSLParser.php';
 require_once 'SSL/SSLHistoryDom.php';
 require_once 'SSL/SSLHistoryPrinter.php';
+require_once 'SSL/SSLRealtimeModel.php';
 
 class HistoryReader
 {
     protected $debug = false;
-    protected $sleep = 5;
+    protected $sleep = 2;
     protected $history_dir;
     
     /**
      * @var SSLHistoryDom
      */
     protected $tree;
+    
+    /**
+     * @var SSLRealtimeModel
+     */
+    protected $rtm;
     
     public function main($argc, array $argv)
     {
@@ -96,18 +102,11 @@ class HistoryReader
                 return;
             }
             
+            echo "Initial Log:\n";
             $this->output($this->tree);
+            echo "************\n\n";
             
-            while(true)
-            {
-                sleep($this->sleep);
-                echo date("Y-m-d H:i:s") . " tick...\n";
-                $tree = $this->read($filename);                
-                $changed = $this->diff($tree);
-                $this->tree = $tree;
-                $this->output($changed);
-            }
-            
+            $this->monitor($filename, $this->tree);            
         }
         catch(Exception $e)
         {   
@@ -117,7 +116,7 @@ class HistoryReader
         }
     }
     
-    public function output($tree)
+    public function output(SSLHistoryDom $tree)
     {
         $sp = new SSLHistoryPrinter();
         $sp->printOut($tree);        
@@ -128,6 +127,9 @@ class HistoryReader
         echo "Usage: {$appname} [--debug] <session file>\n";
     }
     
+    /**
+     * @return SSLHistoryDom
+     */
     protected function read($filename)
     {
         $parser = new SSLParser(new SSLHistoryDom());
@@ -140,6 +142,33 @@ class HistoryReader
     protected function diff($tree)
     {
         return $tree;
+    }
+    
+    protected function monitor($filename, SSLHistoryDom $tree)
+    {
+        $this->rtm = new SSLRealtimeModel();
+        
+        echo "\n\n\n\n\n\n\n\n\n";
+        while(true)
+        {
+            sleep($this->sleep);
+            $new_tree = $this->read($filename);
+            $changed = $new_tree->getNewOrUpdatedTracksSince($tree);
+            if(count($changed->getTracks()) > 0 )
+            {
+                //echo date("Y-m-d H:i:s") . " tick...";
+                //echo " " . count($new_tree) . " chunks";
+                $this->rtm->notify($changed);
+                $this->tree = $new_tree;
+                $tree = $new_tree;
+                //echo "\n";
+                //$this->output($changed);
+            }
+            $this->rtm->tick();
+            //echo chr(10) . chr(27) . '[9A';
+            echo $this->rtm . "\n";
+            echo "Date: " . date('Y-m-d H:i:s') . " Memory Usage: " . number_format(memory_get_usage()) . " bytes\n";
+        }        
     }
     
     protected function getMostRecentFile($from_dir, $type)

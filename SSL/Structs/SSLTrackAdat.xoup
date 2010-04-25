@@ -37,7 +37,8 @@ hex:
     r1l>i_ r_b>h_
     
 timestamp:
-    r1l>i_ r_b>t_
+    # r1l>i_ r_b>t_
+    r1l>i_ r_b>i_ # timestamps are actually more useful as integers, not date-strings
     
 field: 
     # tail-recurses to gobble up all available fields. 
@@ -85,9 +86,9 @@ field39: int. c>rTHIRTYNINExUNKNOWN
 field45: int. c>rplaytime
 
 field48: int. c>rsessionId
-field50: int. c>rplayedOne
+field50: int. c>rplayed
 field51: hex. c>rFIFTYONExUNKNOWN
-field52: int. c>rplayedTwo
+field52: int. c>radded
 
 field53: # always last field 
     timestamp. c>rupdatedAt

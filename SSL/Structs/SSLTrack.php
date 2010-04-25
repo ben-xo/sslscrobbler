@@ -34,8 +34,13 @@ class SSLTrack extends SSLStruct
         $artist, 
         $title, 
         $played, 
+        $length,
         $start_time, 
-        $end_time
+        $end_time,
+        $updated_at = 0,
+        $added,
+        $playtime,
+        $fields = array()
     ;
     
     public function getParser()
@@ -50,14 +55,18 @@ class SSLTrack extends SSLStruct
     
     public function populateFrom(array $fields)
     {
+        $this->fields = $fields;
         isset($fields['row']) && $this->row = $fields['row'];
         isset($fields['title']) && $this->title = $fields['title'];
         isset($fields['artist']) && $this->artist = $fields['artist'];
         isset($fields['deck']) && $this->deck = $fields['deck'];
         isset($fields['starttime']) && $this->start_time = $fields['starttime'];
         isset($fields['endtime']) && $this->end_time = $fields['endtime'];
-        isset($fields['playedOne']) && $this->played = (bool) $fields['playedOne'];
-        isset($fields['playedTwo']) && $this->played = (bool) $fields['playedTwo'];
+        isset($fields['played']) && $this->played = (bool) $fields['played'];
+        isset($fields['added']) && $this->added = $fields['added'];
+        isset($fields['updatedAt']) && $this->updated_at = $fields['updatedAt'];
+        isset($fields['playtime']) && $this->playtime = $fields['playtime'];
+        isset($fields['length']) && $this->length = $fields['length'];
     }
     
     public function getRow()
@@ -85,6 +94,11 @@ class SSLTrack extends SSLStruct
         return $this->played;
     }
 
+    public function getPlayTime()
+    {
+        return $this->playtime;
+    }
+
     public function getStartTime()
     {
         return $this->start_time;
@@ -95,14 +109,76 @@ class SSLTrack extends SSLStruct
         return $this->end_time;
     }
     
+    public function getLength()
+    {
+        return $this->length;
+    }
+    
+    public function getLengthInSeconds()
+    {
+        if(preg_match('/^(\d+):(\d+)\./', $this->length, $matches))
+        {
+            return $matches[1] * 60 + $matches[2];
+        }
+        return 0;
+    }
+    
+    public function getUpdatedAt()
+    {
+        return $this->updated_at;
+    }
+    
     public function isPlayed()
     {
         return (bool) $this->played;
     }
     
+    public function getStatus()
+    {
+        if($this->isPlayed())
+        {
+            if($this->getPlaytime())
+            {
+                // 1 N
+                return 'PLAYED';
+            }
+            else
+            {
+                // 1 0
+                return 'PLAYING';
+            }
+        }
+        else
+        {
+            if($this->getPlaytime())
+            {
+                // 0 N
+                return 'SKIPPED';
+            }
+            else
+            {
+                // 0 0
+                return 'NEW';
+            }
+            
+        }
+    }
+    
     
     public function __toString()
     {
-        return sprintf("%d - %s - %s", $this->played, $this->artist, $this->title);
+        return sprintf("PLAYED:%s - ADDED:%s - DECK:%s - %s - %s - %s", 
+            $this->played ? '1' : '0', isset($this->added) ? ($this->added ? '1' : '0') : 'X', 
+            $this->deck,
+            $this->artist, $this->title,  floor($this->playtime / 60) . ':' . ($this->playtime % 60)
+        );
+        
+        // debugging
+        $s = '';
+        foreach($this->fields as $k => $v)
+        {
+            $s .= "$k => $v\n";
+        }
+        return $s;
     }
 }

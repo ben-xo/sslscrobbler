@@ -24,34 +24,32 @@
  *  THE SOFTWARE.
  */
 
-require_once dirname(__FILE__) . '/../SSLStruct.php';
-
-class SSLVersion extends SSLStruct
+/**
+ * Holds the output of SSLHistoryDom::getNewTracksSince().
+ *  
+ * @author ben
+ */
+class SSLHistoryDiffDom extends SSLHistoryDom
 {
-    protected $version;
-
-    public function getParser()
+    private $tracks = array();
+    
+    public function __construct(array $tracks)
     {
-        $parser = file_get_contents( dirname(__FILE__) . '/SSLVersionVrsn.xoup');
-        if(empty($parser)) 
-        {
-            throw new RuntimeException('Could not load SSLVersionVrsn.xoup');
-        }
-        return $parser;
-    }
-        
-    public function populateFrom(array $fields)
-    {
-        isset($fields['version']) && $this->version = $fields['version'];
+        $this->tracks = $tracks;
     }
     
-    public function getVersion()
+    public function getTracks()
     {
-        return $this->version;
+        return $this->tracks;
     }
-       
+    
+    public function addChunks(array $chunks)
+    {
+        return false;
+    }
+    
     public function __toString()
     {
-        return '>>> ' . $this->version;
+        return 'DIFF<+' . count($this->tracks) . '>';
     }
 }

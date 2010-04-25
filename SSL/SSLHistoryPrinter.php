@@ -26,7 +26,7 @@
 
 class SSLHistoryPrinter
 {
-    protected $unplayed = false;
+    protected $unplayed = true;
     
     public function printOut(SSLHistoryDom $tree)
     {
@@ -39,7 +39,6 @@ class SSLHistoryPrinter
                 
         foreach($tracks as $track)
         {
-            if($track)
             $this->outputRow($track);
         }
     }
@@ -55,8 +54,7 @@ class SSLHistoryPrinter
         foreach($tracks as $track)
         {
         	/* @var $track SSLTrack */
-            
-            if($track->isPlayed())
+            if($track && $track->isPlayed())
             {
                 $played[] = $track;
             }

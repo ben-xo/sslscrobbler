@@ -25,6 +25,7 @@
  */
 
 require_once 'SSLDom.php';
+require_once 'SSLHistoryDiffDom.php';
 require_once 'Structs/SSLVersion.php';
 require_once 'Structs/SSLTrack.php';
 require_once 'Structs/SSLTrackDelete.php';
@@ -52,14 +53,45 @@ class SSLHistoryDom extends SSLDom
             
             elseif($chunk instanceof SSLOrenChunk)
             {
-                $deletes[] = $chunk->getDataInto(new SSLTrackDelete());
+                $tracks[] = $chunk->getDataInto(new SSLTrackDelete());
             }
         }
         
         $tracks = $this->mergeRows($tracks); // this will re-key everything by row number
-        $tracks = $this->applyDeletes($tracks, $deletes); // this relies on the row numbering
         
         return $tracks;
+    }
+    
+    /** 
+     * Find all changes since we last polled.
+     * 
+     * @return SSLHistoryDiffDom
+     */
+    public function getNewOrUpdatedTracksSince(SSLHistoryDom $tree)
+    {
+        $a_tracks = $this->getTracks(); // newer tree
+        $b_tracks = $tree->getTracks(); // older tree
+        
+        $a_track_rows = array_keys($a_tracks);
+        $b_track_rows = array_keys($b_tracks);
+        
+        $track_rows_added = array_diff($a_track_rows, $b_track_rows);
+        $tracks_added = array();
+        foreach($track_rows_added as $row)
+        {
+            $tracks_added[$row] = $a_tracks[$row];
+        }
+
+        foreach($a_tracks as $row => $track)
+        {
+            /* @var $track SSLTrack */
+            if( !isset($b_tracks[$row]) || $track->getUpdatedAt() > $b_tracks[$row]->getUpdatedAt() ) 
+            {
+                $tracks_added[$row] = $track;
+            }
+        }
+        
+        return new SSLHistoryDiffDom($tracks_added);
     }
     
     /**
@@ -72,32 +104,24 @@ class SSLHistoryDom extends SSLDom
      * 
      * @param array $tracks
      */
-    protected function mergeRows(array $tracks)
+    private function mergeRows(array $tracks)
     {
         $merged = array();
         foreach($tracks as $track)
         {
-            /* @var $track SSLTrack */
-            $merged[$track->getRow()] = $track;
+            // updates to tracks will always come later in the file, 
+            // so no need to check for updatedAt
+            if($track instanceof SSLTrack)
+            {
+            	/* @var $track SSLTrack */
+                $merged[$track->getRow()] = $track;
+            }
+            elseif($track instanceof SSLTrackDelete)
+            {
+            	/* @var $track SSLTrackDelete */
+                $merged[$track->getRow()] = null;
+            }
         }
         return $merged;
     }
-    
-    /**
-     * SSL writes deletes out to the stream as action chunks.
-     * 
-     * @param array $tracks
-     * @param array $deletes
-     */
-    protected function applyDeletes(array $tracks, array $deletes)
-    {
-        foreach($deletes as $delete)
-        {
-            /* @var $delete SSLTrackDelete */
-            $deleted_row = $delete->getRow();
-            unset($tracks[$deleted_row]);
-        }
-        return $tracks;
-    }
-
 }
