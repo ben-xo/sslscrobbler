@@ -1,11 +1,35 @@
 <?php
 
 /**
+ *  @author      Ben XO (me@ben-xo.com)
+ *  @copyright   Copyright (c) 2010 Ben XO
+ *  @license     MIT License (http://www.opensource.org/licenses/mit-license.html)
+ *  
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *  
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *  
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ */
+
+/**
  * The real time model responds to timer ticks via tick(), and changes to the tracks
  * on the decks via notify(). (Calling notify() does not imply a tick()).
  * 
  * This model is intended to simulate the decks in ScratchLIVE, but it does so by inferring
- * the status of the decks from information abotu TRACKS that are written to the history file.
+ * the status of the decks from information about TRACKS that are written to the history file.
  * Therefore it will not always match everything that happens in software exactly. However, 
  * it can infer quite a lot!
  * 
@@ -13,7 +37,8 @@
  * 
  * * EMPTY
  * 		No track has yet been loaded on to the deck. This is the starting state for the deck.
- * 		(This state is never returned to by any other transition).
+ * 		(This state is never returned to by any other transition, but PLAYED and SKIPPED are 
+ * 		similar).
  * 
  * * NEW		
  * 		A track was added to the deck, and may (or may not) be playing. At this point it's 
@@ -23,23 +48,43 @@
  *      so as to keep it visually interesting...
  * 
  * * PLAYING 
- * 		The track on the deck is still playing, but will definitely count as "played" 
- * 		in the history. In ScratchLive, tracks transition from NEW to PLAYING when a new track 
- * 		is loaded on to any OTHER decks. At this point, ScratchLive marks the track as played.
- * 		We then trigger timers for the various scrobble rules, based on MIN_SCROBBLE_TIME and
+ * 		The track on the deck is still playing, and will definitely count as "played" in the
+ * 		history. In ScratchLive, tracks transition from NEW to PLAYING when a new track is
+ * 		loaded on to any OTHER deck. At this point, ScratchLive marks the track as played. We
+ * 		then trigger timers for the various scrobble rules, based on MIN_SCROBBLE_TIME and
  * 		SCROBBLE_POINT_DIVIDER.
  * 
  * * PLAYED	
  * 		Similar to EMPTY, but indicates that the previous track on the deck has finished playing.
  * 		This state is usually only reached if the track runs out, or the deck was unloaded while 
  * 		the state was PLAYING. If the track was simply replaced by a different track, you won't 
- * 		see this state.
+ * 		see this state (see the Compound Transitions list below).
  * 
  * * SKIPPED
  * 		Similar to EMPTY, but the previous track on the deck was not played for the purposes of 
  * 		the history. This state	is usually only reached if the deck was unloaded while the state 
  * 		was NEW (implying that you are just trying a track out in the mix, rather than playing it). 
- * 		If the track was simply replaced by a different track, you won't see this state.
+ * 		If the track was simply replaced by a different track, you won't see this state (see the
+ * 		Compound Transitions list below).
+ * 
+ * ScratchLive writes several track blocks out to the history file at each track load. The 
+ * statuses - NEW, PLAYING, PLAYED or SKIPPED, for a deck - can actually be inferred directly from 
+ * fields on the track blocks. This creates the following possible transitions for an individual
+ * deck:
+ * 
+ * Simple Transitions:
+ * 
+ *  EMPTY -> NEW        : First track is loaded to the deck
+ *  SKIPPED -> NEW      : A track is loaded onto an empty deck
+ *  PLAYED -> NEW       : A track is loaded onto an empty deck
+ *  NEW -> SKIPPED      : NEW track is unloaded from the deck (e.g. via the eject button)
+ *  NEW -> PLAYING      : A track is loaded to any other deck
+ *  PLAYING -> PLAYED   : PLAYING track is unloaded from the deck (e.g. via the eject button)
+ *  
+ * Compound Transitions:
+ * 
+ *  NEW (-> SKIPPED) -> NEW     : A NEW track is replaced by another track
+ *  PLAYING (-> PLAYED) -> NEW  : A PLAYING track is replaced by another track
  * 
  * @author ben
  */
@@ -49,12 +94,9 @@ class SSLRealtimeModel
     const NOW_PLAYING_POINT = 10;
     const SCROBBLE_POINT_DIVIDER = 16;
     
-    /* @var $left_track  SSLTrack */
-    /* @var $right_track SSLTrack */
-    
     private $track   = array();
     private $previous = array();
-    private $status = array( 'EMPTY', 'EMPTY', 'EMPTY');
+    private $status = array();
     private $start = array();
     private $end = array();
     private $played = array();
@@ -77,7 +119,7 @@ class SSLRealtimeModel
                 
                 // switch on the status when the timer goes off
                 // so we don't notify on scrobbler, now played etc multiple times.
-                switch($this->status[$deck])
+                switch($this->getStatus($deck))
                 {
                     case 'PLAYED':
                         if($this->track[$deck]->getLengthInSeconds() >= self::MIN_SCROBBLE_TIME)
@@ -195,6 +237,14 @@ class SSLRealtimeModel
         }
     }
     
+    protected function getStatus($deck)
+    {
+        if(!isset($this->status[$deck]))
+            return 'EMPTY';
+            
+        return $this->status[$deck];
+    }
+    
     protected function stopDeck($track, $deck)
     {
         $this->end[$deck] = $track->getEndTime();
@@ -206,6 +256,10 @@ class SSLRealtimeModel
         $this->start[$deck] = time();
     }
     
+    
+    /*
+     * Methods concerned with the visual display of the model
+     */
     
     protected function getPrevTrackTitle($deck)
     { 
@@ -228,7 +282,7 @@ class SSLRealtimeModel
     protected function getPlaytimeInSeconds($deck)
     {
         if(!isset($this->start[$deck])) return 0;
-        if($this->status[$deck] == 'PLAYED' || $this->status[$deck] == 'SKIPPED')
+        if($this->getStatus($deck) == 'PLAYED' || $this->getStatus($deck) == 'SKIPPED')
         {
             $endtime = $this->end[$deck];
         }
@@ -239,33 +293,23 @@ class SSLRealtimeModel
         return $endtime - $this->start[$deck];
     }
     
-    
-    protected function getPlaytime($deck)
+    protected function getFormattedPlaytime($deck)
     {
-        if(!isset($this->start[$deck])) return '--:--';
-        if($this->status[$deck] == 'PLAYED' || $this->status[$deck] == 'SKIPPED')
-        {
-            $endtime = $this->end[$deck];
-        }
-        else
-        {
-            $endtime = time();
-        }
-        $seconds = $endtime - $this->start[$deck];
-        $time = sprintf("%02d:%02d", floor($seconds / 60) , $seconds % 60);
-        return $time;
+        $seconds = $this->getPlaytimeInSeconds($deck);
+        if(!$seconds) return '--:--';
+        return sprintf("%02d:%02d", floor($seconds / 60) , $seconds % 60);
     }
         
     public function __toString()
     {
-        $left_status = $this->status[1];
+        $left_status = $this->getStatus(1);
         $left_title = $this->getTrackTitle(1);
-        $left_played = $this->getPlaytime(1);
+        $left_played = $this->getFormattedPlaytime(1);
         $left_length = $this->getLength(1);
         
-        $right_status = $this->status[2];
+        $right_status = $this->getStatus(2);
         $right_title = $this->getTrackTitle(2);
-        $right_played = $this->getPlaytime(2);
+        $right_played = $this->getFormattedPlaytime(2);
         $right_length = $this->getLength(2);
 
         $prev_left_title = $this->getPrevTrackTitle(1);
