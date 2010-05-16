@@ -51,7 +51,7 @@ field2: string.  c>rfullpath
 field3: string.  c>rlocation
 field4: string.  c>rfilename
 
-field5: hex.      c>rFIVExUNKNOWN
+field5: hex.     c>rFIVExUNKNOWN
 
 field6: string.  c>rtitle
 field7: string.  c>rartist
@@ -64,9 +64,9 @@ field12: string. c>rTWELVExUNKNOWN
 
 field13: string. c>rbitrate
 field14: string. c>rfrequency
-field15: int.      c>rbpm 
+field15: int.    c>rbpm 
 
-field16: hex.      c>rSIXTEENxUNKNOWN
+field16: hex.    c>rSIXTEENxUNKNOWN
 
 field17: string. c>rcomments
 field18: ascii.  c>rlang
@@ -87,7 +87,7 @@ field45: int. c>rplaytime
 
 field48: int. c>rsessionId
 field50: int. c>rplayed
-field51: hex. c>rFIFTYONExUNKNOWN
+field51: string. c>rkey
 field52: int. c>radded
 
 field53: # always last field 

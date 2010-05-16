@@ -24,37 +24,7 @@
  *  THE SOFTWARE.
  */
 
-/**
- * Holds the output of SSLHistoryDom::getNewTracksSince().
- *  
- * @author ben
- */
-class SSLHistoryDiffDom extends SSLHistoryDom
+class SSLInvalidTransitionException extends Exception
 {
-    private $tracks = array();
     
-    public function __construct(array $tracks)
-    {
-        $this->tracks = $tracks;
-    }
-    
-    public function getTracks()
-    {
-        return $this->tracks;
-    }
-    
-    public function addChunks(array $chunks)
-    {
-        return false;
-    }
-    
-    public function __toString()
-    {
-        $return = 'DIFF<+' . count($this->tracks) . '>:';
-        foreach($this->tracks as $track)
-        {
-            $return .= $track->__toString() . "\n";
-        }
-        return $return . "\n";
-    }
 }

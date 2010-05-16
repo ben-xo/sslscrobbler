@@ -29,6 +29,7 @@ require_once 'SSL/SSLParser.php';
 require_once 'SSL/SSLHistoryDom.php';
 require_once 'SSL/SSLHistoryPrinter.php';
 require_once 'SSL/SSLRealtimeModel.php';
+require_once 'SSL/SSLRealtimeModelPrinter.php';
 
 class HistoryReader
 {
@@ -146,7 +147,8 @@ class HistoryReader
     
     protected function monitor($filename, SSLHistoryDom $tree)
     {
-        $this->rtm = new SSLRealtimeModel();
+        $rtm = new SSLRealtimeModel();
+        $rtm_printer = new SSLRealtimeModelPrinter($rtm);
         
         echo "\n\n\n\n\n\n\n\n\n";
         while(true)
@@ -158,15 +160,15 @@ class HistoryReader
             {
                 //echo date("Y-m-d H:i:s") . " tick...";
                 //echo " " . count($new_tree) . " chunks";
-                $this->rtm->notify($changed);
+                $rtm->notify($changed);
                 $this->tree = $new_tree;
                 $tree = $new_tree;
                 //echo "\n";
                 //$this->output($changed);
             }
-            $this->rtm->tick();
+            $rtm->tick();
             //echo chr(10) . chr(27) . '[9A';
-            echo $this->rtm . "\n";
+            echo $rtm_printer->render() . "\n";
             echo "Date: " . date('Y-m-d H:i:s') . " Memory Usage: " . number_format(memory_get_usage()) . " bytes\n";
         }        
     }
