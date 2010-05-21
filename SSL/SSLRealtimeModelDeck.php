@@ -245,9 +245,7 @@ class SSLRealtimeModelDeck
     }
     
     /**
-     * Transitions combinations
-     * @param $from
-     * @param $to
+     * Transition combinations
      */
     public function transition($from, $to, SSLTrack $track)
     {
@@ -293,10 +291,20 @@ class SSLRealtimeModelDeck
                 $this->transitionFromNewToPlaying();
                 break;
                 
+            // The following transitions can happen if you start reading a history file
+            // part way through, when the deck's not really empty; or you load a normalised history file
+            
             case 'SKIPPED':
+                $this->transitionFromEmptyToNew($track);
+                $this->transitionFromNewToSkipped();
+                break;
+                
             case 'PLAYED':
-                // these transitions can happen if you start reading a history file
-                // part way through, when the deck's not really empty.
+                $this->transitionFromEmptyToNew($track);
+                $this->transitionFromNewToPlaying();
+                $this->transitionFromPlayingToPlayed();
+                break;
+                
             case 'EMPTY':
                 throw new SSLInvalidTransitionException('Invalid transition from EMPTY to '. $to);
                 
@@ -318,10 +326,22 @@ class SSLRealtimeModelDeck
                 $this->transitionFromSkippedToNew($track);
                 $this->transitionFromNewToPlaying();
                 break;
+
+            // The following transitions can happen if you start reading a history file
+            // part way through, when the deck's not really empty; or you load a normalised history file
+                
+            case 'SKIPPED':
+                $this->transitionFromSkippedToNew($track);
+                $this->transitionFromNewToSkipped();
+                break;
+                
+            case 'PLAYED':
+                $this->transitionFromSkippedToNew($track);
+                $this->transitionFromNewToPlaying();
+                $this->transitionFromPlayingToPlayed();
+                break;
                 
             case 'EMPTY':
-            case 'SKIPPED':
-            case 'PLAYED':
                 throw new SSLInvalidTransitionException('Invalid transition from SKIPPED to '. $to);
                 
             default:                
@@ -343,9 +363,21 @@ class SSLRealtimeModelDeck
                 $this->transitionFromNewToPlaying();
                 break;
                 
+            // The following transitions can happen if you start reading a history file
+            // part way through, when the deck's not really empty; or you load a normalised history file
+            
             case 'PLAYED':
-            case 'EMPTY':
+                $this->transitionFromPlayedToNew($track);
+                $this->transitionFromNewToPlaying();
+                $this->transitionFromPlayingToPlayed();
+                break;
+                
             case 'SKIPPED':
+                $this->transitionFromPlayedToNew($track);
+                $this->transitionFromNewToSkipped();
+                break;
+                
+            case 'EMPTY':
                 throw new SSLInvalidTransitionException('Invalid transition from PLAYED to '. $to);
                 
             default:                

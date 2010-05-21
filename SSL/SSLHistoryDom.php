@@ -36,12 +36,7 @@ class SSLHistoryDom extends SSLDom
      * @return array of SSLAdatChunk
      */
     public function getTracks()
-    {
-        if(count($this) == 0)
-        {
-            throw new RuntimeException("HistoryDom empty");
-        }
-        
+    {        
         $tracks = array();
         $deletes = array();
         foreach($this as $chunk)

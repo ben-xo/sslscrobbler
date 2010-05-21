@@ -33,9 +33,16 @@ require_once 'SSL/SSLRealtimeModelPrinter.php';
 
 class HistoryReader
 {
+    // command line switched
     protected $debug = false;
+    protected $wait_for_file = true;
+    protected $help = false;
+    
     protected $sleep = 2;
-    protected $history_dir;
+    
+    protected $appname;
+    protected $filename;
+    protected $historydir;
     
     /**
      * @var SSLHistoryDom
@@ -50,28 +57,44 @@ class HistoryReader
     public function main($argc, array $argv)
     {
         date_default_timezone_set('UTC');
-    
+        
+        // guess history file (always go for the most recently modified)
+        $this->historydir = getenv('HOME') . '/Music/ScratchLIVE/History/Sessions';
+        
         try
         {
-            $appname = array_shift($argv);
+            $this->parseOptions($argv);
             
-            while($arg = array_shift($argv))
+            $appname = $this->appname;
+            
+            if($this->help)
             {
-                if($arg == '--debug')
-                {
-                    $this->debug = true;
-                    continue;
-                }
-                
-                $filename = $arg;
-                break;
+                $this->usage($appname, $argv);
+                return;
             }
+            
+            $filename = $this->filename;
             
             if(empty($filename))
             {
-                // guess history file (always go for the most recently modified)
-                $historydir = getenv('HOME') . '/Music/ScratchLIVE/History/Sessions';
-                $filename = $this->getMostRecentFile($historydir, '.session');
+                if($this->wait_for_file)
+                {
+                    echo "Waiting for new session file...\n";
+                    // find the most recent file, then wait for a new one to be created and use that.
+                    $first_filename = $this->getMostRecentFile($this->historydir, '.session');
+                    $second_filename = $first_filename;
+                    while($second_filename == $first_filename)
+                    {
+                        sleep($this->sleep);
+                        $second_filename = $this->getMostRecentFile($this->historydir, '.session');
+                    }
+                    $filename = $second_filename;
+                }
+                else
+                {
+                    $filename = $this->getMostRecentFile($this->historydir, '.session');                
+                }
+                
                 echo "Using file $filename ...\n";
             }
                             
@@ -81,10 +104,11 @@ class HistoryReader
             if(!is_readable($filename))
                 throw new InvalidArgumentException("File $filename not readable.");
                 
-            $this->tree = $this->read($filename);
             
             if($this->debug)
             {
+                $this->tree = $this->read($filename);
+                
                 // Sets up all the right parsing.
                 //
                 // There's no particular reason to assume that e.g. all Adat chunks 
@@ -102,11 +126,8 @@ class HistoryReader
                 echo "Memory usage: " . memory_get_peak_usage() . " bytes\n";
                 return;
             }
-            
-            echo "Initial Log:\n";
-            $this->output($this->tree);
-            echo "************\n\n";
-            
+
+            $this->tree = new SSLHistoryDom(); // start on empty.
             $this->monitor($filename, $this->tree);            
         }
         catch(Exception $e)
@@ -125,7 +146,40 @@ class HistoryReader
     
     public function usage($appname, array $argv)
     {
-        echo "Usage: {$appname} [--debug] <session file>\n";
+        echo "Usage: {$appname} [--debug] [--immediate] [session file]\n";
+        echo "Session file is optional. If omitted, the most recent history file from {$this->historydir} will be used automatically\n";
+        echo "    -h or --help:      This message.\n";
+        echo "    -d or --debug:     Dump the file's complete structure and exit\n";
+        echo "    -i or --immediate: Do not wait for the next history file to be created before monitoring. (Use if you started {$appname} mid way through a session)\n";
+        
+    }
+    
+    protected function parseOptions(array $argv)
+    {
+        $this->appname = array_shift($argv);
+        
+        while($arg = array_shift($argv))
+        {
+            if($arg == '--help' || $arg == '-h')
+            {
+                $this->help = true;
+                continue;
+            }
+            
+            if($arg == '--debug' || $arg == '-d')
+            {
+                $this->debug = true;
+                continue;
+            }
+            
+            if($arg == '--immediate' || $arg == '-i')
+            {
+                $this->wait_for_file = false;
+                continue;
+            }
+            
+            $this->filename = $arg;
+        }        
     }
     
     /**
@@ -150,7 +204,6 @@ class HistoryReader
         $rtm = new SSLRealtimeModel();
         $rtm_printer = new SSLRealtimeModelPrinter($rtm);
         
-        echo "\n\n\n\n\n\n\n\n\n";
         while(true)
         {
             sleep($this->sleep);
