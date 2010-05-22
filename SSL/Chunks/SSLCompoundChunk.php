@@ -27,14 +27,14 @@
 class SSLCompoundChunk extends SSLChunk
 {
     /**
-     * @var array of SSLChunk
+     * @var array of SSLStructChunk
      */
     protected $chunks = array();
     
     /**
-     * @var SSLChunk
+     * @var SSLStructChunk
      */
-    protected $last_inner_chunk = null;
+    protected $last_inner_chunk;
     
     public function __construct($type, $data)
     {
@@ -44,8 +44,8 @@ class SSLCompoundChunk extends SSLChunk
         while($cp->hasMore())
         {
             $chunk = $cp->parse();
-            $this->chunks[] =& $chunk;
-            $this->last_inner_chunk =& $chunk;
+            $this->chunks[] = $chunk;
+            $this->last_inner_chunk = $chunk;
         }
     }
     
@@ -66,8 +66,6 @@ class SSLCompoundChunk extends SSLChunk
     {
         if(isset($this->last_inner_chunk))
         {
-            $parser = $struct->getParser();
-            $this->last_inner_chunk->parseWith( $struct->getParser() );
             return $this->last_inner_chunk->getData();
         }
         
@@ -82,7 +80,7 @@ class SSLCompoundChunk extends SSLChunk
         if(isset($this->last_inner_chunk))
         {
             $parser = $struct->getParser();
-            $this->last_inner_chunk->parseWith( $struct->getParser() );
+            $this->last_inner_chunk->parseWith( $parser );
             return $this->last_inner_chunk->getDataInto($struct);
         }
         
