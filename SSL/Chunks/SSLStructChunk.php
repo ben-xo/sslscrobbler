@@ -42,11 +42,10 @@ abstract class SSLStructChunk extends SSLChunk
         return $s;
     }
     
-    public function parseWith($program)
+    public function unpackWith(Unpacker $up)
     {
         if(empty($this->fields))
         {
-            $up = new Unpacker($program);
             $this->fields = $up->unpack($this->data);
             unset($this->data);
         }

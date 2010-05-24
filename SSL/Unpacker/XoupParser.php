@@ -24,29 +24,52 @@
  *  THE SOFTWARE.
  */
 
-require_once dirname(__FILE__) . '/../SSLStruct.php';
-
-class SSLTrackDelete extends SSLStruct
+class XoupParser
 {
-    protected $row;
-
-    public function getUnpacker()
+    public function parse($program)
     {
-        return $this->getUnpackerForFile( dirname(__FILE__) . '/SSLTrackDeleteUent.xoup' );
-    }
+        // strip comments
+        $program = preg_replace("/#[^\n]*\n/", ' ', $program);
         
-    public function populateFrom(array $fields)
-    {
-        isset($fields['row']) && $this->row = $fields['row'];
-    }
-    
-    public function getRow()
-    {
-        return $this->row;
-    }
-       
-    public function __toString()
-    {
-        return sprintf("DELETED %d", $this->row);
+        // tokenize
+        $ops = preg_split("/\s+/", $program);
+        
+        // trim
+        $ops = array_map('trim', $ops);
+        
+        // remove empty tokens
+        foreach($ops as $k => $v)
+        {
+            if(empty($v)) unset($ops[$k]);
+        }
+        
+        $subs = array();
+        $opdest = null;
+        foreach($ops as $k => $v)
+        {
+            if(preg_match('/^([a-zA-Z0-9]+):$/', $v, $matches))
+            {
+                // it's a label
+                $subs[$matches[1]] = array();
+                $opdest =& $subs[$matches[1]];
+            }
+            else
+            {
+                // it's an op
+                if(is_null($opdest))
+                {
+                    throw new RuntimeException("Parse error: op found out of sub scope");
+                }
+                
+                $opdest[] = $v;
+            }
+        }
+        
+        if(!in_array( 'main', array_keys($subs) ))
+        {
+            throw new RuntimeException("Parse error: no 'main' sub found.");
+        }
+        
+        return $subs;
     }
 }

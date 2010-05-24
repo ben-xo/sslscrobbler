@@ -30,14 +30,9 @@ class SSLVersion extends SSLStruct
 {
     protected $version;
 
-    public function getParser()
+    public function getUnpacker()
     {
-        $parser = file_get_contents( dirname(__FILE__) . '/SSLVersionVrsn.xoup');
-        if(empty($parser)) 
-        {
-            throw new RuntimeException('Could not load SSLVersionVrsn.xoup');
-        }
-        return $parser;
+        return $this->getUnpackerForFile( dirname(__FILE__) . '/SSLVersionVrsn.xoup' );
     }
         
     public function populateFrom(array $fields)

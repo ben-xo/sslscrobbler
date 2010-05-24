@@ -43,14 +43,14 @@ class SSLTrack extends SSLStruct
         $fields = array()
     ;
     
-    public function getParser()
+    protected function newUnpacker($program)
     {
-        $parser = file_get_contents(dirname(__FILE__) . '/SSLTrackAdat.xoup');
-        if(empty($parser)) 
-        {
-            throw new RuntimeException('Could not load SSLTrackAdat.xoup');
-        }
-        return $parser;
+        return new Unpacker($program);
+    }
+    
+    public function getUnpacker()
+    {
+        return $this->getUnpackerForFile(dirname(__FILE__) . '/SSLTrackAdat.xoup');
     }
     
     public function populateFrom(array $fields)

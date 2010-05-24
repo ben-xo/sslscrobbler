@@ -24,28 +24,48 @@
  *  THE SOFTWARE.
  */
 
+require_once 'Unpacker.php';
+
 /**
  * SSL Structs, e.g. Track, are concrete data structures that model actual data
  * from SSL. This representation is decoupled from chunk types that the data is
  * stored in, for reasons of polymorphism.
  * 
  * Usually a DOM that's context specific will pass expected SSLStructs into 
- * encountered SSLChunks to extract data from them, when parsing the file. 
- * That way, SSLChunks don't have to know much about their own data, and SSLStructs 
- * don't have to know anything about the binary representation of the Chunks. 
+ * encountered SSLChunks to extract data from them when parsing the file. 
+ * That way, SSLChunks don't have to know any semantics about their own data, and 
+ * SSLStructs don't have to know anything about the container format of the Chunks. 
  */
 abstract class SSLStruct
 {
     /**
-     * Returns an XOUP parsing program for the Unpacker.
+     * Returns an Unpacker
      * 
-     * @return string XOUP
+     * @return Unpacker
      */
-    abstract public function getParser();
+    abstract public function getUnpacker();
 
     /**
      * Take data (often the output of running the parser)
      * and fill up the object.
      */
     abstract public function populateFrom(array $fields);
+    
+    /**
+     * Utility method for SSLStruct subclasses
+     * 
+     * @return Unpacker
+     */
+    protected function getUnpackerForFile($filename)
+    {
+        return $this->newXoupLoader()->load($filename);
+    }
+    
+    /**
+     * @return XoupLoader
+     */
+    protected function newXoupLoader()
+    {
+        return new XoupLoader();
+    }
 }

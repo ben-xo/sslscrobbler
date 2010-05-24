@@ -209,6 +209,7 @@ class HistoryReader
             sleep($this->sleep);
             $new_tree = $this->read($filename);
             $changed = $new_tree->getNewOrUpdatedTracksSince($tree);
+            $track_change = false;
             if(count($changed->getTracks()) > 0 )
             {
                 //echo date("Y-m-d H:i:s") . " tick...";
@@ -218,11 +219,17 @@ class HistoryReader
                 $tree = $new_tree;
                 //echo "\n";
                 //$this->output($changed);
+                $track_change = true;
             }
-            $rtm->tick();
-            //echo chr(10) . chr(27) . '[9A';
-            echo $rtm_printer->render() . "\n";
-            echo "Date: " . date('Y-m-d H:i:s') . " Memory Usage: " . number_format(memory_get_usage()) . " bytes\n";
+            $event_elapsed = $rtm->tick();
+            $print = $track_change || $event_elapsed;
+            
+            if($print)
+            {
+                //echo chr(10) . chr(27) . '[9A';
+                echo $rtm_printer->render() . "\n";
+                echo "Date: " . date('Y-m-d H:i:s') . " Memory Usage: " . number_format(memory_get_usage()) . " bytes\n";
+            }
         }        
     }
     

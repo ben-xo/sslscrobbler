@@ -30,21 +30,12 @@ class SSLVrsnChunk extends SSLChunk
     
     public function __construct($data)
     {
-        parent::__construct('vrsn', '');
-        
-        // the format of VRSN chunks is fixed across all SSL data files
-        try {
-            $up = new Unpacker('main: r*b>sversion');
-            $context = $up->unpack($data);
-            $this->version = $context['version'];
-        } catch (Exception $e) {
-            $this->version = '**EXCEPTION**: ' . $e->getMessage();
-        }
+        parent::__construct('vrsn', $data);
     }
     
     public function chunkDebugBody($indent=0)
     {
-        return str_repeat("\t", $indent) . '>>> ' . $this->version . "\n";
+        return str_repeat("\t", $indent) . '>>> ' . $this->data . "\n";
     }
     
     public function getData()
