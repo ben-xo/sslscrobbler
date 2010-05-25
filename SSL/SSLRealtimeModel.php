@@ -169,83 +169,11 @@ class SSLRealtimeModel
         $this->getDeck($deck)->getPlaytime();      
     }
     
-    public function tick()
-    {
-//            // timer based updates
-//        foreach(array_keys($this->track) as $deck)
-//        {
-//            if($this->next_timer[$deck] && $this->next_timer[$deck] <= time())
-//            {
-//                // timer for this track has elapsed!
-//                $this->next_timer[$deck] = 0;
-//                
-//                // switch on the status when the timer goes off
-//                // so we don't notify on scrobbler, now played etc multiple times.
-//                switch($this->getStatus($deck))
-//                {
-//                    case 'PLAYED':
-//                        if($this->track[$deck]->getLengthInSeconds() >= self::MIN_SCROBBLE_TIME)
-//                        {
-//                            $this->scrobbled = $this->getTrackTitle($deck);
-//                            $this->scrobbled_deck = $deck;
-//                            $this->next_timer[$deck] = 0;
-//                        } 
-//                        break;
-//                        
-//                    case 'SKIPPED':
-//                        if($deck == $this->nowplaying_deck)
-//                        {
-//                            $this->nowplaying = '--';
-//                            $this->nowplaying_deck = -1;
-//                            $this->next_timer[$deck] = 0;
-//                        }
-//                        break;
-//                        
-//                    case 'NEW':
-//                    case 'PLAYING':
-//                        
-//                        if($this->getPlaytimeInSeconds($deck) >= self::NOW_PLAYING_POINT)
-//                        {
-//                            $this->next_timer[$deck] = $this->start[$deck] + self::MIN_SCROBBLE_TIME;
-//                            if($deck == $this->nowplaying_deck)
-//                            {
-//                                $may_scrobble = $this->track[$deck]->getLengthInSeconds() >= self::MIN_SCROBBLE_TIME;
-//                                if($may_scrobble)
-//                                {
-//                                    $scrobble_point = floor($this->track[$deck]->getLengthInSeconds() / self::SCROBBLE_POINT_DIVIDER);
-//                                    $this->next_timer[$deck] = $this->start[$deck] + $scrobble_point;
-//                                    $playtime = $this->getPlaytimeInSeconds($deck);
-//                                    if( $playtime >= $scrobble_point )
-//                                    {
-//                                        $this->scrobbled = $this->getTrackTitle($deck);
-//                                        $this->scrobbled_deck = $deck;
-//                                        $this->scrobbled_after = $playtime;
-//                                        $this->next_timer[$deck] = 0;
-//                                    }                            
-//                                }
-//                            }
-//                            
-//                            $newest_deck = $deck; 
-//                            foreach(array_keys($this->track) as $d)
-//                            {
-//                                if($this->start[$d] > $this->start[$newest_deck])
-//                                {
-//                                    $newest_deck = $d;
-//                                }   
-//                            }
-//                            
-//                            if($deck == $newest_deck)
-//                            {
-//                                $this->nowplaying = $this->getTrackTitle($deck);
-//                                $this->nowplaying_deck = $deck;
-//                            } 
-//                        }
-//                        break;                    
-//                }
-//            }
-//        }        
-    }
-    
+    /**
+     * Update model information based on changes to the SSL History.
+     * 
+     * @param SSLHistoryDiffDom $diff
+     */
     public function notify(SSLHistoryDiffDom $diff)
     {
         foreach($diff->getTracks() as $track)
@@ -259,11 +187,30 @@ class SSLRealtimeModel
         {
         	/** @var SSLRealtimeModelDeck $deck */
             $deck->notify($diff);
-            if($deck->isStopped())
+            if($deck->trackStopped())
             {
-                $this->timers[$deck_number] = 0;
+                // TODO: notify NowPlaying and Scrobbling RTMs to stop.
+                $prev_track = $deck->getPreviousTrack();
+                if($prev_track)
+                {
+                    
+                }
+            }
+            
+            if($deck->trackStarted())
+            {
+                // TODO: notify NowPlaying and Scrobbling RTMs to start.
+                $curr_track = $deck->getCurrentTrack();
+                if($curr_track)
+                {
+                    
+                }
             }
         }
+    }
+
+    public function tick()
+    {
     }
     
 }

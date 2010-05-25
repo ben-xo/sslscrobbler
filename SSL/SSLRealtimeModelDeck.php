@@ -36,6 +36,13 @@ require_once 'SSLInvalidTransitionException.php';
 class SSLRealtimeModelDeck
 {
     protected $deck_number;
+    
+    /*
+     * Status flags that are updated by notify()
+     */
+    protected $track_stopped = false;
+    protected $track_started = false;
+    
     private $debug = true;
     
     /**
@@ -129,16 +136,20 @@ class SSLRealtimeModelDeck
         return $endTime - $startTime;        
     }
     
-    public function isStopped()
+    /**
+     * Returns true if a track started since the last notify.
+     */
+    public function trackStarted()
     {
-        switch($this->status) {
-            case 'NEW':
-            case 'PLAYING':
-                return false;
-                
-            default:
-                return true;
-        }
+        return $this->track_started;
+    }
+    
+    /**
+     * Returns true if a track stopped since the last notify.
+     */
+    public function trackStopped()
+    {
+        return $this->track_stopped;
     }
     
     // Mutators
@@ -163,6 +174,9 @@ class SSLRealtimeModelDeck
      */
     public function notify(SSLHistoryDiffDom $diff)
     {
+        $this->track_started = false;
+        $this->track_stopped = false;
+        
         $my_tracks = array();
         foreach($diff->getTracks() as $track)
         {
@@ -188,25 +202,9 @@ class SSLRealtimeModelDeck
             }
         }
     }    
-        
-    public function start(SSLTrack $track)
-    {
-        $this->transition($this->getStatus(), 'NEW', $track);    
-    }
+
     
-    public function stop()
-    {
-        if($this->status == 'NEW')
-        {
-            $this->transitionFromNewToSkipped();
-        }
-        elseif($this->status == 'PLAYING')
-        {
-            $this->transitionFromPlayingToPlayed();
-        }
-        
-        // else: already stopped 
-    }
+    // Base transitions
     
     public function transitionFromEmptyToNew(SSLTrack $track)
     {
@@ -214,6 +212,7 @@ class SSLRealtimeModelDeck
         $this->status = 'NEW';
         $this->start_time = time();
         $this->end_time = null;
+        $this->track_started = true;
     }
     
     public function transitionFromSkippedToNew(SSLTrack $track)
@@ -223,14 +222,16 @@ class SSLRealtimeModelDeck
     
     public function transitionFromPlayedToNew(SSLTrack $track)
     {
-        $this->previous_track = $this->track; 
         $this->transitionFromEmptyToNew($track);
+        $this->track_started = true;
     }
     
     public function transitionFromNewToSkipped()
     {
         $this->status = 'SKIPPED';
         $this->end_time = time();
+        $this->track_stopped = true;
+        $this->previous_track = $this->track; 
     }
 
     public function transitionFromNewToPlaying()
@@ -242,11 +243,13 @@ class SSLRealtimeModelDeck
     {
         $this->status = 'PLAYED';
         $this->end_time = time();
+        $this->track_stopped = true;
+        $this->previous_track = $this->track; 
     }
     
-    /**
-     * Transition combinations
-     */
+    
+    // Transition combinations
+    
     public function transition($from, $to, SSLTrack $track)
     {
         $this->debug && print "DEBUG: SSLRealtimeModelDeck::transition() deck {$this->deck_number} $from to $to with track " . $track->getTitle() . "\n";
