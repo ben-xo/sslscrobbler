@@ -24,6 +24,12 @@
  *  THE SOFTWARE.
  */
 
+/**
+ * Prints binary stings as formatted hexdumps. Used as the default output on
+ * Chunks where no other decoding is known. 
+ *  
+ * @author ben
+ */
 class Hexdumper
 {
     public function hexdump($bin, $indent=0, $width=32)

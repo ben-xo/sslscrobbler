@@ -30,20 +30,51 @@ require_once 'Unpacker/XoupInterpreter.php';
 require_once 'Unpacker/XoupCompiler.php';
 
 /**
- * Base class for unpacking. XoupInterpreter extends this, as do
- * all compiled XOUP classes.	
- *  
+ * Base class for binary unpacking. 
+ * 
+ * An Unpacker takes a binary string, and returns an array of key/value pairs, using
+ * the unpack() method.
+ * 
+ * XoupInterpreter extends this, as do all compiled XOUP programs.
+ * 
+ * SSLStructs (such as SSLTrack) have a getUnpacker() method that returns an 
+ * appropriate unpacker for the sort of data that the struct is expecting to be 
+ * populated from.
+ * 
+ * Unpacker provides a methods in the base class to do with binary string and integer 
+ * handling as found in SSL's binary files.
+ * 
+ * unpackstr():
+ * SSL binary files appear to contain UTF-16 text, so string unpacking assumes
+ * that you want to convert from UTF-16 to UTF-8.
+ * 
+ * unpackint():
+ * This is a utility function for unpacking big endian unsigned binary integers
+ * into PHP integers, which is how SSL appears to store non-string values.
+ * 
  * @author ben
  */
 abstract class Unpacker
 {
+    /**
+     * Unpack the binary data in $bin, and return it.
+     * 
+     * @param binary string $bin
+     * @return Array of key value pairs.
+     */
     abstract public function unpack($bin);
     
+    /**
+     * Converts an SSL binary string into a PHP string
+     */
     protected function unpackstr($datum)
     {
         return mb_convert_encoding($datum, 'UTF-8', 'UTF-16');
     }
     
+    /**
+     * Converts an SSL binary string into a PHP integer
+     */
     protected function unpackint($datum)
     {
         $width = strlen($datum);

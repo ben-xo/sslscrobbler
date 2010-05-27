@@ -27,8 +27,8 @@
 require_once 'SSLParser.php';
 require_once 'SSLHistoryDom.php';
 require_once 'SSLHistoryPrinter.php';
-require_once 'SSLRealtimeModel.php';
-require_once 'SSLRealtimeModelPrinter.php';
+require_once 'RTM/SSLRealtimeModel.php';
+require_once 'RTM/SSLRealtimeModelPrinter.php';
 
 class HistoryReader
 {
@@ -144,11 +144,11 @@ class HistoryReader
         }
     }
     
-    public function output(SSLHistoryDom $tree)
-    {
-        $sp = new SSLHistoryPrinter();
-        $sp->printOut($tree);        
-    }
+    //public function output(SSLHistoryDom $tree)
+    //{
+    //    $sp = new SSLHistoryPrinter();
+    //    $sp->printOut($tree);        
+    //}
     
     public function usage($appname, array $argv)
     {
@@ -157,7 +157,6 @@ class HistoryReader
         echo "    -h or --help:      This message.\n";
         echo "    -d or --debug:     Dump the file's complete structure and exit\n";
         echo "    -i or --immediate: Do not wait for the next history file to be created before monitoring. (Use if you started {$appname} mid way through a session)\n";
-        
     }
     
     protected function parseOptions(array $argv)

@@ -29,12 +29,27 @@ require_once 'Unpacker.php';
 /**
  * SSL Structs, e.g. Track, are concrete data structures that model actual data
  * from SSL. This representation is decoupled from chunk types that the data is
- * stored in, for reasons of polymorphism.
+ * stored in, for reasons of polymorphism. (@see SSLChunk).
  * 
  * Usually a DOM that's context specific will pass expected SSLStructs into 
  * encountered SSLChunks to extract data from them when parsing the file. 
  * That way, SSLChunks don't have to know any semantics about their own data, and 
- * SSLStructs don't have to know anything about the container format of the Chunks. 
+ * SSLStructs don't have to know anything about the container format of the Chunks.
+ *  
+ * The different between SSLChunk and SSLStruct is therefore semantic: an SSLStruct 
+ * represents well formed destination data that can be constructed from an SSL binary 
+ * file. SSLChunk, on the other hand, represents an actual block of binary data.
+ * Normally you would pass a Struct into a Chunk and ask the Chunk to fill the Struct
+ * out with actual data, using an Unpacker that the Struct provides to do the actual
+ * conversion.
+ * 
+ * As a concrete example of why I chose this scheme, SSL's history files contain a
+ * number of ADAT chunks, that in turn contain track history data. However there's
+ * no particular reason why an ADAT chunk has to contain track data; ADAT chunks
+ * appear to contain array data with numbered fields, and it's the fact that we're
+ * expecting to see tracks in a history file that requires them to be interpreted
+ * as such.
+ * 
  */
 abstract class SSLStruct
 {

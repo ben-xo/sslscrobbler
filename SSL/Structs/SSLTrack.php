@@ -26,6 +26,24 @@
 
 require_once dirname(__FILE__) . '/../SSLStruct.php';
 
+/**
+ * Represents a Track found in an SSL history file. (There may be other 
+ * representations of Tracks found in other SSL files).
+ * 
+ * SSL puts a lot of useful information into the history file, including
+ * the full path to the MP3, bpm, key, etc., as well as history-oriented data
+ * such as start and end time, which deck the track was played on, played or 
+ * skipped, manually added, etc. There is also an incrementing integer primary 
+ * key (which I've called 'row').
+ * 
+ * History file Tracks also have a concept of their own 'status', in the sense of
+ * 'NEW', 'PLAYING', 'PLAYED' or 'SKIPPED'. (@see SSLRealtimeModel for more detail).
+ * These states are derived from a combination of the 'played' field, which is
+ * either 0 or 1 corresponding to whether or not the row is 'green' in the SSL
+ * interface, and whether or not an 'endtime' is present.
+ * 
+ * @author ben
+ */
 class SSLTrack extends SSLStruct
 {
     protected

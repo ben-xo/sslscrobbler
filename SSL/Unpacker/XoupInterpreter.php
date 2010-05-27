@@ -24,6 +24,50 @@
  *  THE SOFTWARE.
  */
 
+/**
+ * Interpreter for the binary unpacking language "XOUP", that I invented for this
+ * project :-)
+ *  
+ * XOUP is a simple procedural language with tokens separated by whitespace. (It 
+ * looks sort of similar to some kind of weird assembler). The execution path of 
+ * a XOUP programs is modelled with a consume-only binary input, and a key/value 
+ * output. There is also a single read/write accumulator (called '_') that can be 
+ * used as a read source, read destination, read-length and as a direct substitute 
+ * in named sub-routine calls. 
+ * 
+ * XOUP offers several conversions from binary strings into useful PHP types such 
+ * as string and integer, and some convenience conversions such as hexdump and 
+ * formatted-timestamp.
+ * 
+ * XOUP programs are structured as sub-routines with comments (delimited with # and 
+ * newline). Sub-routines are labelled; labels consist of the letters A-Z followed
+ * by a ':'. Every label encountered starts the definition of a new sub-routine. 
+ * It's an error to have statements outside of a sub-routine. It's also an error to
+ * have a program with no sub-routine called 'main'.
+ * 
+ * XOUP has 3 commands: 'read', 'copy', and 'call', explained below.
+ *  
+ * Read takes the form "r[length][read-type]>[write-type][dest]" e.g. r1l>i_ or r_b>s_
+ * Copy takes the form "c>[write-type][dest]"                    e.g. c>field
+ * Where,
+ * * [length] is an integer (or '_' to use the integer in the accumulator)
+ * * [read-type] is one of 'b', 'w' or 'l' (for byte, word or longword). 
+ *   'b' is most appropriate for strings; 'l' is often appropriate for integer values.
+ * * [write-type] is one of 'r', 's', 'i', 'h', 't'.
+ *   'r' leaves the value as read (a binary string)
+ *   's' converts the string from UTF-16 to UTF-8
+ *   'i' unpacks a binary string into a PHP integer (supports byte, word and longword).
+ *   'h' converts the binary string to a formatted hexdump using Hexdumper
+ *   't' unpacks into a PHP integer (like 'i') and then formats it as a timestamp string.
+ * * [dest] is either '_' for the accumulator, or the name of a key in the output.
+ * 
+ * Call take the form "[label]." where [label] is any valid sub-routine name. Also, if
+ * [label] contains a '_', the value from the accumulator will be substituted into the 
+ * name. (e.g. "field_." could call sub-routine field10 if the accumulator contained 
+ * integer 10). 
+ * 
+ * @author ben
+ */
 class XoupInterpreter extends Unpacker
 {
     protected $subs = array();
