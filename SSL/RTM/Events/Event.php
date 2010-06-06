@@ -24,10 +24,7 @@
  *  THE SOFTWARE.
  */
 
-class SSLAdatChunk extends SSLStructChunk
+interface Event
 {
-    public function __construct($data)
-    {
-        parent::__construct('adat', $data);
-    }  
+    
 }

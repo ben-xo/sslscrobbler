@@ -24,10 +24,7 @@
  *  THE SOFTWARE.
  */
 
-class SSLAdatChunk extends SSLStructChunk
+interface TrackChangeObservable extends Observable
 {
-    public function __construct($data)
-    {
-        parent::__construct('adat', $data);
-    }  
+    public function addTrackChangeObserver(TrackChangeObserver $o);
 }

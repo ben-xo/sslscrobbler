@@ -24,9 +24,6 @@
  *  THE SOFTWARE.
  */
 
-require_once 'SSLCompoundChunk.php';
-require_once 'SSLAdatChunk.php';
-
 class SSLOentChunk extends SSLCompoundChunk
 {
     public function __construct($data)

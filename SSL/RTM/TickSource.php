@@ -24,10 +24,29 @@
  *  THE SOFTWARE.
  */
 
-class SSLAdatChunk extends SSLStructChunk
+class TickSource implements TickObservable
 {
-    public function __construct($data)
+    protected $tick_observers = array();
+    
+    public function addTickObserver(TickObserver $o)
     {
-        parent::__construct('adat', $data);
-    }  
+        $this->tick_observers[] = $o;
+    }
+    
+    protected function notifyTickObservers($seconds)
+    {
+        foreach($this->tick_observers as $observer)
+        {
+            $observer->notifyTick($seconds);
+        }
+    }
+    
+    public function startClock($interval)
+    {
+        while(true)
+        {
+            sleep($interval);
+            $this->notifyTickObservers($interval);
+        }
+    }
 }

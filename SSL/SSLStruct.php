@@ -24,8 +24,6 @@
  *  THE SOFTWARE.
  */
 
-require_once 'Unpacker.php';
-
 /**
  * SSL Structs, e.g. Track, are concrete data structures that model actual data
  * from SSL. This representation is decoupled from chunk types that the data is

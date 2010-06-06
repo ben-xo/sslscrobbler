@@ -24,8 +24,6 @@
  *  THE SOFTWARE.
  */
 
-require_once dirname(__FILE__) . '/../SSLStruct.php';
-
 class SSLVersion extends SSLStruct
 {
     protected $version;

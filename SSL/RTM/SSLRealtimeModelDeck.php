@@ -24,8 +24,6 @@
  *  THE SOFTWARE.
  */
 
-require_once 'SSLInvalidTransitionException.php';
-
 /**
  * Models one (of several, usually 2) decks in Serato SSL.
  * 

@@ -24,12 +24,6 @@
  *  THE SOFTWARE.
  */
 
-require_once 'SSLDom.php';
-require_once 'SSLHistoryDiffDom.php';
-require_once 'Structs/SSLVersion.php';
-require_once 'Structs/SSLTrack.php';
-require_once 'Structs/SSLTrackDelete.php';
-
 class SSLHistoryDom extends SSLDom
 {
     /**

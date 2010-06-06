@@ -24,8 +24,6 @@
  *  THE SOFTWARE.
  */
 
-require_once dirname(__FILE__) . '/../SSLStruct.php';
-
 class SSLTrackDelete extends SSLStruct
 {
     protected $row;

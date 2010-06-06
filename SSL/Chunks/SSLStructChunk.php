@@ -24,9 +24,6 @@
  *  THE SOFTWARE.
  */
 
-require_once dirname(__FILE__) . '/../Unpacker.php';
-require_once dirname(__FILE__) . '/../SSLStruct.php';
-
 abstract class SSLStructChunk extends SSLChunk
 {
     protected $fields = array();

@@ -24,11 +24,6 @@
  *  THE SOFTWARE.
  */
 
-require_once 'Unpacker/XoupLoader.php';
-require_once 'Unpacker/XoupParser.php';
-require_once 'Unpacker/XoupInterpreter.php';
-require_once 'Unpacker/XoupCompiler.php';
-
 /**
  * Base class for binary unpacking. 
  * 

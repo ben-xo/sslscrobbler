@@ -24,10 +24,7 @@
  *  THE SOFTWARE.
  */
 
-class SSLAdatChunk extends SSLStructChunk
+interface SSLDiffObservable extends Observable
 {
-    public function __construct($data)
-    {
-        parent::__construct('adat', $data);
-    }  
+    public function addDiffObserver(SSLDiffObserver $o);
 }

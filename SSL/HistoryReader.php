@@ -24,12 +24,6 @@
  *  THE SOFTWARE.
  */
 
-require_once 'SSLParser.php';
-require_once 'SSLHistoryDom.php';
-require_once 'SSLHistoryPrinter.php';
-require_once 'RTM/SSLRealtimeModel.php';
-require_once 'RTM/SSLRealtimeModelPrinter.php';
-
 class HistoryReader
 {
     // command line switches
@@ -110,31 +104,16 @@ class HistoryReader
             if(!is_readable($filename))
                 throw new InvalidArgumentException("File $filename not readable.");
                 
-            
+                
             if($this->debug)
             {
-                $this->tree = $this->read($filename);
-                
-                // Sets up all the right parsing.
-                //
-                // There's no particular reason to assume that e.g. all Adat chunks 
-                // encountered are going to be tracks, so the assumption-of-trackiness
-                // is only made in the SSLHistoryDom and a Track Parser passed in to the
-                // Adat chunk during the getTracks() call on the SSLHistoryDom.
-                //
-                // Basically, what I'm saying, is that without this line you'll just get
-                // hexdumps, which is not very exciting.
-                $this->tree->getTracks(); 
-                
-                // After the parsing has occurred, we get much more exciting debug output.
-                echo $this->tree;
-                
-                echo "Memory usage: " . number_format(memory_get_peak_usage()) . " bytes\n";
+                $monitor = new SSLHistoryFileMonitor($filename);
+                $monitor->debug();
                 return;
             }
 
-            $this->tree = new SSLHistoryDom(); // start on empty.
-            $this->monitor($filename, $this->tree);            
+            // start monitoring.
+            $this->monitor($filename);            
         }
         catch(Exception $e)
         {   
@@ -143,12 +122,6 @@ class HistoryReader
             $this->usage($appname, $argv);
         }
     }
-    
-    //public function output(SSLHistoryDom $tree)
-    //{
-    //    $sp = new SSLHistoryPrinter();
-    //    $sp->printOut($tree);        
-    //}
     
     public function usage($appname, array $argv)
     {
@@ -187,55 +160,27 @@ class HistoryReader
         }        
     }
     
-    /**
-     * @return SSLHistoryDom
-     */
-    protected function read($filename)
+    protected function monitor($filename)
     {
-        $parser = new SSLParser(new SSLHistoryDom());
-        $tree = $parser->parse($filename);
-        $parser->close();
-        return $tree;
-    }
-    
-    protected function monitor($filename, SSLHistoryDom $tree)
-    {
+        // set up and couple the various parts of the system
+        $ticksource = new TickSource();
+        $history_file_monitor = new SSLHistoryFileMonitor($filename);
         $rtm = new SSLRealtimeModel();
         $rtm_printer = new SSLRealtimeModelPrinter($rtm);
         $growler = $this->getGrowler();
+        $growl_event_renderer = new SSLEventGrowlRenderer($growler);
+        // $scrobbler = new ScrobblerRealtimeModel();
         
-        while(true)
-        {
-            $new_tree = $this->read($filename);
-            $changed = $new_tree->getNewOrUpdatedTracksSince($tree);
-            $track_change = false;
-            if(count($changed->getTracks()) > 0 )
-            {
-                $rtm->notify($changed);
-                $this->tree = $new_tree;
-                $tree = $new_tree;
-                $track_change = true;
-            }
-            $event_elapsed = $rtm->tick();
-            $print = $track_change || $event_elapsed;
-            
-            if($print)
-            {
-                //echo chr(10) . chr(27) . '[9A';
-                echo $rtm_printer->render() . "\n";
-                echo "Date: " . date('Y-m-d H:i:s') . " Memory Usage: " . number_format(memory_get_usage()) . " bytes\n";
-                if($track_change)
-                {
-                    $growler->notify('alert', 'Track Change', $output);
-                }
-                
-                if($event_elapsed)
-                {
-                    $growler->notify('alert', 'Timeout', $output);
-                }
-            }
-            sleep($this->sleep);
-        }        
+        $ticksource->addTickObserver($history_file_monitor);
+        //$ticksource->addTickObserver($scrobbler);
+        $history_file_monitor->addDiffObserver($rtm);
+        $rtm->addTrackChangeObserver($rtm_printer);
+        $rtm->addTrackChangeObserver($growl_event_renderer);
+        //$rtm->addTrackChangeObserver($scrobbler);
+        //$scrobbler->addTimeoutObserver($growl_event_renderer);
+        
+        // Tick tick tick. This never returns
+        $ticksource->startClock($this->sleep);
     }
     
     protected function getMostRecentFile($from_dir, $type)

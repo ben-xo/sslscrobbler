@@ -24,14 +24,6 @@
  *  THE SOFTWARE.
  */
 
-require_once 'SSLChunk.php';
-require_once 'Chunks/SSLVrsnChunk.php';
-require_once 'Chunks/SSLOentChunk.php';
-require_once 'Chunks/SSLOrenChunk.php';
-require_once 'Chunks/SSLAdatChunk.php';
-require_once 'Chunks/SSLUentChunk.php';
-require_once 'Chunks/SSLUnknownChunk.php';
-
 class SSLChunkFactory
 {
     public function newChunk($type, $bin)

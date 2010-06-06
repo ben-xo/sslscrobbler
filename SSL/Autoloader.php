@@ -24,10 +24,29 @@
  *  THE SOFTWARE.
  */
 
-class SSLAdatChunk extends SSLStructChunk
+class Autoloader
 {
-    public function __construct($data)
+    public function load($class)
     {
-        parent::__construct('adat', $data);
-    }  
+        return $this->_load($class, dirname(__FILE__));
+    }
+    
+    protected function _load($class, $fromDir)
+    {
+        $di = new DirectoryIterator($fromDir);
+        foreach($di as $f)
+        {
+            if($f->isDot()) continue;
+            if($f->isDir() && $this->_load($class, $f->getPathname()))
+            {
+                return true;
+            }
+            if($f->getFilename() == "{$class}.php")
+            {
+                require_once $f->getPathname();
+                return true;
+            }
+        }
+        return false;
+    }
 }

@@ -28,7 +28,13 @@
 error_reporting(E_ALL | E_STRICT);
 
 require_once 'Growl/class.growl.php';
-require_once 'SSL/HistoryReader.php';
+require_once 'SSL/Autoloader.php';
+
+function __autoload($class)
+{
+    $a = new Autoloader();
+    return $a->load($class);
+}
 
 $growlConfig = array(
     'address' => 'localhost',

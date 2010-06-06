@@ -24,9 +24,6 @@
  *  THE SOFTWARE.
  */
 
-require_once('SSLChunkFactory.php');
-require_once('SSLChunkParser.php');
-
 class SSLChunkReader
 {
     protected $fp;

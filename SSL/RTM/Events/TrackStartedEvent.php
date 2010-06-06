@@ -24,10 +24,30 @@
  *  THE SOFTWARE.
  */
 
-class SSLAdatChunk extends SSLStructChunk
+class TrackStartedEvent implements TrackChangeEvent
 {
-    public function __construct($data)
+    /**
+     * @var SSLTrack
+     */
+    protected $track;
+
+    public function __construct(SSLTrack $track)
     {
-        parent::__construct('adat', $data);
-    }  
+        $this->track = $track;
+    }
+    
+    public function getTrack()
+    {
+        return $this->track;
+    }
+
+    public function getMessage()
+    {
+        return (string) $this;
+    }
+    
+    public function __toString()
+    {
+        return 'Track started: ' . $this->track->getArtist() . ' - ' . $this->track->getTitle();
+    }
 }

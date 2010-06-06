@@ -24,8 +24,6 @@
  *  THE SOFTWARE.
  */
 
-require_once 'Hexdumper.php';
-
 abstract class SSLChunk
 {
     protected $type;

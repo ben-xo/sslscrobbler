@@ -24,8 +24,6 @@
  *  THE SOFTWARE.
  */
 
-require_once 'SSLHistoryDom.php';
-
 /**
  * Holds the output of SSLHistoryDom::getNewTracksSince().
  *  

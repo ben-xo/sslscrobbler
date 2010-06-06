@@ -24,9 +24,6 @@
  *  THE SOFTWARE.
  */
 
-require_once 'SSLDom.php';
-require_once 'SSLChunkReader.php';
-
 class SSLParser
 {
     protected $fp;

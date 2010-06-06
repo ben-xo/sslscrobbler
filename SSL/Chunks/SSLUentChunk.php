@@ -24,9 +24,6 @@
  *  THE SOFTWARE.
  */
 
-require_once dirname(__FILE__) . '/../Unpacker.php';
-require_once dirname(__FILE__) . '/../SSLStruct.php';
-
 class SSLUentChunk extends SSLStructChunk
 {
     public function __construct($data)

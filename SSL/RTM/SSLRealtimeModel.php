@@ -89,12 +89,25 @@
  * @author ben
  */
 
-require_once 'SSLRealtimeModelDeck.php';
-
-class SSLRealtimeModel
+class SSLRealtimeModel implements SSLDiffObserver, TrackChangeObservable
 {
     protected $timers = array();
     protected $decks = array();
+    
+    protected $trackchange_observers = array();
+       
+    public function addTrackChangeObserver(TrackChangeObserver $o)
+    {
+        $this->trackchange_observers[] = $o;
+    }
+    
+    protected function notifyTrackChangeObservers(TrackChangeEvent $event)
+    {
+        foreach($this->trackchange_observers as $o)
+        {
+            $o->notifyTrackChange($event);
+        }
+    }
     
     /**
      * @return SSLRealtimeModelDeck
@@ -174,7 +187,7 @@ class SSLRealtimeModel
      * 
      * @param SSLHistoryDiffDom $diff
      */
-    public function notify(SSLHistoryDiffDom $diff)
+    public function notifyDiff(SSLHistoryDiffDom $diff)
     {
         foreach($diff->getTracks() as $track)
         {
@@ -189,28 +202,23 @@ class SSLRealtimeModel
             $deck->notify($diff);
             if($deck->trackStopped())
             {
-                // TODO: notify NowPlaying and Scrobbling RTMs to stop.
                 $prev_track = $deck->getPreviousTrack();
                 if($prev_track)
                 {
-                    
+                    $event = new TrackStoppedEvent($prev_track);
+                    $this->notifyTrackChangeObservers($event);
                 }
             }
             
             if($deck->trackStarted())
             {
-                // TODO: notify NowPlaying and Scrobbling RTMs to start.
                 $curr_track = $deck->getCurrentTrack();
                 if($curr_track)
                 {
-                    
+                    $event = new TrackStartedEvent($curr_track);
+                    $this->notifyTrackChangeObservers($event);
                 }
             }
         }
     }
-
-    public function tick()
-    {
-    }
-    
 }

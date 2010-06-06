@@ -24,9 +24,7 @@
  *  THE SOFTWARE.
  */
 
-require_once 'SSLRealtimeModelPrinter.php';
-
-class SSLRealtimeModelPrinter
+class SSLRealtimeModelPrinter implements TrackChangeObserver
 {
     /**
      * @var SSLRealtimeModel
@@ -95,5 +93,11 @@ class SSLRealtimeModelPrinter
     public function __toString()
     {
         return $this->render();
+    }
+    
+    public function notifyTrackChange(TrackChangeEvent $event)
+    {
+        echo $this->render() . "\n";
+        echo "Date: " . date('Y-m-d H:i:s') . " Memory Usage: " . number_format(memory_get_usage()) . " bytes\n";
     }
 }

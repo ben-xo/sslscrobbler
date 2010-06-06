@@ -24,10 +24,11 @@
  *  THE SOFTWARE.
  */
 
-class SSLAdatChunk extends SSLStructChunk
+interface TrackChangeEvent extends Event
 {
-    public function __construct($data)
-    {
-        parent::__construct('adat', $data);
-    }  
+    /**
+     * @return SSLTrack
+     */
+    public function getTrack();
+    public function getMessage();
 }

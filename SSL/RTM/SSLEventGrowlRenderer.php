@@ -24,10 +24,17 @@
  *  THE SOFTWARE.
  */
 
-class SSLAdatChunk extends SSLStructChunk
+class SSLEventGrowlRenderer implements TrackChangeObserver
 {
-    public function __construct($data)
+    protected $growler;
+    
+    public function __construct(Growl $growler)
     {
-        parent::__construct('adat', $data);
-    }  
+        $this->growler = $growler;
+    }
+
+    public function notifyTrackChange(TrackChangeEvent $event)
+    {
+        $this->growler->notify('alert', 'Track Change', $event);
+    }    
 }

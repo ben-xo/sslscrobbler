@@ -24,8 +24,6 @@
  *  THE SOFTWARE.
  */
 
-require_once dirname(__FILE__) . '/../SSLStruct.php';
-
 /**
  * Represents a Track found in an SSL history file. (There may be other 
  * representations of Tracks found in other SSL files).
