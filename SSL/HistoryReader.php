@@ -163,24 +163,23 @@ class HistoryReader
     protected function monitor($filename)
     {
         // set up and couple the various parts of the system
-        $ticksource = new TickSource();
-        $history_file_monitor = new SSLHistoryFileMonitor($filename);
+        $ts  = new TickSource();
+        $hfm = new SSLHistoryFileMonitor($filename);
         $rtm = new SSLRealtimeModel();
         $rtm_printer = new SSLRealtimeModelPrinter($rtm);
-        $growler = $this->getGrowler();
-        $growl_event_renderer = new SSLEventGrowlRenderer($growler);
+        $growl_event_renderer = new SSLEventGrowlRenderer( $this->getGrowler() );
         // $scrobbler = new ScrobblerRealtimeModel();
         
-        $ticksource->addTickObserver($history_file_monitor);
-        //$ticksource->addTickObserver($scrobbler);
-        $history_file_monitor->addDiffObserver($rtm);
+        $ts->addTickObserver($history_file_monitor);
+        //$ts->addTickObserver($scrobbler);
+        $hfm->addDiffObserver($rtm);
         $rtm->addTrackChangeObserver($rtm_printer);
         $rtm->addTrackChangeObserver($growl_event_renderer);
         //$rtm->addTrackChangeObserver($scrobbler);
         //$scrobbler->addTimeoutObserver($growl_event_renderer);
         
         // Tick tick tick. This never returns
-        $ticksource->startClock($this->sleep);
+        $ts->startClock($this->sleep);
     }
     
     protected function getMostRecentFile($from_dir, $type)
