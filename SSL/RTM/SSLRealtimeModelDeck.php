@@ -188,6 +188,7 @@ class SSLRealtimeModelDeck
         $my_tracks = array();
         foreach($diff->getTracks() as $track)
         {
+            /* @var $track SSLTrack */
             if($track->getDeck() == $this->deck_number)
             {
                 // track notification for this deck!

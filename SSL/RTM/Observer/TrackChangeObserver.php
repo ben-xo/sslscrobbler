@@ -26,5 +26,5 @@
 
 interface TrackChangeObserver extends Observer
 {
-    public function notifyTrackChange(TrackChangeEvent $event);
+    public function notifyTrackChange(TrackChangeEventList $event);
 }

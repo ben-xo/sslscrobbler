@@ -26,6 +26,9 @@
 
 class SSLEventGrowlRenderer implements TrackChangeObserver
 {
+    /**
+     * @var Growl
+     */
     protected $growler;
     
     public function __construct(Growl $growler)
@@ -33,8 +36,12 @@ class SSLEventGrowlRenderer implements TrackChangeObserver
         $this->growler = $growler;
     }
 
-    public function notifyTrackChange(TrackChangeEvent $event)
+    public function notifyTrackChange(TrackChangeEventList $events)
     {
-        $this->growler->notify('alert', 'Track Change', $event);
+        foreach($events as $event)
+        {
+            /* @var $event TrackChangeEvent */
+            $this->growler->notify('alert', 'Track Change', $event);
+        }
     }    
 }

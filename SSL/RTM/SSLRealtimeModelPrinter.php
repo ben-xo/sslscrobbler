@@ -95,7 +95,7 @@ class SSLRealtimeModelPrinter implements TrackChangeObserver
         return $this->render();
     }
     
-    public function notifyTrackChange(TrackChangeEvent $event)
+    public function notifyTrackChange(TrackChangeEventList $events)
     {
         echo $this->render() . "\n";
         echo "Date: " . date('Y-m-d H:i:s') . " Memory Usage: " . number_format(memory_get_usage()) . " bytes\n";

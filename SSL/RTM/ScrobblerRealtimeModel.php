@@ -43,22 +43,27 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver
         $this->elapse($seconds);
     }
     
-    public function notifyTrackChange(TrackChangeEvent $event)
+    public function notifyTrackChange(TrackChangeEventList $events)
     {
-        if($event instanceof TrackStoppedEvent)
+        foreach($events as $event)
         {
-            $this->stopTrack($event->getTrack());
+            if($event instanceof TrackStoppedEvent)
+            {
+                $this->stopTrack($event->getTrack());
+            }
+            
+            elseif($event instanceof TrackStartedEvent)
+            {
+                $this->startTrack($event->getTrack());
+            }
+            
+            elseif($event instanceof TrackUpdatedEvent)
+            {
+                $this->updateTrack($event->getTrack());
+            }
         }
         
-        elseif($event instanceof TrackStartedEvent)
-        {
-            $this->startTrack($event->getTrack());
-        }
-        
-        elseif($event instanceof TrackUpdatedEvent)
-        {
-            $this->updateTrack($event->getTrack());
-        }
+        $this->elapse(0);
     }
     
     protected function stopTrack(SSLTrack $stopped_track)
@@ -78,8 +83,6 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver
         
         $this->debug && print("DEBUG: ScrobbleRealtimeModel::stopTrack(): dequeued track " . $stopped_track->getFullTitle() 
                             . ". Queue length is now " . count($this->scrobble_model_queue) . "\n");
-        
-        $this->elapse(0);
     }
 
     protected function startTrack(SSLTrack $track)
@@ -91,8 +94,6 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver
 
         $this->debug && print("DEBUG: ScrobbleRealtimeModel::startTrack(): queued track " . $track->getFullTitle() 
                             . ". Queue length is now " . count($this->scrobble_model_queue) . "\n");
-        
-        $this->elapse(0);
     }
     
     protected function updateTrack(SSLTrack $track)
@@ -102,8 +103,9 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver
             // the ScrobblerTrackModel will ignore the track if it's not the one it's modelling
             $scrobble_model->update($track);
         }
-
-        $this->elapse(0);
+        
+        $this->debug && print("DEBUG: ScrobbleRealtimeModel::updateTrack(): updated track " . $track->getFullTitle() 
+                            . ". Queue length is now " . count($this->scrobble_model_queue) . "\n");
     }
     
     /**
@@ -129,6 +131,7 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver
     {
         foreach($this->scrobble_model_queue as $scrobble_model)
         {
+            if(!$scrobble_model) print "WTF\n";
             $scrobble_model->elapse($seconds);
         }
         

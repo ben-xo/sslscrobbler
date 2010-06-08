@@ -24,29 +24,17 @@
  *  THE SOFTWARE.
  */
 
-class TickSource implements TickObservable
+class TrackChangeEventList extends ArrayObject
 {
-    protected $tick_observers = array();
-    
-    public function addTickObserver(TickObserver $o)
+    public function __toString()
     {
-        $this->tick_observers[] = $o;
-    }
-    
-    protected function notifyTickObservers($seconds)
-    {
-        foreach($this->tick_observers as $observer)
+        $return = '{';
+        foreach($this as $event)
         {
-            $observer->notifyTick($seconds);
+            /* @var $event TrackChangeEvent */
+            $return .= "\t" . $event->getMessage() . "\n";
         }
-    }
-    
-    public function startClock($interval)
-    {
-        while(true)
-        {
-            sleep($interval);
-            $this->notifyTickObservers($interval);
-        }
+        $return .= '}';
+        return $return;
     }
 }
