@@ -26,6 +26,9 @@
 
 class TrackStoppedEvent implements TrackChangeEvent
 {
+    /**
+     * @var SSLTrack
+     */
     protected $track;
 
     public function __construct(SSLTrack $track)

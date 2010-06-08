@@ -40,6 +40,7 @@ class SSLRealtimeModelDeck
      */
     protected $track_stopped = false;
     protected $track_started = false;
+    protected $track_updated = false;
     
     private $debug = true;
     
@@ -150,6 +151,14 @@ class SSLRealtimeModelDeck
         return $this->track_stopped;
     }
     
+    /**
+     * Returns true if a track was updated since the last notify.
+     */
+    public function trackUpdated()
+    {
+        return $this->track_updated;
+    }
+    
     // Mutators
     
     /**
@@ -174,6 +183,7 @@ class SSLRealtimeModelDeck
     {
         $this->track_started = false;
         $this->track_stopped = false;
+        $this->track_updated = false;
         
         $my_tracks = array();
         foreach($diff->getTracks() as $track)
@@ -182,6 +192,7 @@ class SSLRealtimeModelDeck
             {
                 // track notification for this deck!
                 $my_tracks[$track->getRow()] = $track;
+                $this->track_updated = true;
                 $this->debug && print "DEBUG: SSLRealtimeModelDeck::notify(): Saw " . $track->getTitle() . " in diff (row " . $track->getRow(). ")\n";
             }
         }
@@ -211,6 +222,7 @@ class SSLRealtimeModelDeck
         $this->start_time = time();
         $this->end_time = null;
         $this->track_started = true;
+        $this->track_updated = false;
     }
     
     public function transitionFromSkippedToNew(SSLTrack $track)
@@ -222,6 +234,7 @@ class SSLRealtimeModelDeck
     {
         $this->transitionFromEmptyToNew($track);
         $this->track_started = true;
+        $this->track_updated = false;
     }
     
     public function transitionFromNewToSkipped()
@@ -229,6 +242,7 @@ class SSLRealtimeModelDeck
         $this->status = 'SKIPPED';
         $this->end_time = time();
         $this->track_stopped = true;
+        $this->track_updated = false;
         $this->previous_track = $this->track; 
     }
 
@@ -242,6 +256,7 @@ class SSLRealtimeModelDeck
         $this->status = 'PLAYED';
         $this->end_time = time();
         $this->track_stopped = true;
+        $this->track_updated = false;
         $this->previous_track = $this->track; 
     }
     

@@ -24,31 +24,30 @@
  *  THE SOFTWARE.
  */
 
-class TickSource implements TickObservable
+class TrackUpdatedEvent implements TrackChangeEvent
 {
-    private $debug = true;
-    protected $tick_observers = array();
-    
-    public function addTickObserver(TickObserver $o)
+    /**
+     * @var SSLTrack
+     */
+    protected $track;
+
+    public function __construct(SSLTrack $track)
     {
-        $this->tick_observers[] = $o;
+        $this->track = $track;
     }
     
-    protected function notifyTickObservers($seconds)
+    public function getTrack()
     {
-        foreach($this->tick_observers as $observer)
-        {
-            $observer->notifyTick($seconds);
-        }
+        return $this->track;
+    }
+
+    public function getMessage()
+    {
+        return (string) $this;
     }
     
-    public function startClock($interval)
+    public function __toString()
     {
-        while(true)
-        {
-            if($this->debug) echo ".";
-            sleep($interval);
-            $this->notifyTickObservers($interval);
-        }
+        return 'Track updated: ' . $this->track->getArtist() . ' - ' . $this->track->getTitle();
     }
 }

@@ -180,6 +180,10 @@ class SSLTrack extends SSLStruct
         }
     }
     
+    public function getFullTitle()
+    {
+        return $this->getArtist() . ' - ' . $this->getTitle();
+    }
     
     public function __toString()
     {

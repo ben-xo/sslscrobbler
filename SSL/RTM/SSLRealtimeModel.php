@@ -200,6 +200,9 @@ class SSLRealtimeModel implements SSLDiffObserver, TrackChangeObservable
         {
         	/** @var SSLRealtimeModelDeck $deck */
             $deck->notify($diff);
+            
+            //$events = array();
+                        
             if($deck->trackStopped())
             {
                 $prev_track = $deck->getPreviousTrack();
@@ -218,7 +221,23 @@ class SSLRealtimeModel implements SSLDiffObserver, TrackChangeObservable
                     $event = new TrackStartedEvent($curr_track);
                     $this->notifyTrackChangeObservers($event);
                 }
+            } 
+            
+            if($deck->trackUpdated())
+            {
+                $curr_track = $deck->getCurrentTrack();
+                if($curr_track)
+                {
+                    $event = new TrackUpdatedEvent($curr_track);
+                    $this->notifyTrackChangeObservers($event);
+                }
             }
         }
+        
+        // TODO: make this send multiple events at once!
+        //if(count($events))
+        //{
+        //    $this->notifyTrackChangeObservers($events);
+        //}
     }
 }
