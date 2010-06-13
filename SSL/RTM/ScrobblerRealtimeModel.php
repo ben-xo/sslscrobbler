@@ -85,26 +85,26 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver
                             . ". Queue length is now " . count($this->scrobble_model_queue) . "\n");
     }
 
-    protected function startTrack(SSLTrack $track)
+    protected function startTrack(SSLTrack $started_track)
     {
                             
         // Put new tracks last in the queue for the purposes of determining what's now playing.
         // This means that tracks should transition to "Now Playing" when the previous track is stopped or taken off the deck.
-        $this->scrobble_model_queue[] = new ScrobblerTrackModel($track);
+        $this->scrobble_model_queue[] = new ScrobblerTrackModel($started_track);
 
-        $this->debug && print("DEBUG: ScrobbleRealtimeModel::startTrack(): queued track " . $track->getFullTitle() 
+        $this->debug && print("DEBUG: ScrobbleRealtimeModel::startTrack(): queued track " . $started_track->getFullTitle() 
                             . ". Queue length is now " . count($this->scrobble_model_queue) . "\n");
     }
     
-    protected function updateTrack(SSLTrack $track)
+    protected function updateTrack(SSLTrack $updated_track)
     {
         foreach($this->scrobble_model_queue as $scrobble_model)
         {
             // the ScrobblerTrackModel will ignore the track if it's not the one it's modelling
-            $scrobble_model->update($track);
+            $scrobble_model->update($updated_track);
         }
         
-        $this->debug && print("DEBUG: ScrobbleRealtimeModel::updateTrack(): updated track " . $track->getFullTitle() 
+        $this->debug && print("DEBUG: ScrobbleRealtimeModel::updateTrack(): updated track " . $updated_track->getFullTitle() 
                             . ". Queue length is now " . count($this->scrobble_model_queue) . "\n");
     }
     
@@ -131,6 +131,7 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver
     {
         foreach($this->scrobble_model_queue as $scrobble_model)
         {
+            /* @var $scrobble_model ScrobblerTrackModel */
             if(!$scrobble_model) print "WTF\n";
             $scrobble_model->elapse($seconds);
         }

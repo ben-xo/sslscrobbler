@@ -51,7 +51,12 @@ class ScrobblerTrackModel
         if($track->getRow() == $this->track->getRow())
         {
             $this->track = $track;
-            $this->playtime = $track->getPlayTime();
+            if($track->getPlayTime() !== null)
+            {
+                // don't update the playtime if the Track model itself doesn't know it
+                $this->playtime = $track->getPlayTime();
+            }
+            $this->elapse(0);
         }
     }
     
@@ -59,15 +64,8 @@ class ScrobblerTrackModel
     {
         $this->playtime += $seconds;
 
-        if(!$this->passed_now_playing_point && $this->playtime >= self::NOW_PLAYING_MIN)
-        {
-            $this->passed_now_playing_point = true;
-        }
-        
-        if(!$this->passed_scrobble_point && $this->playtime >= $this->scrobble_point)
-        {
-            $this->passed_scrobble_point = true;
-        }
+        $this->passed_now_playing_point = ($this->playtime >= self::NOW_PLAYING_MIN);
+        $this->passed_scrobble_point = ($this->playtime >= $this->scrobble_point);        
     }
     
     /**
