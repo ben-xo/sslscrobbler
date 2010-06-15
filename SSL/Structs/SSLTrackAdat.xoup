@@ -90,5 +90,7 @@ field50: int. c>rplayed
 field51: string. c>rkey
 field52: int. c>radded
 
-field53: # always last field 
+field53: # always last field ?
     timestamp. c>rupdatedAt
+
+field64: string. c>rSIXTYFOURxUNKNOWN
