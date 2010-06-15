@@ -42,22 +42,27 @@ class ScrobblerTrackModel
     
     public function __construct(SSLTrack $track)
     {
-        $this->track = $track;
         $this->scrobble_point = $track->getLengthInSeconds() / self::SCROBBLE_DIVIDER;
+        $this->setTrack($track);
     }
     
     public function update(SSLTrack $track)
     {
         if($track->getRow() == $this->track->getRow())
         {
-            $this->track = $track;
-            if($track->getPlayTime() !== null)
-            {
-                // don't update the playtime if the Track model itself doesn't know it
-                $this->playtime = $track->getPlayTime();
-            }
-            $this->elapse(0);
+            $this->setTrack($track);
         }
+    }
+    
+    protected function setTrack(SSLTrack $track)
+    {
+        $this->track = $track;
+        if($track->getPlayTime() !== null)
+        {
+            // don't update the playtime if the Track model itself doesn't know it
+            $this->playtime = $track->getPlayTime();
+        }
+        $this->elapse(0);
     }
     
     public function elapse($seconds)
@@ -65,7 +70,7 @@ class ScrobblerTrackModel
         $this->playtime += $seconds;
 
         $this->passed_now_playing_point = ($this->playtime >= self::NOW_PLAYING_MIN);
-        $this->passed_scrobble_point = ($this->playtime >= $this->scrobble_point);        
+        $this->passed_scrobble_point = ($this->playtime >= $this->scrobble_point);
     }
     
     /**

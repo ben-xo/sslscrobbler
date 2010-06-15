@@ -192,7 +192,7 @@ class SSLRealtimeModel implements SSLDiffObserver, TrackChangeObservable
     {
         foreach($diff->getTracks() as $track)
         {
-        	/* @var $track SSLTrack */
+            /* @var $track SSLTrack */
             // create track deck on demand
             $this->getDeck($track->getDeck());
         }

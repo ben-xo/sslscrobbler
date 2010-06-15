@@ -24,8 +24,13 @@
  *  THE SOFTWARE.
  */
 
-class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver
+class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPlayingObservable
 {    
+    /**
+     * @var Array of NowPlayingObserver
+     */
+    protected $now_playing_observers = array();
+    
     /**
      * @var Array of ScrobblerTrackModel
      */
@@ -36,7 +41,7 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver
      */
     protected $now_playing_in_queue;
     
-    protected $debug = true;
+    public $debug = false;
     
     public function notifyTick($seconds)
     {
@@ -66,15 +71,34 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver
         $this->elapse(0);
     }
     
+    public function addNowPlayingObserver(NowPlayingObserver $o)
+    {
+        $this->now_playing_observers[] = $o;
+    }
+    
+    public function getQueueSize()
+    {
+        return count($this->scrobble_model_queue);
+    }
+    
     protected function stopTrack(SSLTrack $stopped_track)
     {
         $stopped_row = $stopped_track->getRow();
         
         foreach($this->scrobble_model_queue as $i => $scrobble_model)
         {
+            /* @var $scrobble_model ScrobblerTrackModel */
             if($scrobble_model->getRow() == $stopped_row)
             {
+                // remove from the queue.
                 unset($this->scrobble_model_queue[$i]);
+                
+                // remove from now_playing, if necessary.
+                if($this->now_playing_in_queue->getRow() == $stopped_row)
+                {
+                    $this->now_playing_in_queue = null;
+                }
+                break;
             }
         }
         
@@ -87,11 +111,29 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver
 
     protected function startTrack(SSLTrack $started_track)
     {
-                            
+        $started_row = $started_track->getRow();
+        
+        foreach($this->scrobble_model_queue as $i => $scrobble_model)
+        {
+            /* @var $scrobble_model ScrobblerTrackModel */
+            if($scrobble_model->getRow() == $started_row)
+            {
+                // do not double-add to the queue.
+                return;
+            }
+        }
+                                    
         // Put new tracks last in the queue for the purposes of determining what's now playing.
         // This means that tracks should transition to "Now Playing" when the previous track is stopped or taken off the deck.
-        $this->scrobble_model_queue[] = new ScrobblerTrackModel($started_track);
-
+        $scrobble_model = $this->newScrobblerTrackModel($started_track);
+        if($scrobble_model->getRow() != $started_track->getRow())
+        {
+            $row1 = $scrobble_model->getRow();
+            $row2 = $started_track->getRow();
+            throw new RuntimeException("Row mismatch! Asked for {$row2}, got {$row1}");   
+        }
+        $this->scrobble_model_queue[] = $scrobble_model;
+        
         $this->debug && print("DEBUG: ScrobbleRealtimeModel::startTrack(): queued track " . $started_track->getFullTitle() 
                             . ". Queue length is now " . count($this->scrobble_model_queue) . "\n");
     }
@@ -132,64 +174,115 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver
         foreach($this->scrobble_model_queue as $scrobble_model)
         {
             /* @var $scrobble_model ScrobblerTrackModel */
-            if(!$scrobble_model) print "WTF\n";
+            if(!$scrobble_model)
+            {
+                throw new RuntimeException("Invalid queue state: empty entry found!");  
+            } 
+            
             $scrobble_model->elapse($seconds);
         }
         
         $is_now_playing = false;
         $queue_length = count($this->scrobble_model_queue);
-        foreach($this->scrobble_model_queue as &$scrobble_model)
+        foreach($this->scrobble_model_queue as $scrobble_model)
         {
-            // If this is the only track in the queue, show it now playing immediately,
-            // otherwise only show it now playing after the "now playing" timer has elapsed.
-            // The "immediate" bypass is appropriate for the first played track, and for 
-            // the single-deck preview mode
-            
-            if($queue_length == 1 || $scrobble_model->isNowPlaying())
+            if($scrobble_model->isNowPlaying())
             {
                 $is_now_playing = true;
-                $candidate_now_playing_track = $scrobble_model->getTrack();
-
-                // is this a "new" now playing track? (new id > old id) 
-                if(empty($this->now_playing_in_queue) || $candidate_now_playing_track->getRow() > $this->getNowPlayingRow())
-                {
-                    // There is a new track playing!
-                    
-                    // keep a reference to the now playing model
-                    $this->now_playing_in_queue =& $scrobble_model;
-                    
-                    // notify observers (Growl, etc)
-                    // $this->notifyNowPlayingObservers($candidate_now_playing_track);
-                    $this->lastfmNowPlaying($candidate_now_playing_track);
-                }
+                $this->setTrackNowPlaying($scrobble_model);
                 
                 // break on first "Now Playing" track
                 break;
             }
         }
         
-        if(!$is_now_playing && !empty($this->now_playing_in_queue))
+        if(!$is_now_playing && $queue_length >= 1)
+        {
+            // No queued track is definitively NowPlaying(), so let's just mark the 1st one 
+            // in the queue as now playing anyway. This is appropriate for the first played 
+            // track, and for the single-deck preview mode
+            
+            $scrobble_model = $this->scrobble_model_queue[0];
+            
+            $is_now_playing = true;
+            $this->setTrackNowPlaying($scrobble_model);
+        }
+        
+        if(!$is_now_playing)
         {
             // Playback has stopped!
-            
             $this->now_playing_in_queue = null;
         
-            // notify observers (Growl, etc)
-            // $this->notifyNowPlayingObservers(null);
-            $this->lastfmNowPlaying(null);
+            // notify observers (Growl, etc) that no track is playing.
+            $this->notifyNowPlayingObservers(null);
         }
     }
     
-    protected function lastfmNowPlaying(SSLTrack $track=null)
+    /**
+     * Sets a track from a ScrobblerTrackModel as "now playing", and notifies observers
+     * 
+     * @param ScrobblerTrackModel $scrobble_model
+     */
+    protected function setTrackNowPlaying(ScrobblerTrackModel $scrobble_model)
     {
-        // TODO
-        if($track)
+        $candidate_now_playing_track = $scrobble_model->getTrack();
+        
+        $new_track = false;
+        
+        // is this a "new" now playing track? 
+        if(!empty($this->now_playing_in_queue))
         {
-            echo "DEBUG: ScrobbleRealtimeModel::lastfmNowPlaying(): TODO: send Now Playing notice to Last.fm!\n";
+            $np_row = $this->now_playing_in_queue->getRow();
+            $cd_row = $candidate_now_playing_track->getRow();
+            if($np_row != $cd_row)
+            {
+                $new_track = true;
+            }
         }
         else
         {
-            echo "DEBUG: ScrobbleRealtimeModel::lastfmNowPlaying(): TODO: send Stopped Playing notice to Last.fm!\n";
+            $new_track = true;
         }
+        
+        if($new_track)
+        {
+            // There is a new track playing!
+            
+            // keep the now playing model
+            $this->now_playing_in_queue = $scrobble_model;
+            
+            // notify observers (Growl, etc)
+            $this->notifyNowPlayingObservers($candidate_now_playing_track);
+        }
+    }
+    
+    protected function notifyNowPlayingObservers(SSLTrack $track=null)
+    {
+        // TODO
+//        if($track)
+//        {
+//            $row = $track->getRow();
+//            echo "DEBUG: ScrobbleRealtimeModel::lastfmNowPlaying({$row}): TODO: send Now Playing notice to Last.fm!\n";
+//        }
+//        else
+//        {
+//            echo "DEBUG: ScrobbleRealtimeModel::lastfmNowPlaying(): TODO: send Stopped Playing notice to Last.fm!\n";
+//        }
+        
+        foreach($this->now_playing_observers as $observer)
+        {
+            /* @var $observer NowPlayingObserver */
+            $observer->notifyNowPlaying($track);
+        }
+    }
+    
+    /**
+     * Override me in tests.
+     * 
+     * @param SSLTrack $track
+     */
+    protected function newScrobblerTrackModel(SSLTrack $track)
+    {
+        return new ScrobblerTrackModel($track);
     }
 }

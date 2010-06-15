@@ -29,7 +29,7 @@ class XoupLoader
     /**
      * @return Unpacker
      */
-    public function load($filename, $load_compiled=true, $compile=true)
+    public function load($filename, $load_compiled=false, $compile=false)
     {
         if($load_compiled)
         {

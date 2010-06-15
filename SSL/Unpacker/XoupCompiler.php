@@ -142,7 +142,7 @@ class XoupCompiler
                     $read_length = $matches[4];
                     $read_width = $matches[5];
                     $body .= "        if(\$ptr >= \$binlen) return false;\n";
-                    $body .= $this->writeRead($read_length, $read_width);
+                    $body .= $this->writeRead($read_length, $read_width, $exit_now);
                 }
                         
                 $write_action = $matches[6];
@@ -150,6 +150,10 @@ class XoupCompiler
                 $dest = $matches[8];
                                             
                 $body .= $this->writeWrite($type, $dest);
+                if($exit_now)
+                {
+                    $body .= "        return false; // this must be the end as we read to eof\n";    
+                }
             }
         }
         while($loop); 
@@ -158,8 +162,11 @@ class XoupCompiler
         return $body;
     }
     
-    protected function writeRead($length, $width)
+    protected function writeRead($length, $width, &$exit_now)
     {
+        // return to outer context. Set to true if this is a "read to eof" read
+        $exit_now = false;
+        
         $body = '';
         $lengthVar = '';
         $toEnd = false;
@@ -201,13 +208,14 @@ class XoupCompiler
         if($toEnd)
         {
             $body .= "        \$datum = substr(\$bin, \$ptr); // to eof\n";
+            $exit_now = true;
         }
         else
         {
             $body .= "        \$datum = substr(\$bin, \$ptr, $length);\n";
+            $body .= "        \$ptr += $length;\n";
         }
         
-        $body .= "        \$ptr += $length;\n";
         
         return $body;
     }

@@ -41,7 +41,7 @@ class ScrobblerTrackModelTest extends PHPUnit_Framework_TestCase
         $this->scrobble_time = (int) (300 / ScrobblerTrackModel::SCROBBLE_DIVIDER);
     }
     
-    private function trackMock($id, $length=300, $played=false, $playtime=null)
+    public function trackMock($id, $length=300, $played=false, $playtime=null)
     {
         $t = $this->getMock('SSLTrack');
         $t->expects($this->any()) ->method('getRow')             ->will($this->returnValue($id));
@@ -86,6 +86,22 @@ class ScrobblerTrackModelTest extends PHPUnit_Framework_TestCase
         $this->assertFalse($this->stm->isNowPlaying());
         $this->assertFalse($this->stm->isScrobblable());
         return $this->stm;
+    }
+
+    public function test_default_state_constructed_with_played()
+    {
+        $track = $this->trackMock(123, 300, true, 45);
+        $stm = new ScrobblerTrackModel($track);   
+        $this->assertTrue($stm->isNowPlaying());
+        $this->assertFalse($stm->isScrobblable());
+    }
+
+    public function test_default_state_constructed_with_scrobblable()
+    {
+        $track = $this->trackMock(123, 300, true, 175);
+        $stm = new ScrobblerTrackModel($track);   
+        $this->assertTrue($stm->isNowPlaying());
+        $this->assertTrue($stm->isScrobblable());
     }
     
     /**
