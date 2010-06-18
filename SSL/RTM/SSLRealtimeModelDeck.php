@@ -27,6 +27,14 @@
 /**
  * Models one (of several, usually 2) decks in Serato SSL.
  * 
+ * Generally you would notify the deck of a bunch of SSLTracks (usually from the Serato 
+ * History file) using notify(), and it would cherry pick relevant entries based on the 
+ * deck number. After processing the Tracks, various status methods are pollable for 
+ * the deck's current state and information about what changed. 
+ * 
+ * You may also ask the deck information about how long the current track has been 
+ * playing for, etc.
+ * 
  * @see SSLRealtimeModel for more info on the statuses, transitions and their meanings.
  * @author ben
  *
@@ -42,14 +50,26 @@ class SSLRealtimeModelDeck
     protected $track_started = false;
     protected $track_updated = false;
     
+    /**
+     * Stores the track on the deck at the beginning
+     * of the update pass.
+     * 
+     * @var SSLTrack
+     */
+    protected $pre_update_track = null;
+    
     private $debug = true;
     
     /**
+     * Stores the track currently on the deck.
+     * 
      * @var SSLTrack
      */
     protected $track;
     
     /**
+     * Stores the last played track on the deck.
+     * 
      * @var SSLTrack
      */
     protected $previous_track;
@@ -65,6 +85,7 @@ class SSLRealtimeModelDeck
     {
         $this->debug = $debug;
     }
+    
     
     // Getters
     
@@ -159,10 +180,20 @@ class SSLRealtimeModelDeck
         return $this->track_updated;
     }
     
+
+   
+    protected function resetFlags()
+    {
+        $this->track_started = false;
+        $this->track_stopped = false;
+        $this->track_updated = false;
+    }
+    
+
     // Mutators
     
     /**
-     * Notify the deck of a group of changed written to the History File.
+     * Notify the deck of a group of changes written to the History File.
      * 
      * SSL batches writes of track info, but doesn't output them in the 
      * natural transition order - that is, sometimes information about the following
@@ -170,21 +201,32 @@ class SSLRealtimeModelDeck
      * History File is track oriented, not deck oriented.
      * 
      * During notify(), we reorder this information into an order that's
-     * transition compatible.
+     * transition compatible (that is, row ID ascending order).
+     * 
+     * The implication of sending a bunch of track notifications together (rather
+     * than one by one) is that they happen simultaneously, and the end result
+     * is what's important rather than every step to get there.
      * 
      * As diffs usually only come during track load, change or eject, it would be
      * abnormal to see information about more than 2 tracks on a single deck here,
      * and abnormal for neither of them to be the one currently on the deck.
-     * Therefore, we check the ordering here and bump the current track to first place.
+     * 
+     * However, it can happen - for example, loading a historical file or starting
+     * the monitor half way through a session.
      * 
      * @param SSLHistoryDiffDom $diff
      */
     public function notify(SSLHistoryDiffDom $diff)
     {
-        $this->track_started = false;
-        $this->track_stopped = false;
-        $this->track_updated = false;
+        $this->resetFlags();
         
+        $starting_track = $this->track;
+        if(isset($starting_track))
+        {
+            $starting_track_row = $starting_track->getRow();
+        } 
+        
+        // filter out tracks that are not for this deck.
         $my_tracks = array();
         foreach($diff->getTracks() as $track)
         {
@@ -193,101 +235,98 @@ class SSLRealtimeModelDeck
             {
                 // track notification for this deck!
                 $my_tracks[$track->getRow()] = $track;
-                $this->track_updated = true;
                 $this->debug && print "DEBUG: SSLRealtimeModelDeck::notify(): Saw " . $track->getTitle() . " in diff (row " . $track->getRow(). ")\n";
             }
         }
         
-        ksort($my_tracks); // sort in natural 'history' order
+        // sort into natural 'history' order (that is, by row ID ascending)
+        ksort($my_tracks); 
         
         foreach($my_tracks as $track)
         {
             try
             {
-                $this->transition($this->getStatus(), $track->getStatus(), $track);
+                $this->transitionTo($track);
             } 
             catch(SSLInvalidTransitionException $e)
             {
                 $this->debug && print "SSLRealtimeModelDeck::notify(): " . $e->getMessage() . "\n";
             }
         }
+
+        if($this->debug)
+        {
+            if($this->track) var_dump($this->track->getRow());
+            else var_dump("NO TRACK");
+            
+            if($starting_track) var_dump($starting_track_row);
+            else var_dump("NO STARTING TRACK");
+        }
+        
+        // set status flags
+        if( $this->track && 
+            (  
+               !$starting_track || 
+               $this->track->getRow() != $starting_track_row
+            ) )
+        {
+            // There is now a track where there was none.
+            $this->track_started = true;
+        }
+        
+        if( $starting_track && 
+            (
+                !$this->track || 
+                $this->track->getRow() != $starting_track_row
+            ) )
+        {
+            // There is now no track where there was one.
+            $this->track_stopped = true;
+        }
+        
+        if(  $this->track && 
+             $starting_track && 
+            ($this->track->getRow() == $starting_track_row) &&
+            ($this->track !== $starting_track) )
+        {
+            // The track on the deck is the same as before, but the object has been replaced.
+            // (We signal this as an update on the principle that there's absolutely no reason
+            // that SSL would log the same row twice unless there was new information in the new
+            // row).
+            
+            $this->track_updated = true;
+        }
     }    
 
-    
-    // Base transitions
-    
-    public function transitionFromEmptyToNew(SSLTrack $track)
-    {
-        $this->track = $track;
-        $this->status = 'NEW';
-        $this->start_time = time();
-        $this->end_time = null;
-        $this->track_started = true;
-        $this->track_updated = false;
-    }
-    
-    public function transitionFromSkippedToNew(SSLTrack $track)
-    {
-        $this->transitionFromEmptyToNew($track); 
-    }
-    
-    public function transitionFromPlayedToNew(SSLTrack $track)
-    {
-        $this->transitionFromEmptyToNew($track);
-        $this->track_started = true;
-        $this->track_updated = false;
-    }
-    
-    public function transitionFromNewToSkipped()
-    {
-        $this->status = 'SKIPPED';
-        $this->end_time = time();
-        $this->track_stopped = true;
-        $this->track_updated = false;
-        $this->previous_track = $this->track; 
-    }
-
-    public function transitionFromNewToPlaying()
-    {
-        $this->status = 'PLAYING';
-    }
-
-    public function transitionFromPlayingToPlayed()
-    {
-        $this->status = 'PLAYED';
-        $this->end_time = time();
-        $this->track_stopped = true;
-        $this->track_updated = false;
-        $this->previous_track = $this->track; 
-    }
-    
-    
     // Transition combinations
     
-    public function transition($from, $to, SSLTrack $track)
+    public function transitionTo(SSLTrack $track)
     {
+        $from = $this->getStatus();
+        $to = $track->getStatus();
+        
         $this->debug && print "DEBUG: SSLRealtimeModelDeck::transition() deck {$this->deck_number} $from to $to with track " . $track->getTitle() . "\n";
         
         switch($from)
         {
             case 'EMPTY':
-                $this->transitionFromEmptyTo($to, $track);
+                $this->transitionFromEmptyTo($track);
                 break;
                 
             case 'SKIPPED':
-                $this->transitionFromSkippedTo($to, $track);
+                $this->transitionFromSkippedTo($track);
                 break;
                 
             case 'PLAYED':
-                $this->transitionFromPlayedTo($to, $track);
+                $this->transitionFromPlayedTo($track);
                 break;
                 
             case 'NEW':
-                $this->transitionFromNewTo($to, $track);
+                $this->transitionFromNewTo($track);
                 break;
                 
             case 'PLAYING':
-                $this->transitionFromPlayingTo($to, $track);
+                $this->transitionFromPlayingTo($track);
                 break;
                 
             default:
@@ -295,8 +334,9 @@ class SSLRealtimeModelDeck
         }
     }
     
-    public function transitionFromEmptyTo($to, SSLTrack $track)
+    protected function transitionFromEmptyTo(SSLTrack $track)
     {
+        $to = $track->getStatus();
         switch($to)
         {
             case 'NEW':
@@ -305,7 +345,7 @@ class SSLRealtimeModelDeck
                 
             case 'PLAYING':
                 $this->transitionFromEmptyToNew($track);
-                $this->transitionFromNewToPlaying();
+                $this->transitionFromNewToPlaying($track);
                 break;
                 
             // The following transitions can happen if you start reading a history file
@@ -313,13 +353,13 @@ class SSLRealtimeModelDeck
             
             case 'SKIPPED':
                 $this->transitionFromEmptyToNew($track);
-                $this->transitionFromNewToSkipped();
+                $this->transitionFromNewToSkipped($track);
                 break;
                 
             case 'PLAYED':
                 $this->transitionFromEmptyToNew($track);
-                $this->transitionFromNewToPlaying();
-                $this->transitionFromPlayingToPlayed();
+                $this->transitionFromNewToPlaying($track);
+                $this->transitionFromPlayingToPlayed($track);
                 break;
                 
             case 'EMPTY':
@@ -330,8 +370,9 @@ class SSLRealtimeModelDeck
         }
     }
 
-    public function transitionFromSkippedTo($to, SSLTrack $track)
+    protected function transitionFromSkippedTo(SSLTrack $track)
     {
+        $to = $track->getStatus();
         switch($to)
         {
             case 'NEW':
@@ -341,7 +382,7 @@ class SSLRealtimeModelDeck
             case 'PLAYING':
                 // a transition from SKIPPED straight to PLAYING can happen in preview-player mode
                 $this->transitionFromSkippedToNew($track);
-                $this->transitionFromNewToPlaying();
+                $this->transitionFromNewToPlaying($track);
                 break;
 
             // The following transitions can happen if you start reading a history file
@@ -349,13 +390,13 @@ class SSLRealtimeModelDeck
                 
             case 'SKIPPED':
                 $this->transitionFromSkippedToNew($track);
-                $this->transitionFromNewToSkipped();
+                $this->transitionFromNewToSkipped($track);
                 break;
                 
             case 'PLAYED':
                 $this->transitionFromSkippedToNew($track);
-                $this->transitionFromNewToPlaying();
-                $this->transitionFromPlayingToPlayed();
+                $this->transitionFromNewToPlaying($track);
+                $this->transitionFromPlayingToPlayed($track);
                 break;
                 
             case 'EMPTY':
@@ -366,8 +407,9 @@ class SSLRealtimeModelDeck
         }
     }
 
-    public function transitionFromPlayedTo($to, SSLTrack $track)
+    protected function transitionFromPlayedTo(SSLTrack $track)
     {
+        $to = $track->getStatus();
         switch($to)
         {
             case 'NEW':
@@ -377,7 +419,7 @@ class SSLRealtimeModelDeck
             case 'PLAYING':
                 // a transition from PLAYED straight to PLAYING can happen in preview-player mode
                 $this->transitionFromPlayedToNew($track);
-                $this->transitionFromNewToPlaying();
+                $this->transitionFromNewToPlaying($track);
                 break;
                 
             // The following transitions can happen if you start reading a history file
@@ -385,13 +427,13 @@ class SSLRealtimeModelDeck
             
             case 'PLAYED':
                 $this->transitionFromPlayedToNew($track);
-                $this->transitionFromNewToPlaying();
-                $this->transitionFromPlayingToPlayed();
+                $this->transitionFromNewToPlaying($track);
+                $this->transitionFromPlayingToPlayed($track);
                 break;
                 
             case 'SKIPPED':
                 $this->transitionFromPlayedToNew($track);
-                $this->transitionFromNewToSkipped();
+                $this->transitionFromNewToSkipped($track);
                 break;
                 
             case 'EMPTY':
@@ -402,27 +444,32 @@ class SSLRealtimeModelDeck
         }
     }
     
-    public function transitionFromNewTo($to, SSLTrack $track)
+    protected function transitionFromNewTo(SSLTrack $track)
     {
+        $to = $track->getStatus();
         switch($to)
         {
             case 'SKIPPED':
-                $this->transitionFromNewToSkipped();
+                $this->transitionFromNewToSkipped($track);
                 break;
                 
             case 'PLAYING':
-                $this->transitionFromNewToPlaying();
+                $this->transitionFromNewToPlaying($track);
                 break;
 
             case 'NEW':
                 // a transition from NEW straight to NEW happens when an the non-playing
                 // deck has its track changed
-                $this->transitionFromNewToSkipped();
+                $this->transitionFromNewToSkipped($track);
                 $this->transitionFromSkippedToNew($track);
                 break;
                 
-            case 'EMPTY':
             case 'PLAYED':
+                $this->transitionFromNewToPlaying($track);
+                $this->transitionFromPlayingToPlayed($track);
+                break;
+                
+            case 'EMPTY':
                 throw new SSLInvalidTransitionException('Invalid transition from NEW to '. $to);
                 
             default:                
@@ -430,18 +477,19 @@ class SSLRealtimeModelDeck
         }
     }
 
-    public function transitionFromPlayingTo($to, SSLTrack $track)
+    protected function transitionFromPlayingTo(SSLTrack $track)
     {
+        $to = $track->getStatus();
         switch($to)
         {
             case 'PLAYED':
-                $this->transitionFromPlayingToPlayed();
+                $this->transitionFromPlayingToPlayed($track);
                 break;
 
             case 'NEW':
                 // a transition from PLAYING to NEW happens when the playing
                 // deck has its track changed
-                $this->transitionFromPlayingToPlayed();
+                $this->transitionFromPlayingToPlayed($track);
                 $this->transitionFromPlayedToNew($track);
                 break;
                 
@@ -452,12 +500,66 @@ class SSLRealtimeModelDeck
                 $this->transitionFromNewToSkipped($track);
                 break;
                 
-            case 'EMPTY':
             case 'PLAYING':
+                $this->transitionFromPlayingToPlayed($track);
+                $this->transitionFromPlayedToNew($track);
+                $this->transitionFromNewToPlaying($track);
+                break;
+                
+            case 'EMPTY':
                 throw new SSLInvalidTransitionException('Invalid transition from PLAYING to '. $to);
                 
             default:
                 throw new InvalidArgumentException('Unknown TO state "'. $to . '"');        
         }
-    }    
+    }
+
+    // Base transitions
+    
+    protected function transitionFromSkippedToNew(SSLTrack $track)
+    {
+        $this->transitionFromEmptyToNew($track);
+    }
+    
+    protected function transitionFromPlayedToNew(SSLTrack $track)
+    {
+        $this->transitionFromEmptyToNew($track);
+    }
+
+    protected function transitionFromEmptyToNew(SSLTrack $track)
+    {
+        $this->track = $track;
+        $this->status = $track->getStatus();
+        $this->start_time = time();
+        $this->end_time = null;
+        // don't touch previous track 
+    }
+    
+    protected function transitionFromNewToPlaying(SSLTrack $track)
+    {
+        $this->track = $track;
+        $this->status = $track->getStatus();
+        // don't touch start time
+        // don't touch end time
+        // don't touch previous track
+    }
+
+    protected function transitionFromPlayingToPlayed(SSLTrack $track)
+    {
+        $this->track = null;
+        $this->status = $track->getStatus();
+        // don't touch start time
+        $this->end_time = time();
+        $this->previous_track = $track; 
+    }
+    
+    protected function transitionFromNewToSkipped(SSLTrack $track)
+    {
+        $this->track = null;
+        $this->status = $track->getStatus();
+        // don't touch start time
+        $this->end_time = time();
+        // don't touch previous track
+    }
+    
 }

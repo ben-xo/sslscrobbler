@@ -59,14 +59,14 @@ field8: string.  c>ralbum
 field9: string.  c>rgenre
 field10: string. c>rlength
 
-field11: hex.    c>rELEVENxUNKNOWN
+field11: hex.    c>rELEVENxUNKNOWN # seems to contain 4 bytes of data, but no idea what it means
 field12: string. c>rTWELVExUNKNOWN
 
 field13: string. c>rbitrate
 field14: string. c>rfrequency
 field15: int.    c>rbpm 
 
-field16: hex.    c>rSIXTEENxUNKNOWN
+field16: hex.    c>rSIXTEENxUNKNOWN # seems to contain 8 bytes of data, but no idea what it means
 
 field17: string. c>rcomments
 field18: ascii.  c>rlang
@@ -90,7 +90,7 @@ field50: int. c>rplayed
 field51: string. c>rkey
 field52: int. c>radded
 
-field53: # always last field ?
+field53: # usually last field
     timestamp. c>rupdatedAt
 
-field64: string. c>commentname
+field64: string. c>rcommentname
