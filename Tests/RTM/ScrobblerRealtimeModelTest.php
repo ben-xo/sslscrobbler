@@ -325,4 +325,6 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $this->assertTrue($this->now_playing_called);
         $this->assertSame($this->now_playing_called_with, $this->track1);        
     }
+    
+    // TODO: test tick behaviour!
 }

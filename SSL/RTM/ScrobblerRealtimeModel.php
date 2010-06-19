@@ -45,11 +45,14 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
     
     public function notifyTick($seconds)
     {
-        $this->elapse($seconds);
+        $was_playing_before = isset($this->now_playing_in_queue); 
+        $this->elapse($seconds, $was_playing_before);
     }
     
     public function notifyTrackChange(TrackChangeEventList $events)
     {
+        $was_playing_before_notify = isset($this->now_playing_in_queue); 
+         
         foreach($events as $event)
         {
             if($event instanceof TrackStoppedEvent)
@@ -68,7 +71,7 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
             }
         }
         
-        $this->elapse(0);
+        $this->elapse(0, $was_playing_before_notify);
     }
     
     public function addNowPlayingObserver(NowPlayingObserver $o)
@@ -169,7 +172,7 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
      * 
      * @param integer $seconds
      */
-    protected function elapse($seconds)
+    protected function elapse($seconds, $was_playing_before)
     {
         foreach($this->scrobble_model_queue as $scrobble_model)
         {
@@ -208,7 +211,7 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
             $this->setTrackNowPlaying($scrobble_model);
         }
         
-        if(!$is_now_playing)
+        if(!$is_now_playing && $was_playing_before)
         {
             // Playback has stopped!
             $this->now_playing_in_queue = null;

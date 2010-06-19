@@ -24,7 +24,7 @@
  *  THE SOFTWARE.
  */
 
-class SSLEventGrowlRenderer implements TrackChangeObserver
+class SSLEventGrowlRenderer implements TrackChangeObserver, NowPlayingObserver
 {
     /**
      * @var Growl
@@ -43,5 +43,17 @@ class SSLEventGrowlRenderer implements TrackChangeObserver
             /* @var $event TrackChangeEvent */
             $this->growler->notify('alert', 'Track Change', $event);
         }
-    }    
+    }
+    
+    public function notifyNowPlaying(SSLTrack $track=null)
+    {
+        if($track)
+        {
+            $this->growler->notify('alert', 'Now Playing', $track->getFullTitle());
+        }
+        else
+        {
+            $this->growler->notify('alert', 'Now Playing', '<Playback Stopped>');
+        }
+    }
 }

@@ -78,6 +78,9 @@ class SSLRealtimeModelTest extends PHPUnit_Framework_TestCase implements TrackCh
         $this->assertNull($this->tcel);
     }
     
+    /**
+     * @depends test_initial_state
+     */
     public function test_empty_update()
     {
         $this->rtm->notifyDiff( new SSLHistoryDiffDom( array(
@@ -87,6 +90,9 @@ class SSLRealtimeModelTest extends PHPUnit_Framework_TestCase implements TrackCh
         $this->assertNull($this->tcel);
     }
     
+    /**
+     * @depends test_empty_update
+     */
     public function test_single_deck_update()
     {
         $track0 = $this->trackMock(123, 0);
@@ -147,6 +153,10 @@ class SSLRealtimeModelTest extends PHPUnit_Framework_TestCase implements TrackCh
         $this->assertEquals($this->tcel[0], new TrackStartedEvent($track0));
     }
     
+    /**
+     * @depends test_single_deck_update
+     * @depends test_single_deck_update_2
+     */
     public function test_tripple_deck_update()
     {
         $tracks = array();
@@ -182,5 +192,5 @@ class SSLRealtimeModelTest extends PHPUnit_Framework_TestCase implements TrackCh
         {
             $this->assertEquals($this->tcel[$i], new TrackStartedEvent($tracks[$i]));
         }
-    }       
+    }
 }
