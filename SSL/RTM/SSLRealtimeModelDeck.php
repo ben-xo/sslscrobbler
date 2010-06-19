@@ -42,6 +42,7 @@
 class SSLRealtimeModelDeck
 {
     protected $deck_number;
+    protected $max_row = 0;
     
     /*
      * Status flags that are updated by notify()
@@ -226,12 +227,13 @@ class SSLRealtimeModelDeck
             $starting_track_row = $starting_track->getRow();
         } 
         
-        // filter out tracks that are not for this deck.
+        // filter out tracks that are not for this deck, or that are too old
         $my_tracks = array();
         foreach($diff->getTracks() as $track)
         {
             /* @var $track SSLTrack */
-            if($track->getDeck() == $this->deck_number)
+            if( $track->getDeck() == $this->deck_number && 
+                $track->getRow()  >= $this->max_row )
             {
                 // track notification for this deck!
                 $my_tracks[$track->getRow()] = $track;
@@ -254,15 +256,6 @@ class SSLRealtimeModelDeck
             }
         }
 
-        if($this->debug)
-        {
-            if($this->track) var_dump($this->track->getRow());
-            else var_dump("NO TRACK");
-            
-            if($starting_track) var_dump($starting_track_row);
-            else var_dump("NO STARTING TRACK");
-        }
-        
         // set status flags
         if( $this->track && 
             (  
@@ -528,6 +521,7 @@ class SSLRealtimeModelDeck
 
     protected function transitionFromEmptyToNew(SSLTrack $track)
     {
+        $this->max_row = max($track->getRow(), $this->max_row);
         $this->track = $track;
         $this->status = $track->getStatus();
         $this->start_time = time();
@@ -537,6 +531,7 @@ class SSLRealtimeModelDeck
     
     protected function transitionFromNewToPlaying(SSLTrack $track)
     {
+        $this->max_row = max($track->getRow(), $this->max_row);
         $this->track = $track;
         $this->status = $track->getStatus();
         // don't touch start time
@@ -546,6 +541,7 @@ class SSLRealtimeModelDeck
 
     protected function transitionFromPlayingToPlayed(SSLTrack $track)
     {
+        $this->max_row = max($track->getRow(), $this->max_row);
         $this->track = null;
         $this->status = $track->getStatus();
         // don't touch start time
@@ -555,6 +551,7 @@ class SSLRealtimeModelDeck
     
     protected function transitionFromNewToSkipped(SSLTrack $track)
     {
+        $this->max_row = max($track->getRow(), $this->max_row);
         $this->track = null;
         $this->status = $track->getStatus();
         // don't touch start time

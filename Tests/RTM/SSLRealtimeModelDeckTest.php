@@ -101,6 +101,28 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
         $this->assertSame($this->srmd->getCurrentTrack(), $track1);
         $this->assertNull($this->srmd->getPreviousTrack()); // NEW to NEW implies that the first one was SKIPPED
     }
+    
+    /**
+     * Compound updates should sort into the right order, so the 
+     * result should be the same as the previous test 
+     * 
+     * @depends test_start_two_new_tracks
+     */
+    public function test_start_two_new_tracks_in_wrong_order_compound()
+    {
+        $track0 = $this->trackMock(456, 'NEW');
+        $track1 = $this->trackMock(123, 'NEW');
+        $this->srmd->notify( new SSLHistoryDiffDom( array(
+           $track0, $track1
+        ) ) );
+        
+        $this->assertTrue($this->srmd->trackStarted());
+        $this->assertFalse($this->srmd->trackStopped());
+        $this->assertFalse($this->srmd->trackUpdated());
+
+        $this->assertSame($this->srmd->getCurrentTrack(), $track0);
+        $this->assertNull($this->srmd->getPreviousTrack()); // NEW to NEW implies that the first one was SKIPPED
+    }
 
     /**
      * @depends test_start_one_track
@@ -242,7 +264,41 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
         $this->assertSame($this->srmd->getCurrentTrack(), $track1);
         $this->assertNull($this->srmd->getPreviousTrack());
     } 
+
+    /**
+     * Same as previous test, but NEW -> NEW (same info but new object)
+     * 
+     * @depends test_start_one_track
+     */
+    public function test_start_one_track_then_update_it_2()
+    {
+        $track0 = $this->trackMock(123, 'NEW');
+        $this->srmd->notify( new SSLHistoryDiffDom( array(
+           $track0
+        ) ) );
         
+        // this is the intended case: start a track (and notify)...
+        $this->assertTrue($this->srmd->trackStarted());
+        $this->assertFalse($this->srmd->trackStopped());
+        $this->assertFalse($this->srmd->trackUpdated());
+        
+        $this->assertSame($this->srmd->getCurrentTrack(), $track0);
+        $this->assertNull($this->srmd->getPreviousTrack());
+
+        $track1 = $this->trackMock(123, 'NEW');
+        $this->srmd->notify( new SSLHistoryDiffDom( array(
+           $track1
+        ) ) );
+        
+        // ...then stop it again (and notify)
+        $this->assertFalse($this->srmd->trackStarted());
+        $this->assertFalse($this->srmd->trackStopped());
+        $this->assertTrue($this->srmd->trackUpdated());
+
+        $this->assertSame($this->srmd->getCurrentTrack(), $track1);
+        $this->assertNull($this->srmd->getPreviousTrack());
+    }
+    
     /**
      * @depends test_start_one_track_stop_same_track_sequence
      */
@@ -299,6 +355,72 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
     }
     
     /**
+     * Unlike out-of-order track in a single diff, the model should
+     * ignore the 2nd update because the track is irrelevant.
+     * 
+     * @depends test_start_one_track_stop_same_track_compound
+     */
+    public function test_start_one_track_sequence_then_start_another_out_of_order()
+    {
+        $track0 = $this->trackMock(456, 'NEW');
+        $this->srmd->notify( new SSLHistoryDiffDom( array(
+           $track0
+        ) ) );
+        
+        $this->assertTrue($this->srmd->trackStarted());
+        $this->assertFalse($this->srmd->trackStopped());
+        $this->assertFalse($this->srmd->trackUpdated());
+        
+        $this->assertSame($this->srmd->getCurrentTrack(), $track0);
+        $this->assertNull($this->srmd->getPreviousTrack());
+
+        $track1 = $this->trackMock(123, 'NEW');
+        $this->srmd->notify( new SSLHistoryDiffDom( array(
+           $track1
+        ) ) );
+        
+        $this->assertFalse($this->srmd->trackStarted());
+        $this->assertFalse($this->srmd->trackStopped());
+        $this->assertFalse($this->srmd->trackUpdated());
+
+        $this->assertSame($this->srmd->getCurrentTrack(), $track0);
+        $this->assertNull($this->srmd->getPreviousTrack());
+    }
+    
+    /**
+     * Double-notification of the same actual track object should 
+     * not have the effect twice.
+     * 
+     * @depends test_start_one_track_stop_same_track_compound
+     */
+    public function test_start_one_track_but_notify_twice()
+    {
+        $track0 = $this->trackMock(123, 'NEW');
+        
+        $this->srmd->notify( new SSLHistoryDiffDom( array(
+           $track0
+        ) ) );
+        
+        $this->assertTrue($this->srmd->trackStarted());
+        $this->assertFalse($this->srmd->trackStopped());
+        $this->assertFalse($this->srmd->trackUpdated());
+        
+        $this->assertSame($this->srmd->getCurrentTrack(), $track0);
+        $this->assertNull($this->srmd->getPreviousTrack());
+
+        $this->srmd->notify( new SSLHistoryDiffDom( array(
+           $track0
+        ) ) );
+        
+        $this->assertFalse($this->srmd->trackStarted());
+        $this->assertFalse($this->srmd->trackStopped());
+        $this->assertFalse($this->srmd->trackUpdated());
+
+        $this->assertSame($this->srmd->getCurrentTrack(), $track0);
+        $this->assertNull($this->srmd->getPreviousTrack());
+    }    
+    
+    /**
      * @depends test_start_one_track_sequence_then_stop_that_track_and_start_another_compound
      */
     public function test_start_three_tracks_compound_then_stop_one_track_sequence()
@@ -334,41 +456,131 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
     
     // tests for NEW / SKIPPED tracks
     
-    public function test_start_one_track_skip_same_track_sequence() {}
-    public function test_start_one_track_skip_same_track_compound() {}
-    public function test_start_one_track_sequence_then_skip_that_track_and_start_another_compound(){}
+    public function test_start_one_track_skip_same_track_sequence() 
+    {
+        $track0 = $this->trackMock(123, 'NEW');
+        $this->srmd->notify( new SSLHistoryDiffDom( array(
+           $track0
+        ) ) );
+        
+        $this->assertTrue($this->srmd->trackStarted());
+        $this->assertFalse($this->srmd->trackStopped());
+        $this->assertFalse($this->srmd->trackUpdated());
+        
+        $this->assertSame($this->srmd->getCurrentTrack(), $track0);
+        $this->assertNull($this->srmd->getPreviousTrack());
+
+        $track1 = $this->trackMock(123, 'SKIPPED');
+        $this->srmd->notify( new SSLHistoryDiffDom( array(
+           $track1
+        ) ) );
+        
+        $this->assertFalse($this->srmd->trackStarted());
+        $this->assertTrue($this->srmd->trackStopped());
+        $this->assertFalse($this->srmd->trackUpdated());
+
+        $this->assertNull($this->srmd->getCurrentTrack());
+        $this->assertNull($this->srmd->getPreviousTrack());
+    }
+    
+    public function test_start_one_track_skip_same_track_compound() 
+    {
+        $track0 = $this->trackMock(123, 'NEW');
+        $track1 = $this->trackMock(123, 'SKIPPED');
+        $this->srmd->notify( new SSLHistoryDiffDom( array(
+           $track0, $track1
+        ) ) );
+        
+        $this->assertFalse($this->srmd->trackStarted());
+        $this->assertFalse($this->srmd->trackStopped());
+        $this->assertFalse($this->srmd->trackUpdated());
+
+        $this->assertNull($this->srmd->getCurrentTrack());
+        $this->assertNull($this->srmd->getPreviousTrack());
+    }
+    
+    public function test_start_one_track_sequence_then_skip_that_track_and_start_another_compound()
+    {
+        $track0 = $this->trackMock(123, 'NEW');
+        $this->srmd->notify( new SSLHistoryDiffDom( array(
+           $track0
+        ) ) );
+        
+        // this is the intended case: start a track (and notify)...
+        $this->assertTrue($this->srmd->trackStarted());
+        $this->assertFalse($this->srmd->trackStopped());
+        $this->assertFalse($this->srmd->trackUpdated());
+        
+        $this->assertSame($this->srmd->getCurrentTrack(), $track0);
+        $this->assertNull($this->srmd->getPreviousTrack());
+
+        $track1 = $this->trackMock(123, 'SKIPPED');
+        $track2 = $this->trackMock(456, 'NEW');
+        $this->srmd->notify( new SSLHistoryDiffDom( array(
+           $track1, $track2
+        ) ) );
+        
+        
+        // ...then stop it again (and notify) and start another (and notify)
+        $this->assertTrue($this->srmd->trackStarted());
+        $this->assertTrue($this->srmd->trackStopped());
+        $this->assertFalse($this->srmd->trackUpdated());
+
+        $this->assertSame($this->srmd->getCurrentTrack(), $track2);
+        $this->assertNull($this->srmd->getPreviousTrack());
+    }
     
     // test transitions:
-    public function test_invalid_transition() {}
+    public function test_invalid_transition() 
+    {
+        $track0 = $this->trackMock(123, 'WTF');
+        try
+        {
+            $this->srmd->transitionTo($track0);
+            $this->fail();
+        }
+        catch(InvalidArgumentException $e) { }
+    }
     
-    public function test_EMPTY_to_EMPTY() {}
-    public function test_EMPTY_to_NEW() {}
-    public function test_EMPTY_to_PLAYING() {}
-    public function test_EMPTY_to_PLAYED() {}
-    public function test_EMPTY_to_SKIPPED() {}
-
-    public function test_NEW_to_EMPTY() {}
-    public function test_NEW_to_NEW() {}
-    public function test_NEW_to_PLAYING() {}
-    public function test_NEW_to_PLAYED() {}
-    public function test_NEW_to_SKIPPED() {}
-
-    public function test_PLAYING_to_EMPTY() {}
-    public function test_PLAYING_to_NEW() {}
-    public function test_PLAYING_to_PLAYING() {}
-    public function test_PLAYING_to_PLAYED() {}
-    public function test_PLAYING_to_SKIPPED() {}
-
-    public function test_PLAYED_to_EMPTY() {}
-    public function test_PLAYED_to_NEW() {}
-    public function test_PLAYED_to_PLAYING() {}
-    public function test_PLAYED_to_PLAYED() {}
-    public function test_PLAYED_to_SKIPPED() {}
-
-    public function test_SKIPPED_to_EMPTY() {}
-    public function test_SKIPPED_to_NEW() {}
-    public function test_SKIPPED_to_PLAYING() {}
-    public function test_SKIPPED_to_PLAYED() {}
-    public function test_SKIPPED_to_SKIPPED() {}
+    public function test_EMPTY_to_EMPTY() 
+    {
+        // a track can not naturally be "EMPTY", as that makes no sense
+        $track0 = $this->trackMock(123, 'EMPTY');
+        try
+        {
+            $this->srmd->transitionTo($track0);
+            $this->fail();
+        }
+        catch(SSLInvalidTransitionException $e) { }
+    }
+    
+//    public function test_EMPTY_to_NEW() {}
+//    public function test_EMPTY_to_PLAYING() {}
+//    public function test_EMPTY_to_PLAYED() {}
+//    public function test_EMPTY_to_SKIPPED() {}
+//
+//    public function test_NEW_to_EMPTY() {}
+//    public function test_NEW_to_NEW() {}
+//    public function test_NEW_to_PLAYING() {}
+//    public function test_NEW_to_PLAYED() {}
+//    public function test_NEW_to_SKIPPED() {}
+//
+//    public function test_PLAYING_to_EMPTY() {}
+//    public function test_PLAYING_to_NEW() {}
+//    public function test_PLAYING_to_PLAYING() {}
+//    public function test_PLAYING_to_PLAYED() {}
+//    public function test_PLAYING_to_SKIPPED() {}
+//
+//    public function test_PLAYED_to_EMPTY() {}
+//    public function test_PLAYED_to_NEW() {}
+//    public function test_PLAYED_to_PLAYING() {}
+//    public function test_PLAYED_to_PLAYED() {}
+//    public function test_PLAYED_to_SKIPPED() {}
+//
+//    public function test_SKIPPED_to_EMPTY() {}
+//    public function test_SKIPPED_to_NEW() {}
+//    public function test_SKIPPED_to_PLAYING() {}
+//    public function test_SKIPPED_to_PLAYED() {}
+//    public function test_SKIPPED_to_SKIPPED() {}
     
 }
