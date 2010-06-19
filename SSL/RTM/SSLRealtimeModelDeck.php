@@ -59,7 +59,7 @@ class SSLRealtimeModelDeck
      */
     protected $pre_update_track = null;
     
-    private $debug = true;
+    private $debug = false;
     
     /**
      * Stores the track currently on the deck.

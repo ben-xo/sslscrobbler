@@ -91,9 +91,8 @@
 
 class SSLRealtimeModel implements SSLDiffObserver, TrackChangeObservable
 {
-    protected $timers = array();
     protected $decks = array();
-    private $debug = true;
+    private $debug = false;
     
     protected $trackchange_observers = array();
        
@@ -106,6 +105,7 @@ class SSLRealtimeModel implements SSLDiffObserver, TrackChangeObservable
     {
         foreach($this->trackchange_observers as $o)
         {
+            /* @var $o TrackChangeObserver */
             $o->notifyTrackChange($events);
         }
     }
@@ -117,7 +117,8 @@ class SSLRealtimeModel implements SSLDiffObserver, TrackChangeObservable
     {
         if(!isset($this->decks[$deck]))
         {
-            $this->decks[$deck] = new SSLRealtimeModelDeck($deck);
+            $this->decks[$deck] = $this->newSSLRealtimeModelDeck($deck);
+            ksort($this->decks);
         }
         
         return $this->decks[$deck];
@@ -161,11 +162,6 @@ class SSLRealtimeModel implements SSLDiffObserver, TrackChangeObservable
     {
         return $this->getDeck($deck)->getEndTime();
     }
-    
-    public function getEventTimer($deck)
-    {
-        return isset($this->timers[$deck]) ? $this->timers[$deck] : 0;
-    }    
     
     public function getDeckIDs()
     {
@@ -214,7 +210,7 @@ class SSLRealtimeModel implements SSLDiffObserver, TrackChangeObservable
             }
             
             if($deck->trackStarted())
-            {
+            {                
                 $curr_track = $deck->getCurrentTrack();
                 if($curr_track)
                 {
@@ -231,12 +227,17 @@ class SSLRealtimeModel implements SSLDiffObserver, TrackChangeObservable
                 }
             }
         }
-        
+                
         if(count($events))
         {
             $events = new TrackChangeEventList($events);
             $this->debug && print("DEBUG: SSLRealtimeModel::notifyDiff(): notifying {$events}\n");
             $this->notifyTrackChangeObservers($events);
         }
+    }
+    
+    protected function newSSLRealtimeModelDeck($deck_number)
+    {
+        return new SSLRealtimeModelDeck($deck_number);
     }
 }

@@ -24,8 +24,6 @@
  *  THE SOFTWARE.
  */
 
-require_once 'ScrobblerTrackModelTest.php';
-
 class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
 {
     /**
