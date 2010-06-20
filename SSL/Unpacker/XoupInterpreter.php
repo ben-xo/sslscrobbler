@@ -100,7 +100,6 @@ class XoupInterpreter extends Unpacker
             throw new RuntimeException("No such subroutine $sub");
         }
             
-            
         $opcount = count($this->subs[$sub]);
         do
         {

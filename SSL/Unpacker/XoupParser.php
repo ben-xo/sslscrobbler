@@ -51,7 +51,7 @@ class XoupParser
             {
                 // it's a label
                 $subs[$matches[1]] = array();
-                $opdest =& $subs[$matches[1]];
+                $opdest = $matches[1];
             }
             else
             {
@@ -61,7 +61,7 @@ class XoupParser
                     throw new RuntimeException("Parse error: op found out of sub scope");
                 }
                 
-                $opdest[] = $v;
+                $subs[$opdest][] = $v;
             }
         }
         

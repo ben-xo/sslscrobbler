@@ -69,6 +69,9 @@ class XoupCompiler
             $output .= $this->writeFunctionBody($sub);    
             $output .= $this->writeFunctionFooter();    
         }
+        $output .= $this->writeLUTFunctionHeader();
+        $output .= $this->writeLUTFunctionBody(array_keys($this->subs));
+        $output .= $this->writeFunctionFooter();
         $output .= "}\n";
         
         file_put_contents($this->getCompiledName($filename), $output);
@@ -78,10 +81,28 @@ class XoupCompiler
     {
         return "    private function _$sub(\$bin, \$binlen, &\$acc, &\$ptr)\n    {\n";
     }
+
+    protected function writeLUTFunctionHeader()
+    {
+        return "    private function lookup(\$sub, \$bin, \$binlen, &\$acc, &\$ptr)\n    {\n";
+    }
     
     protected function writeFunctionFooter()
     {
         return "    }\n\n";
+    }
+    
+    protected function writeLUTFunctionBody(array $subs)
+    {
+        $output = "        switch(\$sub) {\n";
+        foreach($subs as $sub)
+        {
+            $output .= "            case '$sub': return \$this->_$sub(\$bin, \$binlen, \$acc, \$ptr);\n";
+        }
+        $output .= "            default:\n";
+        $output .= "                throw new RuntimeException('No such subroutine' . \$sub);\n";
+        $output .= "        }\n";
+        return $output;
     }
     
     protected function writeFunctionBody($sub)
@@ -113,17 +134,20 @@ class XoupCompiler
                             $body .= "        return false;\n";
                             break;
                         default:
-                            $line = "        if(!\$this->%s(\$bin, \$binlen, \$acc, \$ptr)) return false;\n";
+                            $line = "        if(!\$this->%s(%s\$bin, \$binlen, \$acc, \$ptr)) return false;\n";
                             if(strpos($callsub, '_') === false )
                             {
-                                $body .= sprintf($line, "_$callsub");
+                                $body .= sprintf($line, "_$callsub", '');
                             }
                             else
                             {
                                 $parts = explode('_', $callsub);
-                                foreach($parts as &$part) $part = "'$part'";
+                                foreach($parts as $i => $part) 
+                                {
+                                    $parts[$i] = "'$part'";       
+                                }
                                 $parts = implode( " . \$acc . ", $parts);
-                                $body .= sprintf($line, "{'_' . " . $parts . "}");
+                                $body .= sprintf($line, 'lookup', $parts . ', ');
                             }
                             break;
                     }
@@ -135,6 +159,7 @@ class XoupCompiler
                 if($copy_action == 'c')
                 {
                     $body .= "        \$datum = \$acc;\n";
+                    $exit_now = false;
                 }
                 else
                 {    
