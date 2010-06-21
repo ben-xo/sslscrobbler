@@ -65,19 +65,38 @@ class XoupLoader
     protected function loadCompiled($filename)
     {
         $basename = basename($filename, '.xoup');
-        $dirname  = dirname($filename);
-        $compiled_name = $dirname . '/' . $basename . '.php';
-        if(file_exists($dirname . '/' . $basename . '.php'))
+        $class = 'XOUP' . $basename . 'Unpacker';
+        
+        if(!class_exists($class, false))
         {
-            require_once $compiled_name;
-            $class = 'XOUP' . $basename . 'Unpacker';
-            if(!class_exists($class))
+        
+            $dirname  = dirname($filename);
+            $compiled_name = $dirname . '/' . $basename . '.php';
+            if(file_exists($dirname . '/' . $basename . '.php'))
             {
-                throw new RuntimeException("{$class} not present in {$compiled_name}");
+                require_once $compiled_name;
+                
+                if(!class_exists($class))
+                {
+                    throw new RuntimeException("{$class} not present in {$compiled_name}");
+                }
+                
+                L::level(L::DEBUG) && 
+                    L::log(L::DEBUG, __CLASS__, 'loaded compiled XOUP class %s from file %s', 
+                        array($class, $compiled_name));                
             }
-            return new $class;
+            else
+            {
+                // no compiled file exists
+
+                L::level(L::DEBUG) && 
+                    L::log(L::DEBUG, __CLASS__, 'compiled XOUP file %s does not (yet) exist', 
+                        array($compiled_name));                
+                
+                return null;
+            }
         }
-        return null;
+        return new $class;
     }
     
     protected function newXoupInterpreter($program)

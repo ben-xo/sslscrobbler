@@ -34,7 +34,7 @@ class SSLHistoryFileMonitor implements SSLDiffObservable, TickObserver
      * @var SSLHistoryDiffDom
      */
     protected $tree;
-    
+
     public function __construct($filename)
     {
         $this->filename = $filename;

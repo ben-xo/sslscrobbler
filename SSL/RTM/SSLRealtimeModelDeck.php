@@ -59,8 +59,6 @@ class SSLRealtimeModelDeck
      */
     protected $pre_update_track = null;
     
-    private $debug = false;
-    
     /**
      * Stores the track currently on the deck.
      * 
@@ -82,11 +80,6 @@ class SSLRealtimeModelDeck
         $this->deck_number = $deck_number;
     }
 
-    public function setDebug($debug)
-    {
-        $this->debug = $debug;
-    }
-    
     
     // Getters
     
@@ -237,7 +230,9 @@ class SSLRealtimeModelDeck
             {
                 // track notification for this deck!
                 $my_tracks[$track->getRow()] = $track;
-                $this->debug && print "DEBUG: SSLRealtimeModelDeck::notify(): Saw " . $track->getTitle() . " in diff (row " . $track->getRow(). ")\n";
+                L::level(L::DEBUG) && 
+                    L::log(L::DEBUG, __CLASS__, "Saw %s in diff (row %s)", 
+                        array( $track->getTitle(), $track->getRow()));
             }
         }
         
@@ -252,7 +247,9 @@ class SSLRealtimeModelDeck
             } 
             catch(SSLInvalidTransitionException $e)
             {
-                $this->debug && print "SSLRealtimeModelDeck::notify(): " . $e->getMessage() . "\n";
+                L::level(L::WARNING) && 
+                    L::log(L::WARNING, __CLASS__, "Invalid Transition: %s", 
+                        array($e->getMessage()) );
             }
         }
 
@@ -298,7 +295,9 @@ class SSLRealtimeModelDeck
         $from = $this->getStatus();
         $to = $track->getStatus();
         
-        $this->debug && print "DEBUG: SSLRealtimeModelDeck::transition() deck {$this->deck_number} $from to $to with track " . $track->getTitle() . "\n";
+        L::level(L::INFO) && 
+            L::log(L::INFO, __CLASS__, "deck %d transitioned from %s to %s with track %s", 
+                array( $this->deck_number, $from, $to, $track->getTitle()) );
         
         switch($from)
         {

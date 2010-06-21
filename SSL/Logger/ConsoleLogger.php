@@ -1,4 +1,3 @@
-#!/usr/bin/env php
 <?php
 
 /**
@@ -25,32 +24,11 @@
  *  THE SOFTWARE.
  */
 
-error_reporting(E_ALL | E_STRICT);
-
-require_once 'Growl/class.growl.php';
-require_once 'SSL/Autoloader.php';
-
-function __autoload($class)
+class ConsoleLogger implements Logger
 {
-    $a = new Autoloader();
-    return $a->load($class);
+    public function log($timestamp, $level, $source, $message)
+    {
+        $level = L::getNameFor($level);
+        echo date("Y-m-d H:i:s", $timestamp) . " {$level}: {$source} - {$message}\n"; 
+    }
 }
-
-$growlConfig = array(
-    'address' => 'localhost',
-    'password' => '',
-    'app_name' => 'SSLHistoryReader'
-);
-
-// set max log levels for various internal components. (The default is unlimited.)
-$log_levels = array(
-    'TickSource' => L::SILENT,
-//    'SSLHistoryFileMonitor' => L::DEBUG,
-//    'SSLRealtimeModel' => L::DEBUG,
-//    'ScrobblerRealtimeModel' => L::DEBUG,
-);
-
-$h = new HistoryReader();
-$h->setGrowlConfig($growlConfig);
-$h->setVerbosityOverride($log_levels);
-$h->main($argc, $argv);

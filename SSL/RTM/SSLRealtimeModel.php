@@ -92,7 +92,6 @@
 class SSLRealtimeModel implements SSLDiffObserver, TrackChangeObservable
 {
     protected $decks = array();
-    private $debug = false;
     
     protected $trackchange_observers = array();
        
@@ -231,7 +230,11 @@ class SSLRealtimeModel implements SSLDiffObserver, TrackChangeObservable
         if(count($events))
         {
             $events = new TrackChangeEventList($events);
-            $this->debug && print("DEBUG: SSLRealtimeModel::notifyDiff(): notifying {$events}\n");
+            
+            L::level(L::DEBUG) && 
+                L::log(L::DEBUG, __CLASS__, "notifying %s", 
+                    array($events));
+                    
             $this->notifyTrackChangeObservers($events);
         }
     }

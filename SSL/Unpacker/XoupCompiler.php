@@ -47,7 +47,9 @@ class XoupCompiler
     
     public function compile($filename)
     {
-        $this->debug && print "XoupCompiler::compile(): Compiling $filename\n";
+        L::level(L::INFO) && 
+            L::log(L::INFO, __CLASS__, 'compiling %s', 
+                array($filename));
         
         $class = $this->getClassName($filename);
         

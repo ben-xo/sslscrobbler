@@ -28,7 +28,7 @@ class TrackChangeEventList extends ArrayObject
 {
     public function __toString()
     {
-        $return = '{';
+        $return = "{\n";
         foreach($this as $event)
         {
             /* @var $event TrackChangeEvent */

@@ -24,19 +24,9 @@
  *  THE SOFTWARE.
  */
 
-class TickSource implements TickObservable, Loggable
+class TickSource implements TickObservable
 {
     protected $tick_observers = array();
-    
-    /**
-     * @var Logger
-     */
-    protected $logger;
-    
-    public function setLogger(Logger $logger)
-    {
-        $this->logger = $logger;
-    }
     
     public function addTickObserver(TickObserver $o)
     {
@@ -53,20 +43,27 @@ class TickSource implements TickObservable, Loggable
     
     public function startClock($interval)
     {
-        $this->logger->log(Logger::DEBUG, __CLASS__, "Clock Started, interval {$interval}");
+        L::level(L::DEBUG) && 
+            L::log(L::DEBUG, __CLASS__, "Clock Started, interval %s", 
+                array($interval));
         
         $elapsed = 0.0;
         $start_time = microtime(true);
         while(true)
         {
-            $this->logger->log(Logger::DEBUG, __CLASS__, "Tick {$elapsed} seconds");
+            L::level(L::DEBUG) && 
+                L::log(L::DEBUG, __CLASS__, "Tick %s seconds", 
+                    array($elapsed));
+                    
             $this->notifyTickObservers($elapsed);
             
             $processing_time = microtime(true) - $start_time;
             
             if($processing_time > $interval)
             {
-                $this->logger->log(Logger::WARNING, __CLASS__, "Notification took {$processing_time}, which is longer than interval {$interval}");
+                L::level(L::WARNING) && 
+                    L::log(L::WARNING, __CLASS__, "Notification took %s, which is longer than interval %s",
+                        array($processing_time, $interval));
             }
             else
             {

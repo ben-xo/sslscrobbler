@@ -31,7 +31,7 @@ class HistoryReader
     protected $wait_for_file = true;
     protected $help = false;
     protected $log_file = '';
-    protected $verbosity = Logger::INFO;
+    protected $verbosity = L::INFO;
     
     protected $override_verbosity = array();
     
@@ -184,22 +184,23 @@ class HistoryReader
     {
         if($this->verbosity == 0)
         {
-            $this->logger = new NullLogger();
+            L::setLogger(new NullLogger());
             return;
         }
         
         if($this->log_file)
         {
-            $this->logger = new FileLogger();
-            $this->logger->setLogFile($this->log_file);
+            $logger = new FileLogger();
+            $logger->setLogFile($this->log_file);
         }
         else
         {
-            $this->logger = new ConsoleLogger();
+            $logger = new ConsoleLogger();
         }
         
-        $this->logger->setVerbosity($this->verbosity);
-        $this->logger->setVerbosityOverride($this->override_verbosity);
+        L::setLogger($logger);
+        L::setLevel($this->verbosity);
+        L::setOverrides($this->override_verbosity);
     }
     
     protected function monitor($filename)
@@ -211,9 +212,7 @@ class HistoryReader
         $rtm_printer = new SSLRealtimeModelPrinter($rtm);
         $growl_event_renderer = new SSLEventGrowlRenderer( $this->getGrowler() );
         $scrobbler = new ScrobblerRealtimeModel();
-        
-        $ts->setLogger($this->logger);
-        
+                
         $ts->addTickObserver($hfm);
         $ts->addTickObserver($scrobbler);
         $hfm->addDiffObserver($rtm);

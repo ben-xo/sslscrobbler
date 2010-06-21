@@ -41,8 +41,6 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
      */
     protected $now_playing_in_queue;
     
-    public $debug = false;
-    
     public function notifyTick($seconds)
     {
         $was_playing_before = isset($this->now_playing_in_queue); 
@@ -108,8 +106,13 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
         // reindex the queue
         $this->scrobble_model_queue = array_merge($this->scrobble_model_queue);
         
-        $this->debug && print("DEBUG: ScrobbleRealtimeModel::stopTrack(): dequeued track " . $stopped_track->getFullTitle() 
-                            . ". Queue length is now " . count($this->scrobble_model_queue) . "\n");
+        L::level(L::INFO) && 
+            L::log(L::INFO,  __CLASS__, 'dequeued track %s', 
+                array($stopped_track->getFullTitle()) );
+                
+        L::level(L::DEBUG) && 
+            L::log(L::DEBUG, __CLASS__, 'queue length is now %d', 
+                array(count($this->scrobble_model_queue)) );
     }
 
     protected function startTrack(SSLTrack $started_track)
@@ -137,8 +140,13 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
         }
         $this->scrobble_model_queue[] = $scrobble_model;
         
-        $this->debug && print("DEBUG: ScrobbleRealtimeModel::startTrack(): queued track " . $started_track->getFullTitle() 
-                            . ". Queue length is now " . count($this->scrobble_model_queue) . "\n");
+        L::level(L::INFO) && 
+            L::log(L::INFO,  __CLASS__, 'enqueued track %s', 
+                array($started_track->getFullTitle()) );
+                
+        L::level(L::DEBUG) && 
+            L::log(L::DEBUG, __CLASS__, 'queue length is now %d', 
+                array( count($this->scrobble_model_queue)) );
     }
     
     protected function updateTrack(SSLTrack $updated_track)
@@ -149,8 +157,13 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
             $scrobble_model->update($updated_track);
         }
         
-        $this->debug && print("DEBUG: ScrobbleRealtimeModel::updateTrack(): updated track " . $updated_track->getFullTitle() 
-                            . ". Queue length is now " . count($this->scrobble_model_queue) . "\n");
+        L::level(L::INFO) && 
+            L::log(L::INFO,  __CLASS__, 'updated track %s', 
+                array($started_track->getFullTitle()) );
+                
+        L::level(L::DEBUG) && 
+            L::log(L::DEBUG, __CLASS__, 'queue length is now %d', 
+                array( count($this->scrobble_model_queue)) );
     }
     
     /**
