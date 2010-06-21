@@ -56,14 +56,27 @@ class TickSource implements TickObservable, Loggable
         $this->logger->log(Logger::DEBUG, __CLASS__, "Clock Started, interval {$interval}");
         
         $elapsed = 0.0;
+        $start_time = microtime(true);
         while(true)
         {
-            $start_time = microtime(true);
             $this->logger->log(Logger::DEBUG, __CLASS__, "Tick {$elapsed} seconds");
             $this->notifyTickObservers($elapsed);
-            sleep($interval);
+            
+            $processing_time = microtime(true) - $start_time;
+            
+            if($processing_time > $interval)
+            {
+                $this->logger->log(Logger::WARNING, __CLASS__, "Notification took {$processing_time}, which is longer than interval {$interval}");
+            }
+            else
+            {
+                $usleep = $interval - $processing_time;
+                usleep($usleep * 1000000);   
+            }
+            
             $end_time = microtime(true);
             $elapsed = $end_time - $start_time;
+            $start_time = $end_time;
         }
     }
 }
