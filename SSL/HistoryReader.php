@@ -27,9 +27,13 @@
 class HistoryReader
 {
     // command line switches
-    protected $debug = false;
+    protected $dump_and_exit = false;
     protected $wait_for_file = true;
     protected $help = false;
+    protected $log_file = '';
+    protected $verbosity = Logger::INFO;
+    
+    protected $override_verbosity = array();
     
     protected $sleep = 2;
     
@@ -40,18 +44,18 @@ class HistoryReader
     protected $growl_config;
     
     /**
-     * @var SSLHistoryDom
+     * @var Logger
      */
-    protected $tree;
-    
-    /**
-     * @var SSLRealtimeModel
-     */
-    protected $rtm;
+    protected $logger;
     
     public function setGrowlConfig(array $growlConfig)
     { 
         $this->growl_config = $growlConfig;
+    }
+    
+    public function setVerbosityOverride(array $override)
+    {
+        $this->override_verbosity = $override;
     }
     
     public function main($argc, array $argv)
@@ -60,11 +64,13 @@ class HistoryReader
         
         // guess history file (always go for the most recently modified)
         $this->historydir = getenv('HOME') . '/Music/ScratchLIVE/History/Sessions';
-        
+                
         try
         {
             $this->parseOptions($argv);
             
+            $this->setupLogging();
+                        
             $appname = $this->appname;
             
             if($this->help)
@@ -105,10 +111,10 @@ class HistoryReader
                 throw new InvalidArgumentException("File $filename not readable.");
                 
                 
-            if($this->debug)
+            if($this->dump_and_exit)
             {
                 $monitor = new SSLHistoryFileMonitor($filename);
-                $monitor->debug();
+                $monitor->dump();
                 return;
             }
 
@@ -125,11 +131,13 @@ class HistoryReader
     
     public function usage($appname, array $argv)
     {
-        echo "Usage: {$appname} [--debug] [--immediate] [session file]\n";
+        echo "Usage: {$appname} [--dump] [--immediate] [--verbosity <n>] [--log-file <file>] [session file]\n";
         echo "Session file is optional. If omitted, the most recent history file from {$this->historydir} will be used automatically\n";
-        echo "    -h or --help:      This message.\n";
-        echo "    -d or --debug:     Dump the file's complete structure and exit\n";
-        echo "    -i or --immediate: Do not wait for the next history file to be created before monitoring. (Use if you started {$appname} mid way through a session)\n";
+        echo "    -h or --help:                This message.\n";
+        echo "    -d or --dump:                Dump the file's complete structure and exit\n";
+        echo "    -i or --immediate:           Do not wait for the next history file to be created before monitoring. (Use if you started {$appname} mid way through a session)\n";
+        echo "    -l or --log-file <filename>: Where to send logging output. If this option is omitted, output goes to stdout.\n";
+        echo "    -v or --verbosity <0-9>:     How much logging to output. (default: 0 (none))\n";
     }
     
     protected function parseOptions(array $argv)
@@ -144,9 +152,9 @@ class HistoryReader
                 continue;
             }
             
-            if($arg == '--debug' || $arg == '-d')
+            if($arg == '--dump' || $arg == '-d')
             {
-                $this->debug = true;
+                $this->dump_and_exit = true;
                 continue;
             }
             
@@ -155,9 +163,43 @@ class HistoryReader
                 $this->wait_for_file = false;
                 continue;
             }
+
+            if($arg == '--log-file' || $arg == '-l')
+            {
+                $this->log_file = array_shift($argv);
+                continue;
+            }
+            
+            if($arg == '--verbosity' || $arg == '-v')
+            {
+                $this->verbosity = (int) array_shift($argv);
+                continue;
+            }
             
             $this->filename = $arg;
         }        
+    }
+    
+    protected function setupLogging()
+    {
+        if($this->verbosity == 0)
+        {
+            $this->logger = new NullLogger();
+            return;
+        }
+        
+        if($this->log_file)
+        {
+            $this->logger = new FileLogger();
+            $this->logger->setLogFile($this->log_file);
+        }
+        else
+        {
+            $this->logger = new ConsoleLogger();
+        }
+        
+        $this->logger->setVerbosity($this->verbosity);
+        $this->logger->setVerbosityOverride($this->override_verbosity);
     }
     
     protected function monitor($filename)
@@ -169,6 +211,8 @@ class HistoryReader
         $rtm_printer = new SSLRealtimeModelPrinter($rtm);
         $growl_event_renderer = new SSLEventGrowlRenderer( $this->getGrowler() );
         $scrobbler = new ScrobblerRealtimeModel();
+        
+        $ts->setLogger($this->logger);
         
         $ts->addTickObserver($hfm);
         $ts->addTickObserver($scrobbler);

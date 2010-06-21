@@ -54,7 +54,7 @@ class SSLHistoryFileMonitor implements SSLDiffObservable, TickObserver
         }
     }
     
-    public function debug()
+    public function dump()
     {
         $tree = $this->read($this->filename);
         

@@ -24,9 +24,19 @@
  *  THE SOFTWARE.
  */
 
-class TickSource implements TickObservable
+class TickSource implements TickObservable, Loggable
 {
     protected $tick_observers = array();
+    
+    /**
+     * @var Logger
+     */
+    protected $logger;
+    
+    public function setLogger(Logger $logger)
+    {
+        $this->logger = $logger;
+    }
     
     public function addTickObserver(TickObserver $o)
     {
@@ -43,10 +53,17 @@ class TickSource implements TickObservable
     
     public function startClock($interval)
     {
+        $this->logger->log(Logger::DEBUG, __CLASS__, "Clock Started, interval {$interval}");
+        
+        $elapsed = 0.0;
         while(true)
         {
+            $start_time = microtime(true);
+            $this->logger->log(Logger::DEBUG, __CLASS__, "Tick {$elapsed} seconds");
+            $this->notifyTickObservers($elapsed);
             sleep($interval);
-            $this->notifyTickObservers($interval);
+            $end_time = microtime(true);
+            $elapsed = $end_time - $start_time;
         }
     }
 }

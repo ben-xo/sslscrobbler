@@ -42,6 +42,15 @@ $growlConfig = array(
     'app_name' => 'SSLHistoryReader'
 );
 
+// set log levels for various internal components.
+$log_levels = array(
+    // 'TickSource' => 9,
+    'SSLHistoryFileMonitor' => 9,
+    'SSLRealtimeModel' => 9,
+    'ScrobblerRealtimeModel' => 9
+);
+
 $h = new HistoryReader();
 $h->setGrowlConfig($growlConfig);
+$h->setVerbosityOverride($log_levels);
 $h->main($argc, $argv);
