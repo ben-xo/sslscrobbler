@@ -30,6 +30,7 @@ class HistoryReader
     protected $dump_and_exit = false;
     protected $wait_for_file = true;
     protected $help = false;
+    protected $replay = false;
     protected $log_file = '';
     protected $verbosity = L::INFO;
     
@@ -131,13 +132,14 @@ class HistoryReader
     
     public function usage($appname, array $argv)
     {
-        echo "Usage: {$appname} [--dump] [--immediate] [--verbosity <n>] [--log-file <file>] [session file]\n";
+        echo "Usage: {$appname} [OPTIONS] [session file]\n";
         echo "Session file is optional. If omitted, the most recent history file from {$this->historydir} will be used automatically\n";
-        echo "    -h or --help:                This message.\n";
-        echo "    -d or --dump:                Dump the file's complete structure and exit\n";
-        echo "    -i or --immediate:           Do not wait for the next history file to be created before monitoring. (Use if you started {$appname} mid way through a session)\n";
-        echo "    -l or --log-file <filename>: Where to send logging output. If this option is omitted, output goes to stdout.\n";
-        echo "    -v or --verbosity <0-9>:     How much logging to output. (default: 0 (none))\n";
+        echo "    -h or --help:            This message.\n";
+        echo "    -i or --immediate:       Do not wait for the next history file to be created before monitoring. (Use if you started {$appname} mid way through a session)\n";
+        echo "    -d or --dump:            Dump the file's complete structure and exit\n";
+        echo "    -v or --verbosity <0-9>: How much logging to output. (default: 0 (none))\n";
+        echo "    -l or --log-file <file>: Where to send logging output. If this option is omitted, output goes to stdout.\n";
+        echo "    -r or --replay:          Replay the session file, one batch per tick. Tick by pressing enter at the console.\n"; 
     }
     
     protected function parseOptions(array $argv)
@@ -176,6 +178,12 @@ class HistoryReader
                 continue;
             }
             
+            if($arg == '--replay' || $arg == '-r')
+            {
+                $this->replay = true;
+                continue;
+            }
+            
             $this->filename = $arg;
         }        
     }
@@ -206,8 +214,20 @@ class HistoryReader
     protected function monitor($filename)
     {
         // set up and couple the various parts of the system
-        $ts  = new TickSource();
-        $hfm = new SSLHistoryFileMonitor($filename);
+        
+        if($this->replay) 
+        {
+            // tick when the user presses enter
+            $ts = new CrankHandle();
+            $hfm = new SSLHistoryFileReplayer($filename);
+        }
+        else
+        {
+            // tick based on the clock
+            $ts  = new TickSource();
+            $hfm = new SSLHistoryFileMonitor($filename);
+        }
+        
         $rtm = new SSLRealtimeModel();
         $rtm_printer = new SSLRealtimeModelPrinter($rtm);
         $growl_event_renderer = new SSLEventGrowlRenderer( $this->getGrowler() );

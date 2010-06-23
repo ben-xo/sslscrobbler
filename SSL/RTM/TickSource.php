@@ -67,13 +67,17 @@ class TickSource implements TickObservable
             }
             else
             {
-                $usleep = $interval - $processing_time;
-                usleep($usleep * 1000000);   
+                $this->sleep($interval - $processing_time);
             }
             
             $end_time = microtime(true);
             $elapsed = $end_time - $start_time;
             $start_time = $end_time;
         }
+    }
+    
+    protected function sleep($seconds)
+    {
+        return usleep($seconds * 1000000);   
     }
 }

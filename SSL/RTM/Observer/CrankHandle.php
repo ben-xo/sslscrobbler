@@ -24,46 +24,10 @@
  *  THE SOFTWARE.
  */
 
-/**
- * Holds the output of SSLHistoryDom::getNewTracksSince().
- *  
- * @author ben
- */
-class SSLHistoryDiffDom extends SSLHistoryDom
+class CrankHandle extends TickSource
 {
-    private $tracks = array();
-    
-    public function __construct(array $tracks)
+    protected function sleep($seconds)
     {
-        $this->tracks = $tracks;
-    }
-    
-    public function getTracks()
-    {
-        return $this->tracks;
-    }
-    
-    public function getFirstTimestamp()
-    {
-        if(isset($this->tracks[0]))
-        {
-            return $this->tracks[0]->getUpdatedAt();
-        }
-        return null;
-    }
-    
-    public function addChunks(array $chunks)
-    {
-        return false;
-    }
-    
-    public function __toString()
-    {
-        $return = 'DIFF<+' . count($this->tracks) . '>:';
-        foreach($this->tracks as $track)
-        {
-            $return .= $track->__toString() . "\n";
-        }
-        return $return . "\n";
+        readline('<Press Enter to Tick>');
     }
 }
