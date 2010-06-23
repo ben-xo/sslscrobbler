@@ -31,6 +31,7 @@ class HistoryReader
     protected $wait_for_file = true;
     protected $help = false;
     protected $replay = false;
+    protected $csv = false;
     protected $log_file = '';
     protected $verbosity = L::INFO;
     
@@ -136,10 +137,12 @@ class HistoryReader
         echo "Session file is optional. If omitted, the most recent history file from {$this->historydir} will be used automatically\n";
         echo "    -h or --help:            This message.\n";
         echo "    -i or --immediate:       Do not wait for the next history file to be created before monitoring. (Use if you started {$appname} mid way through a session)\n";
+        echo "Debugging options:\n";
         echo "    -d or --dump:            Dump the file's complete structure and exit\n";
         echo "    -v or --verbosity <0-9>: How much logging to output. (default: 0 (none))\n";
-        echo "    -l or --log-file <file>: Where to send logging output. If this option is omitted, output goes to stdout.\n";
-        echo "    -r or --replay:          Replay the session file, one batch per tick. Tick by pressing enter at the console.\n"; 
+        echo "    -l or --log-file <file>: Where to send logging output. (If this option is omitted, output goes to stdout)\n";
+        echo "    -r or --replay:          Replay the session file, one batch per tick. (Tick by pressing enter at the console)\n"; 
+        echo "    -c or --csv:             Parse the session file as a CSV, not a binary file, for testing purposes. Best used with --replay\n"; 
     }
     
     protected function parseOptions(array $argv)
@@ -181,6 +184,12 @@ class HistoryReader
             if($arg == '--replay' || $arg == '-r')
             {
                 $this->replay = true;
+                continue;
+            }
+            
+            if($arg == '--csv' || $arg == '-c')
+            {
+                $this->csv = true;
                 continue;
             }
             
@@ -226,6 +235,11 @@ class HistoryReader
             // tick based on the clock
             $ts  = new TickSource();
             $hfm = new SSLHistoryFileMonitor($filename);
+        }
+        
+        if($this->csv)
+        {
+            $hfm = new SSLHistoryFileCSVInjector($filename);
         }
         
         $rtm = new SSLRealtimeModel();

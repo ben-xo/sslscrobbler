@@ -98,16 +98,21 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver
     protected function initialize()
     {
         $tree = $this->read($this->filename);
+        $tracks = $tree->getTracks();
+        $this->groupByTimestamp($tracks);
+        $this->initialized = true;
+    }
+    
+    protected function groupByTimestamp(array $tracks)
+    {
         $last_updated_at = 0;
         $group = array();
-        
-        $tracks = $tree->getTracks();
         
         L::level(L::DEBUG) &&
             L::log(L::DEBUG, __CLASS__, 'Found %d tracks in file', 
                 array(count($tracks)));
                 
-        foreach($tree->getTracks() as $track)
+        foreach($tracks as $track)
         {
             /* @var $track SSLTrack */
             if($track->getUpdatedAt() != $last_updated_at)
@@ -130,8 +135,6 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver
         
         L::level(L::DEBUG) &&
             L::log(L::DEBUG, __CLASS__, 'Divided tracks in %d groups', 
-                array(count($this->payloads)));
-                
-        $this->initialized = true;
+                array(count($this->payloads)));        
     }
 }
