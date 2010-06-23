@@ -47,9 +47,9 @@ class SSLRealtimeModelDeck
     /*
      * Status flags that are updated by notify()
      */
-    protected $track_stopped = false;
-    protected $track_started = false;
-    protected $track_updated = false;
+    protected $track_stopped = null;
+    protected $track_started = null;
+    protected $track_updated = null;
     
     /**
      * Stores the track on the deck at the beginning
@@ -178,9 +178,9 @@ class SSLRealtimeModelDeck
    
     protected function resetFlags()
     {
-        $this->track_started = false;
-        $this->track_stopped = false;
-        $this->track_updated = false;
+        $this->track_started = null;
+        $this->track_stopped = null;
+        $this->track_updated = null;
     }
     
 
@@ -261,7 +261,7 @@ class SSLRealtimeModelDeck
             ) )
         {
             // There is now a track where there was none.
-            $this->track_started = true;
+            $this->track_started = $this->track;
         }
         
         if( $starting_track && 
@@ -271,7 +271,7 @@ class SSLRealtimeModelDeck
             ) )
         {
             // There is now no track where there was one.
-            $this->track_stopped = true;
+            $this->track_stopped = $starting_track;
         }
         
         if(  $this->track && 
@@ -284,7 +284,7 @@ class SSLRealtimeModelDeck
             // that SSL would log the same row twice unless there was new information in the new
             // row).
             
-            $this->track_updated = true;
+            $this->track_updated = $this->track;
         }
     }    
 

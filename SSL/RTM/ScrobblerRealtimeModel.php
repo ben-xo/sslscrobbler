@@ -159,7 +159,7 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
         
         L::level(L::INFO) && 
             L::log(L::INFO,  __CLASS__, 'updated track %s', 
-                array($started_track->getFullTitle()) );
+                array($updated_track->getFullTitle()) );
                 
         L::level(L::DEBUG) && 
             L::log(L::DEBUG, __CLASS__, 'queue length is now %d', 

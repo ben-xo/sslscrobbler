@@ -217,7 +217,7 @@ class HistoryReader
         $ts->addTickObserver($scrobbler);
         $hfm->addDiffObserver($rtm);
         $rtm->addTrackChangeObserver($rtm_printer);
-        $rtm->addTrackChangeObserver($growl_event_renderer);
+        //$rtm->addTrackChangeObserver($growl_event_renderer);
         $rtm->addTrackChangeObserver($scrobbler);
         $scrobbler->addNowPlayingObserver($growl_event_renderer);
         //$scrobbler->addTimeoutObserver($growl_event_renderer);

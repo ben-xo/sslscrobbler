@@ -44,7 +44,7 @@ $growlConfig = array(
 
 // set max log levels for various internal components. (The default is unlimited.)
 $log_levels = array(
-    'TickSource' => L::SILENT,
+//    'TickSource' => L::SILENT,
 //    'SSLHistoryFileMonitor' => L::DEBUG,
 //    'SSLRealtimeModel' => L::DEBUG,
 //    'ScrobblerRealtimeModel' => L::DEBUG,

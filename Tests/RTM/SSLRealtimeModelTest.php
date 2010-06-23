@@ -108,10 +108,6 @@ class SSLRealtimeModelTest extends PHPUnit_Framework_TestCase implements TrackCh
                   
         $this->decks[0]->expects($this->once())
                        ->method('trackStarted')
-                       ->will($this->returnValue(true));
-
-        $this->decks[0]->expects($this->once())
-                       ->method('getCurrentTrack')
                        ->will($this->returnValue($track0));
                        
         $this->rtm->notifyDiff( new SSLHistoryDiffDom( array(
@@ -138,10 +134,6 @@ class SSLRealtimeModelTest extends PHPUnit_Framework_TestCase implements TrackCh
                   
         $this->decks[1]->expects($this->once())
                        ->method('trackStarted')
-                       ->will($this->returnValue(true));
-
-        $this->decks[1]->expects($this->once())
-                       ->method('getCurrentTrack')
                        ->will($this->returnValue($track0));
                        
         $this->rtm->notifyDiff( new SSLHistoryDiffDom( array(
@@ -175,10 +167,6 @@ class SSLRealtimeModelTest extends PHPUnit_Framework_TestCase implements TrackCh
                       
             $this->decks[$i]->expects($this->once())
                            ->method('trackStarted')
-                           ->will($this->returnValue(true));
-    
-            $this->decks[$i]->expects($this->once())
-                           ->method('getCurrentTrack')
                            ->will($this->returnValue($track));
 
             array_unshift($tracks, $track); // populate it backwards on purpose

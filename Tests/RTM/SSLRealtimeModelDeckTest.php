@@ -34,7 +34,6 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
     public function setUp()
     {
         $this->srmd = new SSLRealtimeModelDeck(0);
-        $this->srmd->setDebug(false);
     }
 
     public function trackMock($id, $state)
@@ -53,9 +52,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
     
     public function test_initial_state()
     {
-        $this->assertFalse($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertNull($this->srmd->trackStarted());
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertNull($this->srmd->trackUpdated());
         
         $this->assertNull($this->srmd->getCurrentTrack());
         $this->assertNull($this->srmd->getPreviousTrack());
@@ -73,9 +72,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
            $track0
         ) ) );
         
-        $this->assertTrue($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertSame($this->srmd->trackStarted(), $track0);
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertNull($this->srmd->trackUpdated());
         
         $this->assertSame($this->srmd->getCurrentTrack(), $track0);
         $this->assertNull($this->srmd->getPreviousTrack());
@@ -92,9 +91,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
            $track0, $track1
         ) ) );
         
-        $this->assertTrue($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertSame($this->srmd->trackStarted(), $track1);
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertNull($this->srmd->trackUpdated());
 
         $this->assertSame($this->srmd->getCurrentTrack(), $track1);
         $this->assertNull($this->srmd->getPreviousTrack()); // NEW to NEW implies that the first one was SKIPPED
@@ -114,9 +113,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
            $track0, $track1
         ) ) );
         
-        $this->assertTrue($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertSame($this->srmd->trackStarted(), $track0);
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertNull($this->srmd->trackUpdated());
 
         $this->assertSame($this->srmd->getCurrentTrack(), $track0);
         $this->assertNull($this->srmd->getPreviousTrack()); // NEW to NEW implies that the first one was SKIPPED
@@ -133,9 +132,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
            $track0, $track1
         ) ) );
         
-        $this->assertFalse($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertNull($this->srmd->trackStarted());
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertNull($this->srmd->trackUpdated());
 
         $this->assertNull($this->srmd->getCurrentTrack());
         $this->assertSame($this->srmd->getPreviousTrack(), $track1);
@@ -152,9 +151,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
            $track0, $track1
         ) ) );
         
-        $this->assertTrue($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertSame($this->srmd->trackStarted(), $track1);
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertNull($this->srmd->trackUpdated());
 
         $this->assertSame($this->srmd->getCurrentTrack(), $track1);
         $this->assertSame($this->srmd->getPreviousTrack(), $track0);
@@ -171,9 +170,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
            $track0, $track1
         ) ) );
         
-        $this->assertFalse($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertNull($this->srmd->trackStarted());
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertNull($this->srmd->trackUpdated());
 
         $this->assertNull($this->srmd->getCurrentTrack());
         $this->assertSame($this->srmd->getPreviousTrack(), $track1);
@@ -191,9 +190,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
            $track0, $track1, $track2
         ) ) );
         
-        $this->assertTrue($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertSame($this->srmd->trackStarted(), $track2);
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertNull($this->srmd->trackUpdated());
 
         $this->assertSame($this->srmd->getCurrentTrack(), $track2);
         $this->assertNull($this->srmd->getPreviousTrack());
@@ -210,9 +209,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
         ) ) );
         
         // this is the intended case: start a track (and notify)...
-        $this->assertTrue($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertSame($this->srmd->trackStarted(), $track0);
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertNull($this->srmd->trackUpdated());
         
         $this->assertSame($this->srmd->getCurrentTrack(), $track0);
         $this->assertNull($this->srmd->getPreviousTrack());
@@ -223,9 +222,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
         ) ) );
         
         // ...then stop it again (and notify)
-        $this->assertFalse($this->srmd->trackStarted());
-        $this->assertTrue($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertNull($this->srmd->trackStarted());
+        $this->assertSame($this->srmd->trackStopped(), $track0);
+        $this->assertNull($this->srmd->trackUpdated());
 
         $this->assertNull($this->srmd->getCurrentTrack());
         $this->assertSame($this->srmd->getPreviousTrack(), $track1);
@@ -242,9 +241,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
         ) ) );
         
         // this is the intended case: start a track (and notify)...
-        $this->assertTrue($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertSame($this->srmd->trackStarted(), $track0);
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertNull($this->srmd->trackUpdated());
         
         $this->assertSame($this->srmd->getCurrentTrack(), $track0);
         $this->assertNull($this->srmd->getPreviousTrack());
@@ -255,9 +254,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
         ) ) );
         
         // ...then stop it again (and notify)
-        $this->assertFalse($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertTrue($this->srmd->trackUpdated());
+        $this->assertNull($this->srmd->trackStarted());
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertSame($this->srmd->trackUpdated(), $track1);
 
         $this->assertSame($this->srmd->getCurrentTrack(), $track1);
         $this->assertNull($this->srmd->getPreviousTrack());
@@ -276,9 +275,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
         ) ) );
         
         // this is the intended case: start a track (and notify)...
-        $this->assertTrue($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertSame($this->srmd->trackStarted(), $track0);
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertNull($this->srmd->trackUpdated());
         
         $this->assertSame($this->srmd->getCurrentTrack(), $track0);
         $this->assertNull($this->srmd->getPreviousTrack());
@@ -289,9 +288,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
         ) ) );
         
         // ...then stop it again (and notify)
-        $this->assertFalse($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertTrue($this->srmd->trackUpdated());
+        $this->assertNull($this->srmd->trackStarted());
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertSame($this->srmd->trackUpdated(), $track1);
 
         $this->assertSame($this->srmd->getCurrentTrack(), $track1);
         $this->assertNull($this->srmd->getPreviousTrack());
@@ -310,9 +309,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
         
         // if you receive a start and stop in a single update of the same track,
         // then there's really no point making a fuss about it.
-        $this->assertFalse($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertNull($this->srmd->trackStarted());
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertNull($this->srmd->trackUpdated());
 
         $this->assertNull($this->srmd->getCurrentTrack());
         $this->assertSame($this->srmd->getPreviousTrack(), $track1);
@@ -329,9 +328,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
         ) ) );
         
         // this is the intended case: start a track (and notify)...
-        $this->assertTrue($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertSame($this->srmd->trackStarted(), $track0);
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertNull($this->srmd->trackUpdated());
         
         $this->assertSame($this->srmd->getCurrentTrack(), $track0);
         $this->assertNull($this->srmd->getPreviousTrack());
@@ -344,9 +343,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
         
         
         // ...then stop it again (and notify) and start another (and notify)
-        $this->assertTrue($this->srmd->trackStarted());
-        $this->assertTrue($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertSame($this->srmd->trackStarted(), $track2);
+        $this->assertSame($this->srmd->trackStopped(), $track0);
+        $this->assertNull($this->srmd->trackUpdated());
 
         $this->assertSame($this->srmd->getCurrentTrack(), $track2);
         $this->assertSame($this->srmd->getPreviousTrack(), $track1);
@@ -365,9 +364,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
            $track0
         ) ) );
         
-        $this->assertTrue($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertSame($this->srmd->trackStarted(), $track0);
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertNull($this->srmd->trackUpdated());
         
         $this->assertSame($this->srmd->getCurrentTrack(), $track0);
         $this->assertNull($this->srmd->getPreviousTrack());
@@ -377,9 +376,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
            $track1
         ) ) );
         
-        $this->assertFalse($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertNull($this->srmd->trackStarted());
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertNull($this->srmd->trackUpdated());
 
         $this->assertSame($this->srmd->getCurrentTrack(), $track0);
         $this->assertNull($this->srmd->getPreviousTrack());
@@ -399,9 +398,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
            $track0
         ) ) );
         
-        $this->assertTrue($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertSame($this->srmd->trackStarted(), $track0);
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertNull($this->srmd->trackUpdated());
         
         $this->assertSame($this->srmd->getCurrentTrack(), $track0);
         $this->assertNull($this->srmd->getPreviousTrack());
@@ -410,9 +409,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
            $track0
         ) ) );
         
-        $this->assertFalse($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertNull($this->srmd->trackStarted());
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertNull($this->srmd->trackUpdated());
 
         $this->assertSame($this->srmd->getCurrentTrack(), $track0);
         $this->assertNull($this->srmd->getPreviousTrack());
@@ -431,9 +430,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
         ) ) );
         
         // start one, then start two, then start three
-        $this->assertTrue($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertSame($this->srmd->trackStarted(), $track2);
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertNull($this->srmd->trackUpdated());
         
         $this->assertSame($this->srmd->getCurrentTrack(), $track2);
         $this->assertNull($this->srmd->getPreviousTrack());
@@ -444,9 +443,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
         ) ) );
         
         // now stop one
-        $this->assertFalse($this->srmd->trackStarted());
-        $this->assertTrue($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertNull($this->srmd->trackStarted());
+        $this->assertSame($this->srmd->trackStopped(), $track2);
+        $this->assertNull($this->srmd->trackUpdated());
 
         $this->assertNull($this->srmd->getCurrentTrack());
         $this->assertSame($this->srmd->getPreviousTrack(), $track4);
@@ -461,9 +460,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
            $track0
         ) ) );
         
-        $this->assertTrue($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertSame($this->srmd->trackStarted(), $track0);
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertNull($this->srmd->trackUpdated());
         
         $this->assertSame($this->srmd->getCurrentTrack(), $track0);
         $this->assertNull($this->srmd->getPreviousTrack());
@@ -473,9 +472,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
            $track1
         ) ) );
         
-        $this->assertFalse($this->srmd->trackStarted());
-        $this->assertTrue($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertNull($this->srmd->trackStarted());
+        $this->assertSame($this->srmd->trackStopped(), $track0);
+        $this->assertNull($this->srmd->trackUpdated());
 
         $this->assertNull($this->srmd->getCurrentTrack());
         $this->assertNull($this->srmd->getPreviousTrack());
@@ -489,9 +488,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
            $track0, $track1
         ) ) );
         
-        $this->assertFalse($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertNull($this->srmd->trackStarted());
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertNull($this->srmd->trackUpdated());
 
         $this->assertNull($this->srmd->getCurrentTrack());
         $this->assertNull($this->srmd->getPreviousTrack());
@@ -505,9 +504,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
         ) ) );
         
         // this is the intended case: start a track (and notify)...
-        $this->assertTrue($this->srmd->trackStarted());
-        $this->assertFalse($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertSame($this->srmd->trackStarted(), $track0);
+        $this->assertNull($this->srmd->trackStopped());
+        $this->assertNull($this->srmd->trackUpdated());
         
         $this->assertSame($this->srmd->getCurrentTrack(), $track0);
         $this->assertNull($this->srmd->getPreviousTrack());
@@ -520,9 +519,9 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
         
         
         // ...then stop it again (and notify) and start another (and notify)
-        $this->assertTrue($this->srmd->trackStarted());
-        $this->assertTrue($this->srmd->trackStopped());
-        $this->assertFalse($this->srmd->trackUpdated());
+        $this->assertSame($this->srmd->trackStarted(), $track2);
+        $this->assertSame($this->srmd->trackStopped(), $track0);
+        $this->assertNull($this->srmd->trackUpdated());
 
         $this->assertSame($this->srmd->getCurrentTrack(), $track2);
         $this->assertNull($this->srmd->getPreviousTrack());

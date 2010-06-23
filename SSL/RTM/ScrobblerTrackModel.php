@@ -69,8 +69,25 @@ class ScrobblerTrackModel
     {
         $this->playtime += $seconds;
 
+        $was_passed_now_playing_point = $this->passed_now_playing_point;
+        $was_passed_scrobble_point = $this->passed_scrobble_point;
+        
         $this->passed_now_playing_point = ($this->playtime >= self::NOW_PLAYING_MIN);
         $this->passed_scrobble_point = ($this->playtime >= $this->scrobble_point);
+        
+        if($this->passed_now_playing_point && !$was_passed_now_playing_point)
+        {
+            L::level(L::INFO) &&
+                L::log(L::INFO, __CLASS__, '%s passed now playing point', 
+                    array($this->track->getFullTitle()));
+        }
+
+        if($this->passed_scrobble_point && !$was_passed_scrobble_point)
+        {
+            L::level(L::INFO) &&
+                L::log(L::INFO, __CLASS__, '%s passed now scrobble point', 
+                    array($this->track->getFullTitle()));
+        }
     }
     
     /**
