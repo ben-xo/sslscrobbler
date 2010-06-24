@@ -42,6 +42,11 @@ class SSLEventGrowlRenderer implements TrackChangeObserver, NowPlayingObserver
         {
             /* @var $event TrackChangeEvent */
             $this->growler->notify('alert', 'Track Change', $event);
+            
+            L::level(L::DEBUG) &&
+                L::log(L::DEBUG, __CLASS__, '>> Track change: >> %s', 
+                    array($event));
+            
         }
     }
     
@@ -50,10 +55,18 @@ class SSLEventGrowlRenderer implements TrackChangeObserver, NowPlayingObserver
         if($track)
         {
             $this->growler->notify('alert', 'Now Playing', $track->getFullTitle());
+
+            L::level(L::DEBUG) &&
+                L::log(L::DEBUG, __CLASS__, '>> Now Playing: >> %s', 
+                    array($track->getFullTitle()));
         }
         else
         {
             $this->growler->notify('alert', 'Now Playing', '<Playback Stopped>');
+
+            L::level(L::DEBUG) &&
+                L::log(L::DEBUG, __CLASS__, '>> Now Playing: >> <Playback Stopped>', 
+                    array());
         }
     }
 }

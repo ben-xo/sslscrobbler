@@ -40,10 +40,9 @@ class SSLHistoryFileCSVInjector extends SSLHistoryFileReplayer
         {
             if($fs)
             {
-                $i = 0;
-                foreach($field_order as $f_name)
+                foreach($field_order as $i => $f_name)
                 {
-                    $fields[$f_name] = $fs[$i++];
+                    isset($fs[$i]) && $fields[$f_name] = $fs[$i];
                 }
                 
                 $track = new SSLTrack();
@@ -52,9 +51,11 @@ class SSLHistoryFileCSVInjector extends SSLHistoryFileReplayer
             }
         }
         
+        if(empty($tracks)) throw new InvalidArgumentException("File {$filename} contained no records");
+        
         fclose($fp);
         
-        return new SSLHistoryDiffDom($tracks);
+        return $tracks;
     }
     
     /**
