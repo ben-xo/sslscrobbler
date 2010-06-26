@@ -86,12 +86,19 @@ class SSLChunkParser
         }
             
         if($length_read < 8)
-            throw new OutOfBoundsException("No more data (read $length_read bytes)");
+            throw new OutOfBoundsException("No more data (read {$length_read} bytes)");
 
         if($header_bin === false)
             throw new RuntimeException("Read error; failed to read 8 bytes of chunk header");
             
         list($chunk_type, $chunk_size) = $this->parseHeader($header_bin);
+        
+        if($chunk_size > 1048576)
+        {
+            // a chunk larger than 1Mb!?
+            $chunk_size = number_format($chunk_size / 1024 / 1024, 2);
+            throw new RuntimeException("Found chunk claiming to be enormous ({$chunk_size} MiB); are you reading the right file?");
+        }
         
         $body_bin = fread($fp, $chunk_size);
         

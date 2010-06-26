@@ -115,7 +115,7 @@ class HistoryReader
                 
             if($this->dump_and_exit)
             {
-                $monitor = new SSLHistoryFileMonitor($filename);
+                $monitor = new SSLHistoryFileDiffMonitor($filename);
                 $monitor->dump();
                 return;
             }
