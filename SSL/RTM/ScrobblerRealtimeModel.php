@@ -95,7 +95,8 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
                 unset($this->scrobble_model_queue[$i]);
                 
                 // remove from now_playing, if necessary.
-                if($this->now_playing_in_queue->getRow() == $stopped_row)
+                if($this->now_playing_in_queue && 
+                   $this->now_playing_in_queue->getRow() == $stopped_row)
                 {
                     $this->now_playing_in_queue = null;
                 }

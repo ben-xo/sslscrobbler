@@ -62,7 +62,7 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $this->now_playing_called_with = false;
     }
     
-    public function srmNewDeckExactly($exactly, $override0=null, $override1=null, $override2=null)
+    public function srmExpectsNewDeckExactly($exactly, $override0=null, $override1=null, $override2=null)
     {
         $this->srm->expects($this->exactly($exactly))
              ->method('newScrobblerTrackModel')
@@ -97,7 +97,7 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         
         // setup
         
-        $this->srmNewDeckExactly(3);
+        $this->srmExpectsNewDeckExactly(3);
 
         $events1 = new TrackChangeEventList( 
             array(new TrackStartedEvent($this->track0)) 
@@ -131,7 +131,7 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
     {
         $srm = $this->srm;
 
-        $this->srmNewDeckExactly(1);
+        $this->srmExpectsNewDeckExactly(1);
                 
         $events = new TrackChangeEventList( 
             array(new TrackStartedEvent($this->track0)) 
@@ -151,7 +151,7 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $srm = $this->srm;
 
         // expectations
-        $this->srmNewDeckExactly(1);
+        $this->srmExpectsNewDeckExactly(1);
         
         // events
         $events = new TrackChangeEventList( 
@@ -185,7 +185,7 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $srm = $this->srm;
         
         // expectations
-        $this->srmNewDeckExactly(2);
+        $this->srmExpectsNewDeckExactly(2);
         
         // events
         $events = new TrackChangeEventList( 
@@ -221,7 +221,7 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $srm = $this->srm;
         
         // expectations
-        $this->srmNewDeckExactly(2);
+        $this->srmExpectsNewDeckExactly(2);
         
         // events
         $events = new TrackChangeEventList( 
@@ -257,7 +257,7 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $srm = $this->srm;
         
         // expectations
-        $this->srmNewDeckExactly(2);
+        $this->srmExpectsNewDeckExactly(2);
         
         // events
         $events = new TrackChangeEventList( 
@@ -299,7 +299,7 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $deck0 = new ScrobblerTrackModel($track0);
         
         // expectations
-        $this->srmNewDeckExactly(2, $deck0);
+        $this->srmExpectsNewDeckExactly(2, $deck0);
         
         // events
         $events = new TrackChangeEventList( 
@@ -324,6 +324,54 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         
         $this->assertTrue($this->now_playing_called);
         $this->assertSame($this->now_playing_called_with, $this->track1);        
+    }
+    
+    /**
+     * @depends test_start_a_track_sets_now_playing
+     */
+    public function test_notifying_two_stops()
+    {
+        // get the model into a state with a track playing, and a track queued...
+        
+        $srm = $this->srm;
+        
+        $stm_test = new ScrobblerTrackModelTest();
+        
+        // expectations
+        $this->srmExpectsNewDeckExactly(2);
+        
+        // events
+        $events = new TrackChangeEventList( 
+            array(new TrackStartedEvent($this->track0), 
+                  new TrackStartedEvent($this->track1)) 
+        );
+            
+        $srm->notifyTrackChange($events);
+
+        $this->assertTrue($this->now_playing_called);
+        $this->assertSame($this->now_playing_called_with, $this->track0);        
+        
+        $this->now_playing_called = false;
+        $this->now_playing_called_with = false;
+        
+        // Now for the important bit of the test!
+        
+        $stm_test = new ScrobblerTrackModelTest();
+        $track2 = $stm_test->trackMock(123, 300, true, 150); // track0, but "played"
+        $track3 = $stm_test->trackMock(456, 300, true, 150); // track1, but "played"
+        
+        $events = new TrackChangeEventList( 
+            array(new TrackStoppedEvent($track2), 
+                  new TrackStoppedEvent($track3)) 
+        );
+        
+        $srm->notifyTrackChange($events);
+        
+        $this->assertEquals(0, $srm->getQueueSize());
+        
+        $this->assertTrue($this->now_playing_called);
+        $this->assertNull($this->now_playing_called_with);        
+        
     }
     
     // TODO: test tick behaviour!
