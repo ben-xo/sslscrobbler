@@ -31,17 +31,26 @@ class SSLParser
     /**
      * @var SSLDom
      */
-    protected $dom;
+    protected $dom_prototype;
 
+    /**
+     * You should construct the parser with a $dom of the type that you wish to 
+     * fill in from the parsed chunks (different DOM types have different parsing
+     * semantics for the chunk types). For example, you probably want to use the
+     * SSLHistoryDom for reading the history file, as this DOM understands that
+     * ADAT chunks are SSLTracks. 
+     * 
+     * @param SSLDom $dom
+     */
     public function __construct(SSLDom $dom = null)
     {
         if(isset($dom))
         {
-            $this->dom = $dom;
+            $this->dom_prototype = $dom;
         }
         else
         {
-            $this->newDom();        
+            $this->dom_prototype = $this->newSSLDom();        
         }
     }
     
@@ -50,13 +59,17 @@ class SSLParser
      */
     public function parse($filename)
     {
+        $this->open($filename);
+        return $this->readChunks();
+    }
+        
+    public function open($filename)
+    {
         $this->fp = fopen($filename, 'r');
         if(!$this->fp)
-            throw new RuntimeException("Opening file $filename failed.");
-
-        $this->readChunks();
-        
-        return $this->dom;
+        {
+            throw new RuntimeException("Opening file {$filename} failed.");
+        }
     }
     
     public function close()
@@ -64,14 +77,21 @@ class SSLParser
         fclose($this->fp);
     }
 
-    protected function readChunks()
+    public function readChunks()
     {
+        if(!$this->fp)
+        {
+            throw new RuntimeException("readChunks() called with no file open.");
+        }
+        
         $reader = new SSLChunkReader($this->fp);
-        $this->dom->addChunks( $reader->getChunks() );
+        $dom = clone $this->dom_prototype;
+        $dom->addChunks( $reader->getChunks() );
+        return $dom;
     }
     
-    protected function newDom()
+    protected function newSSLDom()
     {
-        $this->dom = new SSLDom();
+        return new SSLDom();
     }
 }

@@ -234,7 +234,7 @@ class HistoryReader
         {
             // tick based on the clock
             $ts  = new TickSource();
-            $hfm = new SSLHistoryFileMonitor($filename);
+            $hfm = new SSLHistoryFileTailMonitor($filename);
         }
         
         if($this->csv)

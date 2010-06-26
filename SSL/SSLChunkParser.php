@@ -77,19 +77,30 @@ class SSLChunkParser
                 
         $length_read = strlen($header_bin);
         if($length_read == 0)
+        {
+            L::level(L::DEBUG) &&
+                L::log(L::DEBUG, __CLASS__, "Reached EOF; no more to read", 
+                    array());
+                
             return false; // if we read an exact chunk, it's not an 'eof'.
+        }
             
         if($length_read < 8)
             throw new OutOfBoundsException("No more data (read $length_read bytes)");
 
         if($header_bin === false)
-            throw new RuntimeException("Read error; failed to read 6 bytes of chunk header");
+            throw new RuntimeException("Read error; failed to read 8 bytes of chunk header");
             
         list($chunk_type, $chunk_size) = $this->parseHeader($header_bin);
         
         $body_bin = fread($fp, $chunk_size);
         
         $chunk = $this->newChunk($chunk_type, $body_bin);
+        
+        L::level(L::DEBUG) &&
+            L::log(L::DEBUG, __CLASS__, "Read %s chunk from file", 
+                array($chunk_type));
+        
         return $chunk;
     }
     

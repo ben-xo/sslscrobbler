@@ -24,7 +24,7 @@
  *  THE SOFTWARE.
  */
 
-class SSLHistoryFileMonitor implements SSLDiffObservable, TickObserver
+class SSLHistoryFileDiffMonitor implements SSLDiffObservable, TickObserver
 {
     protected $diff_observers = array();
     

@@ -24,45 +24,49 @@
  *  THE SOFTWARE.
  */
 
-class SSLChunkReader
+class SSLHistoryFileTailMonitor extends SSLHistoryFileDiffMonitor
 {
-    protected $fp;
-    
-    public function __construct($fp)
-    { 
-        $this->fp = $fp;
-    }
-    
-    public function getChunks()
-    {
-        $chunks = array();
-        
-        do
-        {
-            $chunk = $this->readChunk();
-            if($chunk !== false)
-            {
-                $chunks[] = $chunk;
-            }
-        }
-        while($chunk !== false);
-        
-        L::level(L::DEBUG) &&
-            L::log(L::DEBUG, __CLASS__, "Read %d chunks", 
-                array( count($chunks)));
-                
-        return $chunks;
-    }
-    
     /**
-     * Reads an SSL data file chunk from the filepointer. Chunks have an 8 byte header
-     * consisting of 4 byte type string and 4 byte length.
-     * 
-     * @return SSLChunk
+     * @var SSLParser
      */
-    protected function readChunk()
+    protected $tail_parser;
+    
+    public function notifyTick($seconds)
     {
-        $cp = new SSLChunkParser();
-        return $cp->parseFromFile($this->fp);
+        if(!isset($this->tail_parser))
+        {
+            $this->tail_parser = $this->newTailParser($this->filename);
+        }
+        
+        // $dom is what was passed into the constructor of SSLParser 
+        // in $this->newTailParser
+        /* @var $dom SSLHistoryDom */
+        $dom = $this->tail_parser->readChunks();
+        $changed = $dom->getNewOrUpdatedTracksSince(new SSLHistoryDom());
+        
+        if(count($changed->getTracks()) > 0)
+        {
+            $this->notifyDiffObservers($changed);
+        }
+    }
+    
+    protected function newTailParser($filename)
+    {
+        $parser = new SSLParser(new SSLHistoryDom());
+        $parser->open($filename);
+        return $parser;
+    }
+    
+    public function close()
+    {
+        if(isset($this->tail_parser))
+        {
+            $this->tail_parser->close();
+        }
+    }
+    
+    public function __destruct()
+    {
+        $this->close();
     }
 }
