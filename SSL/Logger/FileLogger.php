@@ -26,5 +26,8 @@
 
 class FileLogger implements Logger
 {
-    public function log($timestamp, $level, $source, $message) {}
+    public function log($timestamp, $level, $source, $message) 
+    {
+        throw new Exception("FileLogger not implemented yet. TODO / FIXME");
+    }
 }

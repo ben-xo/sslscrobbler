@@ -43,14 +43,23 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
     
     public function notifyTick($seconds)
     {
-        $was_playing_before = isset($this->now_playing_in_queue); 
-        $this->elapse($seconds, $was_playing_before);
+        $was_playing_before_notify = false;
+        if(isset($this->now_playing_in_queue))
+        {
+            $was_playing_before_notify = $this->now_playing_in_queue->getRow();
+        }
+        
+        $this->elapse($seconds, $was_playing_before_notify);
     }
     
     public function notifyTrackChange(TrackChangeEventList $events)
     {
-        $was_playing_before_notify = isset($this->now_playing_in_queue); 
-         
+        $was_playing_before_notify = false;
+        if(isset($this->now_playing_in_queue))
+        {
+            $was_playing_before_notify = $this->now_playing_in_queue->getRow();
+        }
+                 
         foreach($events as $event)
         {
             if($event instanceof TrackStoppedEvent)
@@ -185,6 +194,7 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
      * have been any transitions in what's "Now Playing".
      * 
      * @param integer $seconds
+     * @param integer $was_playing_before id of the row playing, or false if none was playing
      */
     protected function elapse($seconds, $was_playing_before)
     {
@@ -212,13 +222,31 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
                 break;
             }
         }
+
+        if(!$is_now_playing && $was_playing_before)
+        {
+            // Don't send the playlist "back in time".
+            // Perhaps no track is naturally "now playing", but let's pick either the
+            // current playing track or a newer one (if the current one's gone) as now playing.
+            // (never pick one that's older unless we have no choice.)
+            
+            foreach($this->scrobble_model_queue as $scrobble_model)
+            {
+                if($scrobble_model->getRow() >= $was_playing_before)
+                {
+                    $is_now_playing = true;
+                    $this->setTrackNowPlaying($scrobble_model);
+                    break;
+                }
+            }
+        }
         
         if(!$is_now_playing && $queue_length >= 1)
         {
             // No queued track is definitively NowPlaying(), so let's just mark the 1st one 
             // in the queue as now playing anyway. This is appropriate for the first played 
             // track, and for the single-deck preview mode
-            
+                        
             $scrobble_model = $this->scrobble_model_queue[0];
             
             $is_now_playing = true;

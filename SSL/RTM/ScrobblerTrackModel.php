@@ -85,18 +85,22 @@ class ScrobblerTrackModel
         if($this->passed_scrobble_point && !$was_passed_scrobble_point)
         {
             L::level(L::INFO) &&
-                L::log(L::INFO, __CLASS__, '%s passed now scrobble point', 
+                L::log(L::INFO, __CLASS__, '%s passed scrobble point', 
                     array($this->track->getFullTitle()));
         }
     }
     
     /**
-     * We model a track as potentially "Now Playing" if it's been on the deck for "NOW_PLAYING_MIN" seconds.
-     * SSL doesn't give us enough info to say if it's really playing or not.
+     * We model a track as potentially "Now Playing" if it's been on the deck for 
+     * "NOW_PLAYING_MIN" seconds, and has not yet reached the scrobble point.
+     * (SSL doesn't give us enough info to say if it's really playing or not.)
+     * 
+     * Note that edge cases, such as what's "Now Playing" when there's only 1 song
+     * on the deck, are handled elsewhere (in ScrobblerRealtimeModel)
      */
     public function isNowPlaying()
     {
-        return $this->passed_now_playing_point;
+        return $this->passed_now_playing_point && !$this->passed_scrobble_point;
     }
     
     public function isScrobblable()

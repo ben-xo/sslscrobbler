@@ -100,7 +100,7 @@ class ScrobblerTrackModelTest extends PHPUnit_Framework_TestCase
     {
         $track = $this->trackMock(123, 300, true, 175);
         $stm = new ScrobblerTrackModel($track);   
-        $this->assertTrue($stm->isNowPlaying());
+        $this->assertFalse($stm->isNowPlaying()); // we assume it's no longer "now playing" if it's past the scrobble point
         $this->assertTrue($stm->isScrobblable());
     }
     
@@ -162,7 +162,7 @@ class ScrobblerTrackModelTest extends PHPUnit_Framework_TestCase
         $stm = $this->stm;
         $stm->elapse( $this->scrobble_time + 5 );
         $stm->update( $this->trackMock(123, 300, true) );
-        $this->assertTrue($stm->isNowPlaying());
+        $this->assertFalse($stm->isNowPlaying()); // we assume it's no longer "now playing" if it's past the scrobble point
         $this->assertTrue($stm->isScrobblable());
     }
     
@@ -171,7 +171,7 @@ class ScrobblerTrackModelTest extends PHPUnit_Framework_TestCase
         $stm = $this->stm;
         $stm->update( $this->trackMock(123, 300, true) );
         $stm->elapse( $this->scrobble_time + 5 );
-        $this->assertTrue($stm->isNowPlaying());
+        $this->assertFalse($stm->isNowPlaying()); // we assume it's no longer "now playing" if it's past the scrobble point
         $this->assertTrue($stm->isScrobblable());
     }
     
