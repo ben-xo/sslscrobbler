@@ -315,8 +315,6 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         
     }
     
-    // TODO: test tick behaviour!
-    
     public function test_now_playing_goes_to_newest_non_now_playing_track_as_default() 
     {
         // test that it doesn't revert to the previous track if they're both past the scrobble point, basically
@@ -384,7 +382,6 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $this->assertFalse($this->now_playing_called); // it should stay with the 3rd track.        
     }
     
-    
     public function test_second_track_becomes_now_playing_after_reaching_np_point() 
     {
         // Override track1 / deck1 to be new on the deck with 0 seconds played for this test 
@@ -436,5 +433,4 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $this->assertTrue($this->now_playing_called); // it should switch to 2nd track
         $this->assertSame($this->now_playing_called_with, $this->track1);        
     }
-    
 }
