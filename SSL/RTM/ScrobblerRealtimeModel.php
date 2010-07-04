@@ -24,17 +24,12 @@
  *  THE SOFTWARE.
  */
 
-class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPlayingObservable, ScrobbleObservable
+class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPlayingObservable
 {    
     /**
      * @var Array of NowPlayingObserver
      */
     protected $now_playing_observers = array();
-
-    /**
-     * @var Array of ScrobbleObserver
-     */
-    protected $scrobble_observers = array();
     
     /**
      * @var Array of ScrobblerTrackModel
@@ -91,11 +86,6 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
         $this->now_playing_observers[] = $o;
     }
 
-    public function addScrobbleObserver(ScrobbleObserver $o)
-    {
-        $this->scrobble_observers[] = $o;
-    }
-    
     public function getQueueSize()
     {
         return count($this->scrobble_model_queue);
@@ -335,15 +325,6 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
         foreach($this->now_playing_observers as $observer)
         {
             $observer->notifyNowPlaying($track);
-        }
-    }
-
-    protected function notifyScrobbleObservers(SSLTrack $track=null)
-    {
-        /* @var $observer ScrobbleObserver */
-        foreach($this->scrobble_observers as $observer)
-        {
-            $observer->notifyScrobble($track);
         }
     }
     
