@@ -24,7 +24,7 @@
  *  THE SOFTWARE.
  */
 
-class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPlayingObservable
+class NowPlayingModel implements TickObserver, TrackChangeObserver, NowPlayingObservable
 {    
     /**
      * @var Array of NowPlayingObserver
@@ -34,7 +34,7 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
     /**
      * @var Array of ScrobblerTrackModel
      */
-    protected $scrobble_model_queue = array();
+    protected $now_playing_queue = array();
     
     /**
      * @var ScrobblerTrackModel
@@ -88,20 +88,20 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
 
     public function getQueueSize()
     {
-        return count($this->scrobble_model_queue);
+        return count($this->now_playing_queue);
     }
     
     protected function stopTrack(SSLTrack $stopped_track)
     {
         $stopped_row = $stopped_track->getRow();
         
-        foreach($this->scrobble_model_queue as $i => $scrobble_model)
+        foreach($this->now_playing_queue as $i => $scrobble_model)
         {
             /* @var $scrobble_model ScrobblerTrackModel */
             if($scrobble_model->getRow() == $stopped_row)
             {
                 // remove from the queue.
-                unset($this->scrobble_model_queue[$i]);
+                unset($this->now_playing_queue[$i]);
                 
                 // remove from now_playing, if necessary.
                 if($this->now_playing_in_queue && 
@@ -114,7 +114,7 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
         }
         
         // reindex the queue
-        $this->scrobble_model_queue = array_merge($this->scrobble_model_queue);
+        $this->now_playing_queue = array_merge($this->now_playing_queue);
         
         L::level(L::INFO) && 
             L::log(L::INFO,  __CLASS__, 'dequeued track %s', 
@@ -122,14 +122,14 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
                 
         L::level(L::DEBUG) && 
             L::log(L::DEBUG, __CLASS__, 'queue length is now %d', 
-                array(count($this->scrobble_model_queue)) );
+                array(count($this->now_playing_queue)) );
     }
 
     protected function startTrack(SSLTrack $started_track)
     {
         $started_row = $started_track->getRow();
         
-        foreach($this->scrobble_model_queue as $i => $scrobble_model)
+        foreach($this->now_playing_queue as $i => $scrobble_model)
         {
             /* @var $scrobble_model ScrobblerTrackModel */
             if($scrobble_model->getRow() == $started_row)
@@ -147,7 +147,7 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
         {
             throw new RuntimeException("Row mismatch! Asked for {$started_row}, got {$scrobble_model_row}");   
         }
-        $this->scrobble_model_queue[] = $scrobble_model;
+        $this->now_playing_queue[] = $scrobble_model;
         
         L::level(L::INFO) && 
             L::log(L::INFO,  __CLASS__, 'enqueued track %s', 
@@ -155,12 +155,12 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
                 
         L::level(L::DEBUG) && 
             L::log(L::DEBUG, __CLASS__, 'queue length is now %d', 
-                array( count($this->scrobble_model_queue)) );
+                array( count($this->now_playing_queue)) );
     }
     
     protected function updateTrack(SSLTrack $updated_track)
     {
-        foreach($this->scrobble_model_queue as $scrobble_model)
+        foreach($this->now_playing_queue as $scrobble_model)
         {
             // the ScrobblerTrackModel will ignore the track if it's not the one it's modelling
             $scrobble_model->update($updated_track);
@@ -172,7 +172,7 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
                 
         L::level(L::DEBUG) && 
             L::log(L::DEBUG, __CLASS__, 'queue length is now %d', 
-                array( count($this->scrobble_model_queue)) );
+                array( count($this->now_playing_queue)) );
     }
     
     /**
@@ -197,7 +197,7 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
      */
     protected function elapse($seconds, $was_playing_before)
     {
-        foreach($this->scrobble_model_queue as $scrobble_model)
+        foreach($this->now_playing_queue as $scrobble_model)
         {
             /* @var $scrobble_model ScrobblerTrackModel */
             if(!$scrobble_model)
@@ -209,10 +209,10 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
         }
         
         $is_now_playing = false;
-        $queue_length = count($this->scrobble_model_queue);
+        $queue_length = count($this->now_playing_queue);
         
         // Try to find the earliest queued track which is naturally "now playing".
-        foreach($this->scrobble_model_queue as $scrobble_model)
+        foreach($this->now_playing_queue as $scrobble_model)
         {
             if($scrobble_model->isNowPlaying())
             {
@@ -231,7 +231,7 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
             // That is, either "maintain the status quo" or "move forward".
             
             $preferred_now_playing_model = -1;
-            foreach($this->scrobble_model_queue as $i => $scrobble_model)
+            foreach($this->now_playing_queue as $i => $scrobble_model)
             {
                 $scrobble_model_row = $scrobble_model->getRow();
                 if($scrobble_model_row < $was_playing_before)
@@ -247,7 +247,7 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
             if($preferred_now_playing_model !== -1)
             {
                 // set it "now playing" only once we've picked it.
-                $this->setTrackNowPlaying($this->scrobble_model_queue[$preferred_now_playing_model]);
+                $this->setTrackNowPlaying($this->now_playing_queue[$preferred_now_playing_model]);
                 return;
             }
         }
@@ -261,7 +261,7 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
             // This is particularly appropriate for the first played track, and for 
             // the single-deck preview mode
                         
-            $scrobble_model = $this->scrobble_model_queue[0];
+            $scrobble_model = $this->now_playing_queue[0];
             
             $is_now_playing = true;
             $this->setTrackNowPlaying($scrobble_model);

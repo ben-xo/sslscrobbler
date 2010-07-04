@@ -96,7 +96,7 @@ class ScrobblerTrackModel
      * (SSL doesn't give us enough info to say if it's really playing or not.)
      * 
      * Note that edge cases, such as what's "Now Playing" when there's only 1 song
-     * on the deck, are handled elsewhere (in ScrobblerRealtimeModel)
+     * on the deck, are handled elsewhere (in NowPlayingModel)
      */
     public function isNowPlaying()
     {

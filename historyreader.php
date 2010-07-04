@@ -47,7 +47,7 @@ $log_levels = array(
 //    'TickSource' => L::SILENT,
 //    'SSLHistoryFileMonitor' => L::DEBUG,
 //    'SSLRealtimeModel' => L::DEBUG,
-//    'ScrobblerRealtimeModel' => L::DEBUG,
+//    'NowPlayingModel' => L::DEBUG,
 );
 
 $h = new HistoryReader();

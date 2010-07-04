@@ -24,7 +24,7 @@
  *  THE SOFTWARE.
  */
 
-class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements NowPlayingObserver
+class NowPlayingModelTest extends PHPUnit_Framework_TestCase implements NowPlayingObserver
 {
     protected $srm;
     
@@ -41,7 +41,7 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
     
     public function setUp()
     {
-        $this->srm = $this->getMock('ScrobblerRealtimeModel', 
+        $this->srm = $this->getMock('NowPlayingModel', 
             array( 'newScrobblerTrackModel' )
         );
 
