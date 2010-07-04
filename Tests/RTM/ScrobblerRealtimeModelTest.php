@@ -100,6 +100,13 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $this->srm->notifyTrackChange($events);
     }
     
+    public function sendTick($seconds)
+    {
+        $this->now_playing_called = false;
+        $this->now_playing_called_with = null;
+        $this->srm->notifyTick($seconds);
+    }
+    
     public function notifyNowPlaying(SSLTrack $track = null)
     {
         $this->now_playing_called = true;
@@ -277,11 +284,12 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         
         // expectations
         $this->srmExpectsNewDeckExactly(2);
-        $events = new TrackChangeEventList( 
+        
+        // send multiple starts        
+        $srm->notifyTrackChange(new TrackChangeEventList( 
             array(new TrackStartedEvent($this->track0), 
                   new TrackStartedEvent($this->track1)) 
-        );
-        $srm->notifyTrackChange($events);
+        ));
 
         $this->assertTrue($this->now_playing_called);
         $this->assertSame($this->now_playing_called_with, $this->track0);        
@@ -292,13 +300,13 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $track2 = $stm_test->trackMock(123, 300, true, 150); // track0, but "played"
         $track3 = $stm_test->trackMock(456, 300, true, 150); // track1, but "played"
         
+        // reset, and send multiple stops
         $this->now_playing_called = false;
         $this->now_playing_called_with = false;
-        $events = new TrackChangeEventList( 
+        $srm->notifyTrackChange(new TrackChangeEventList( 
             array(new TrackStoppedEvent($track2), 
                   new TrackStoppedEvent($track3)) 
-        );
-        $srm->notifyTrackChange($events);
+        ));
         
         $this->assertEquals(0, $srm->getQueueSize());
         
@@ -321,9 +329,7 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $this->assertTrue($this->now_playing_called);
         $this->assertSame($this->now_playing_called_with, $this->track0);
         
-        $this->now_playing_called = false;
-        $this->now_playing_called_with = null;
-        $this->srm->notifyTick(50); // it's already at 125 seconds in, so bring it to 175 (past scrobble point)
+        $this->sendTick(50); // it's already at 125 seconds in, so bring it to 175 (past scrobble point)
         
         // even though it's past scrobble point, it's the first track, so it's still "now playing"
         $this->assertFalse($this->now_playing_called);
@@ -333,13 +339,10 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $this->assertTrue($this->now_playing_called); // should switch to 2nd track now
         $this->assertSame($this->now_playing_called_with, $this->track1);
         
-        $this->srm->notifyTick(1); // now they're both now playing (track0 at 176, track1 at 126)
-                
-        $this->now_playing_called = false;
-        $this->now_playing_called_with = null;
+        $this->sendTick(1); // now they're both now playing (track0 at 176, track1 at 126)
         
         // get them both past the scrobble point
-        $this->srm->notifyTick(40); // track0 -> 216, track1 -> 166
+        $this->sendTick(40); // track0 -> 216, track1 -> 166
         
         $this->assertFalse($this->now_playing_called); // it should stay with the 2nd track.        
     }
@@ -357,9 +360,7 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $this->assertTrue($this->now_playing_called);
         $this->assertSame($this->now_playing_called_with, $this->track0);
         
-        $this->now_playing_called = false;
-        $this->now_playing_called_with = null;
-        $this->srm->notifyTick(50); // it's already at 125 seconds in, so bring it to 175 (past scrobble point)
+        $this->sendTick(50); // it's already at 125 seconds in, so bring it to 175 (past scrobble point)
         
         // even though it's past scrobble point, it's the first track, so it's still "now playing"
         $this->assertFalse($this->now_playing_called);
@@ -369,9 +370,7 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $this->assertTrue($this->now_playing_called); // should switch to 2nd track now
         $this->assertSame($this->now_playing_called_with, $this->track1);
         
-        $this->now_playing_called = false;
-        $this->now_playing_called_with = null;
-        $this->srm->notifyTick(50); // now they're both now playing and past scrobble point (track0 at 225, track1 at 175)
+        $this->sendTick(50); // now they're both now playing and past scrobble point (track0 at 225, track1 at 175)
 
         $this->assertFalse($this->now_playing_called); // it should stay with the 2nd track.        
         
@@ -379,11 +378,8 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $this->assertTrue($this->now_playing_called); // should switch to 3rd track now
         $this->assertSame($this->now_playing_called_with, $this->track2);
         
-        $this->now_playing_called = false;
-        $this->now_playing_called_with = null;
-        
-        // get them both past the scrobble point
-        $this->srm->notifyTick(40); // track0 -> 265, track1 -> 205, track2 -> 165
+        // get them all past the scrobble point
+        $this->sendTick(40); // track0 -> 265, track1 -> 205, track2 -> 165
         
         $this->assertFalse($this->now_playing_called); // it should stay with the 3rd track.        
     }
@@ -402,9 +398,7 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $this->assertTrue($this->now_playing_called);
         $this->assertSame($this->now_playing_called_with, $this->track0);
         
-        $this->now_playing_called = false;
-        $this->now_playing_called_with = null;
-        $this->srm->notifyTick(50); // it's already at 125 seconds in, so bring it to 175 (past scrobble point)
+        $this->sendTick(50); // it's already at 125 seconds in, so bring it to 175 (past scrobble point)
         
         // even though it's past scrobble point, it's the first track, so it's still "now playing"
         $this->assertFalse($this->now_playing_called);
@@ -415,9 +409,7 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $this->assertFalse($this->now_playing_called); // should not switch to the track immediately
         $this->assertNull($this->now_playing_called_with);
         
-        $this->now_playing_called = false;
-        $this->now_playing_called_with = null;
-        $this->srm->notifyTick(45); // get track 1 past the now playing point
+        $this->sendTick(45); // get track 1 past the now playing point
                         
         $this->assertTrue($this->now_playing_called); // it should switch to 2nd track
         $this->assertSame($this->now_playing_called_with, $this->track1);        
