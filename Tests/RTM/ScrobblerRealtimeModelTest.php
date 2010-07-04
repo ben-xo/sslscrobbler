@@ -59,8 +59,10 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $this->deck2 = new ScrobblerTrackModel($this->track2);
         
         $this->now_playing_called = false;
-        $this->now_playing_called_with = false;
+        $this->now_playing_called_with = null;
     }
+    
+    // support methods
     
     public function srmExpectsNewDeckExactly($exactly, $override0=null, $override1=null, $override2=null)
     {
@@ -78,7 +80,7 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
     {
         $this->now_playing_called = false;
         $this->now_playing_called_with = null;
-           
+        
         // events
         $events = new TrackChangeEventList( 
             array(new TrackStartedEvent($track)) 
@@ -91,7 +93,7 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
     {
         $this->now_playing_called = false;
         $this->now_playing_called_with = null;
-           
+        
         // events
         $events = new TrackChangeEventList( 
             array(new TrackStoppedEvent($track)) 
@@ -107,18 +109,20 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $this->srm->notifyTick($seconds);
     }
     
+    // self-shunt methods
+    
     public function notifyNowPlaying(SSLTrack $track = null)
     {
         $this->now_playing_called = true;
         $this->now_playing_called_with = $track;
     }
     
+    // here be the tests!
+    
     public function test_empty_deck_ticking_does_nothing_interesting()
     {
-        $this->srm->expects($this->never())
-                  ->method('lastfmNowPlaying');
-
-        $this->srm->notifyTick(1000);
+        $this->sendTick(1000);
+        $this->assertFalse($this->now_playing_called);
     }
     
     // Tests for tracks that are marked "now playing" by their model when they're added.
@@ -166,7 +170,7 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $this->sendStart($this->track0);
         
         $this->assertTrue($this->now_playing_called);
-        $this->assertSame($this->now_playing_called_with, $this->track0);        
+        $this->assertSame($this->now_playing_called_with, $this->track0);
     }
     
     /**
@@ -183,7 +187,7 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $this->sendStop($this->track0);        
         $this->assertEquals(0, $this->srm->getQueueSize());
         $this->assertTrue($this->now_playing_called);
-        $this->assertNull($this->now_playing_called_with);        
+        $this->assertNull($this->now_playing_called_with);
     }
     
     /**
@@ -268,7 +272,7 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $this->assertEquals(2, $this->srm->getQueueSize());
         
         $this->assertTrue($this->now_playing_called);
-        $this->assertSame($this->now_playing_called_with, $this->track1);        
+        $this->assertSame($this->now_playing_called_with, $this->track1);
     }
     
     /**
@@ -312,8 +316,11 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         
         $this->assertTrue($this->now_playing_called);
         $this->assertNull($this->now_playing_called_with);
-        
     }
+    
+    /*
+     * "Tick" based tests 
+     */
     
     public function test_now_playing_goes_to_newest_non_now_playing_track_as_default() 
     {
@@ -433,4 +440,19 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $this->assertTrue($this->now_playing_called); // it should switch to 2nd track
         $this->assertSame($this->now_playing_called_with, $this->track1);        
     }
+    
+//    public function test_no_scrobbling_under_30s()
+//    {
+//        
+//    }
+//    
+//    public function test_no_scrobbling_unplayed()
+//    {
+//        
+//    }
+//    
+//    public function test_stop_all_tracks_on_shutdown()
+//    {
+//        
+//    }
 }
