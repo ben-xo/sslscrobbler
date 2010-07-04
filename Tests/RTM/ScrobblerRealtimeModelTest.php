@@ -417,6 +417,24 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
     
     public function test_second_track_becomes_now_playing_after_first_reaches_scrobble_point() 
     {
+        // expectations
+        $this->srmExpectsNewDeckExactly(2);
+        $this->sendStart($this->track0);
+        $this->assertTrue($this->now_playing_called);
+        $this->assertSame($this->now_playing_called_with, $this->track0);
+        
+        $this->sendTick(20); // it's already at 125 seconds in, so bring it to 145 (just before scrobble point)
+        $this->assertFalse($this->now_playing_called);
+
+        // Now for the important bit of the test!        
+        $this->sendStart($this->track1);
+        $this->assertFalse($this->now_playing_called); // should not switch to the track immediately
+        $this->assertNull($this->now_playing_called_with);
+        
+        $this->sendTick(10); // get first track past the scrobble point (145 -> 155, but track2 is still 'now playing'-able)(
+                        
+        $this->assertTrue($this->now_playing_called); // it should switch to 2nd track
+        $this->assertSame($this->now_playing_called_with, $this->track1);        
     }
     
 }
