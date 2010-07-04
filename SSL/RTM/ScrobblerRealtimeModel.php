@@ -24,12 +24,17 @@
  *  THE SOFTWARE.
  */
 
-class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPlayingObservable
+class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPlayingObservable, ScrobbleObservable
 {    
     /**
      * @var Array of NowPlayingObserver
      */
     protected $now_playing_observers = array();
+
+    /**
+     * @var Array of ScrobbleObserver
+     */
+    protected $scrobble_observers = array();
     
     /**
      * @var Array of ScrobblerTrackModel
@@ -84,6 +89,11 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
     public function addNowPlayingObserver(NowPlayingObserver $o)
     {
         $this->now_playing_observers[] = $o;
+    }
+
+    public function addScrobbleObserver(ScrobbleObserver $o)
+    {
+        $this->scrobble_observers[] = $o;
     }
     
     public function getQueueSize()
@@ -303,21 +313,19 @@ class ScrobblerRealtimeModel implements TickObserver, TrackChangeObserver, NowPl
     
     protected function notifyNowPlayingObservers(SSLTrack $track=null)
     {
-        // TODO
-//        if($track)
-//        {
-//            $row = $track->getRow();
-//            echo "DEBUG: ScrobbleRealtimeModel::lastfmNowPlaying({$row}): TODO: send Now Playing notice to Last.fm!\n";
-//        }
-//        else
-//        {
-//            echo "DEBUG: ScrobbleRealtimeModel::lastfmNowPlaying(): TODO: send Stopped Playing notice to Last.fm!\n";
-//        }
-        
+        /* @var $observer NowPlayingObserver */
         foreach($this->now_playing_observers as $observer)
         {
-            /* @var $observer NowPlayingObserver */
             $observer->notifyNowPlaying($track);
+        }
+    }
+
+    protected function notifyScrobbleObservers(SSLTrack $track=null)
+    {
+        /* @var $observer ScrobbleObserver */
+        foreach($this->scrobble_observers as $observer)
+        {
+            $observer->notifyScrobble($track);
         }
     }
     
