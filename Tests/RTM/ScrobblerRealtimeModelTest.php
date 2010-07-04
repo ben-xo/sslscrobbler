@@ -391,6 +391,36 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
     
     public function test_second_track_becomes_now_playing_after_reaching_np_point() 
     {
+        // Override track1 / deck1 to be new on the deck with 0 seconds played for this test 
+        $stm_test = new ScrobblerTrackModelTest();
+        $this->track1 = $stm_test->trackMock(456, 300, false, 0); // new track pon de floor
+        $this->deck1 = new ScrobblerTrackModel($this->track1);
+        
+        // expectations
+        $this->srmExpectsNewDeckExactly(2);
+        $this->sendStart($this->track0);
+        $this->assertTrue($this->now_playing_called);
+        $this->assertSame($this->now_playing_called_with, $this->track0);
+        
+        $this->now_playing_called = false;
+        $this->now_playing_called_with = null;
+        $this->srm->notifyTick(50); // it's already at 125 seconds in, so bring it to 175 (past scrobble point)
+        
+        // even though it's past scrobble point, it's the first track, so it's still "now playing"
+        $this->assertFalse($this->now_playing_called);
+        $this->assertFalse($this->deck0->isNowPlaying());
+
+        // Now for the important bit of the test!        
+        $this->sendStart($this->track1);
+        $this->assertFalse($this->now_playing_called); // should not switch to the track immediately
+        $this->assertNull($this->now_playing_called_with);
+        
+        $this->now_playing_called = false;
+        $this->now_playing_called_with = null;
+        $this->srm->notifyTick(45); // get track 1 past the now playing point
+                        
+        $this->assertTrue($this->now_playing_called); // it should switch to 2nd track
+        $this->assertSame($this->now_playing_called_with, $this->track1);        
     }
     
     public function test_second_track_becomes_now_playing_after_first_reaches_scrobble_point() 
