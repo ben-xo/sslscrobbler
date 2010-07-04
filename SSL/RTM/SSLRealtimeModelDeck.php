@@ -295,8 +295,8 @@ class SSLRealtimeModelDeck
         $from = $this->getStatus();
         $to = $track->getStatus();
         
-        L::level(L::INFO) && 
-            L::log(L::INFO, __CLASS__, "deck %d transitioned from %s to %s with track %s", 
+        L::level(L::DEBUG) && 
+            L::log(L::DEBUG, __CLASS__, "deck %d transitioned from %s to %s with track %s", 
                 array( $this->deck_number, $from, $to, $track->getTitle()) );
         
         switch($from)

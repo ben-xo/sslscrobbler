@@ -24,7 +24,7 @@
  *  THE SOFTWARE.
  */
 
-class SSLEventGrowlRenderer implements TrackChangeObserver, NowPlayingObserver
+class SSLEventGrowlRenderer implements TrackChangeObserver, NowPlayingObserver, ScrobbleObserver
 {
     /**
      * @var Growl
@@ -43,10 +43,9 @@ class SSLEventGrowlRenderer implements TrackChangeObserver, NowPlayingObserver
             /* @var $event TrackChangeEvent */
             $this->growler->notify('alert', 'Track Change', $event);
             
-            L::level(L::DEBUG) &&
-                L::log(L::DEBUG, __CLASS__, '>> Track change: >> %s', 
+            L::level(L::INFO) &&
+                L::log(L::INFO, __CLASS__, '>> Track change: >> %s', 
                     array($event));
-            
         }
     }
     
@@ -56,17 +55,26 @@ class SSLEventGrowlRenderer implements TrackChangeObserver, NowPlayingObserver
         {
             $this->growler->notify('alert', 'Now Playing', $track->getFullTitle());
 
-            L::level(L::DEBUG) &&
-                L::log(L::DEBUG, __CLASS__, '>> Now Playing: >> %s', 
+            L::level(L::INFO) &&
+                L::log(L::INFO, __CLASS__, '>> Now Playing: >> %s', 
                     array($track->getFullTitle()));
         }
         else
         {
             $this->growler->notify('alert', 'Now Playing', '<Playback Stopped>');
 
-            L::level(L::DEBUG) &&
-                L::log(L::DEBUG, __CLASS__, '>> Now Playing: >> <Playback Stopped>', 
+            L::level(L::INFO) &&
+                L::log(L::INFO, __CLASS__, '>> Now Playing: >> <Playback Stopped>', 
                     array());
         }
+    }
+    
+    public function notifyScrobble(SSLTrack $track)
+    {
+        $this->growler->notify('alert', 'Scrobbling', $track->getFullTitle());
+        
+        L::level(L::INFO) &&
+            L::log(L::INFO, __CLASS__, '>> Scrobbling: >> %s', 
+                array($track->getFullTitle()));        
     }
 }

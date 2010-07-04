@@ -247,6 +247,7 @@ class HistoryReader
         $rtm_printer = new SSLRealtimeModelPrinter($rtm);
         $growl_event_renderer = new SSLEventGrowlRenderer( $this->getGrowler() );
         $npm = new NowPlayingModel();
+        $sm = new ScrobbleModel();
                 
         $ts->addTickObserver($hfm);
         $ts->addTickObserver($npm);
@@ -254,8 +255,9 @@ class HistoryReader
         $rtm->addTrackChangeObserver($rtm_printer);
         //$rtm->addTrackChangeObserver($growl_event_renderer);
         $rtm->addTrackChangeObserver($npm);
+        $rtm->addTrackChangeObserver($sm);
         $npm->addNowPlayingObserver($growl_event_renderer);
-        //$npm->addTimeoutObserver($growl_event_renderer);
+        $npm->addScrobbleObserver($growl_event_renderer);
         
         // Tick tick tick. This never returns
         $ts->startClock($this->sleep);
