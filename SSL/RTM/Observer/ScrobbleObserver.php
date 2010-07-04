@@ -26,5 +26,5 @@
 
 interface ScrobbleObserver extends Observer
 {
-    public function notifyScrobble(SSLTrack $track=null);
+    public function notifyScrobble(SSLTrack $track);
 }
