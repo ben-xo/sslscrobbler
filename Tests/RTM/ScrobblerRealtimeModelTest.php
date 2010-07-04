@@ -315,8 +315,6 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         
         // get the model into a state with a track playing, and a track queued...
         
-        $stm_test = new ScrobblerTrackModelTest();
-        
         // expectations
         $this->srmExpectsNewDeckExactly(2);
         $this->sendStart($this->track0);
@@ -346,7 +344,57 @@ class ScrobblerRealtimeModelTest extends PHPUnit_Framework_TestCase implements N
         $this->assertFalse($this->now_playing_called); // it should stay with the 2nd track.        
     }
     
-    public function test_second_track_becomes_now_playing_after_reaching_np_point() {}
-    public function test_second_track_becomes_now_playing_after_first_reaches_scrobble_point() {}
+    public function test_now_playing_goes_to_newest_non_now_playing_track_as_default_2() 
+    {
+        // test that it doesn't revert to the previous track if they're both past the scrobble point, basically
+        
+        // get the model into a state with a track playing, and a track queued...
+        
+        // expectations
+        $this->srmExpectsNewDeckExactly(3);
+        
+        $this->sendStart($this->track0);
+        $this->assertTrue($this->now_playing_called);
+        $this->assertSame($this->now_playing_called_with, $this->track0);
+        
+        $this->now_playing_called = false;
+        $this->now_playing_called_with = null;
+        $this->srm->notifyTick(50); // it's already at 125 seconds in, so bring it to 175 (past scrobble point)
+        
+        // even though it's past scrobble point, it's the first track, so it's still "now playing"
+        $this->assertFalse($this->now_playing_called);
+        
+        // MILK.
+        $this->sendStart($this->track1);
+        $this->assertTrue($this->now_playing_called); // should switch to 2nd track now
+        $this->assertSame($this->now_playing_called_with, $this->track1);
+        
+        $this->now_playing_called = false;
+        $this->now_playing_called_with = null;
+        $this->srm->notifyTick(50); // now they're both now playing and past scrobble point (track0 at 225, track1 at 175)
+
+        $this->assertFalse($this->now_playing_called); // it should stay with the 2nd track.        
+        
+        $this->sendStart($this->track2);
+        $this->assertTrue($this->now_playing_called); // should switch to 3rd track now
+        $this->assertSame($this->now_playing_called_with, $this->track2);
+        
+        $this->now_playing_called = false;
+        $this->now_playing_called_with = null;
+        
+        // get them both past the scrobble point
+        $this->srm->notifyTick(40); // track0 -> 265, track1 -> 205, track2 -> 165
+        
+        $this->assertFalse($this->now_playing_called); // it should stay with the 3rd track.        
+    }
+    
+    
+    public function test_second_track_becomes_now_playing_after_reaching_np_point() 
+    {
+    }
+    
+    public function test_second_track_becomes_now_playing_after_first_reaches_scrobble_point() 
+    {
+    }
     
 }
