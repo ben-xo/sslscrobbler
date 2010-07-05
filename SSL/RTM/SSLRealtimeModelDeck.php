@@ -151,7 +151,7 @@ class SSLRealtimeModelDeck
     }
     
     /**
-     * Returns true if a track started since the last notify.
+     * Returns a track, if one started since the last notify.
      */
     public function trackStarted()
     {
@@ -159,7 +159,7 @@ class SSLRealtimeModelDeck
     }
     
     /**
-     * Returns true if a track stopped since the last notify.
+     * Returns a track, if one stopped since the last notify.
      */
     public function trackStopped()
     {
@@ -167,15 +167,13 @@ class SSLRealtimeModelDeck
     }
     
     /**
-     * Returns true if a track was updated since the last notify.
+     * Returns a track, if one was updated since the last notify.
      */
     public function trackUpdated()
     {
         return $this->track_updated;
     }
-    
-
-   
+       
     protected function resetFlags()
     {
         $this->track_started = null;
@@ -271,7 +269,9 @@ class SSLRealtimeModelDeck
             ) )
         {
             // There is now no track where there was one.
-            $this->track_stopped = $starting_track;
+            
+            // make sure we're using the newest track object from the file
+            $this->track_stopped = $my_tracks[$starting_track->getRow()];
         }
         
         if(  $this->track && 

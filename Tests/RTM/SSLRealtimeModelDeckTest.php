@@ -223,7 +223,7 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
         
         // ...then stop it again (and notify)
         $this->assertNull($this->srmd->trackStarted());
-        $this->assertSame($this->srmd->trackStopped(), $track0);
+        $this->assertSame($this->srmd->trackStopped(), $track1);
         $this->assertNull($this->srmd->trackUpdated());
 
         $this->assertNull($this->srmd->getCurrentTrack());
@@ -344,7 +344,7 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
         
         // ...then stop it again (and notify) and start another (and notify)
         $this->assertSame($this->srmd->trackStarted(), $track2);
-        $this->assertSame($this->srmd->trackStopped(), $track0);
+        $this->assertSame($this->srmd->trackStopped(), $track1);
         $this->assertNull($this->srmd->trackUpdated());
 
         $this->assertSame($this->srmd->getCurrentTrack(), $track2);
@@ -444,7 +444,7 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
         
         // now stop one
         $this->assertNull($this->srmd->trackStarted());
-        $this->assertSame($this->srmd->trackStopped(), $track2);
+        $this->assertSame($this->srmd->trackStopped(), $track4);
         $this->assertNull($this->srmd->trackUpdated());
 
         $this->assertNull($this->srmd->getCurrentTrack());
@@ -473,7 +473,7 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
         ) ) );
         
         $this->assertNull($this->srmd->trackStarted());
-        $this->assertSame($this->srmd->trackStopped(), $track0);
+        $this->assertSame($this->srmd->trackStopped(), $track1);
         $this->assertNull($this->srmd->trackUpdated());
 
         $this->assertNull($this->srmd->getCurrentTrack());
@@ -520,7 +520,7 @@ class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
         
         // ...then stop it again (and notify) and start another (and notify)
         $this->assertSame($this->srmd->trackStarted(), $track2);
-        $this->assertSame($this->srmd->trackStopped(), $track0);
+        $this->assertSame($this->srmd->trackStopped(), $track1);
         $this->assertNull($this->srmd->trackUpdated());
 
         $this->assertSame($this->srmd->getCurrentTrack(), $track2);
