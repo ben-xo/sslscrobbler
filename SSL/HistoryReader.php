@@ -257,7 +257,7 @@ class HistoryReader
         $rtm->addTrackChangeObserver($npm);
         $rtm->addTrackChangeObserver($sm);
         $npm->addNowPlayingObserver($growl_event_renderer);
-        $npm->addScrobbleObserver($growl_event_renderer);
+        $sm->addScrobbleObserver($growl_event_renderer);
         
         // Tick tick tick. This never returns
         $ts->startClock($this->sleep);
