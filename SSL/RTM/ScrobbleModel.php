@@ -60,7 +60,7 @@ class ScrobbleModel implements ScrobbleObservable, TrackChangeObserver
         {
             L::level(L::INFO) &&
                 L::log(L::INFO, __CLASS__, 'I reckon it\'s time to submit a scrobble for %s!', 
-                    array($this->track->getFullTitle()));
+                    array($track->getFullTitle()));
                     
             $this->notifyScrobbleObservers($track);
         }
