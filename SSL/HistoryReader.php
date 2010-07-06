@@ -243,12 +243,14 @@ class HistoryReader
             $hfm = new SSLHistoryFileCSVInjector($filename);
         }
         
+        $sh = new SignalHandler();
+        
         $rtm = new SSLRealtimeModel();
         $rtm_printer = new SSLRealtimeModelPrinter($rtm);
         $growl_event_renderer = new SSLEventGrowlRenderer( $this->getGrowler() );
         $npm = new NowPlayingModel();
         $sm = new ScrobbleModel();
-                
+
         $ts->addTickObserver($hfm);
         $ts->addTickObserver($npm);
         $hfm->addDiffObserver($rtm);
@@ -259,8 +261,10 @@ class HistoryReader
         $npm->addNowPlayingObserver($growl_event_renderer);
         $sm->addScrobbleObserver($growl_event_renderer);
         
-        // Tick tick tick. This never returns
-        $ts->startClock($this->sleep);
+        $sh->install();
+        
+        // Tick tick tick. This only returns if a signal is caught
+        $ts->startClock($this->sleep, $sh);
     }
     
     protected function getMostRecentFile($from_dir, $type)
