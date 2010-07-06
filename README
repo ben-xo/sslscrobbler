@@ -1,19 +1,34 @@
-SSLScrobbler
+SSLScrobbler v0.1alpha
 ============
 
 SSLScrobbler is a Scrobbler for Serato ScratchLive! (http://www.serato.com/) written in PHP.
 See http://www.last.fm/help/faq?category=99 for an explanation of Scrobbling.
 
-ScratchLive! logs plays to a binary history file during playback. The bulk of this app
-is concerned with decoding the binary history file to retrieve the metadata.
+ScratchLive! logs plays to a binary history file during playback. This app reads the binary
+file and models what's going on. It sends you Growl popups when certain events happen,
+such as a track is loaded on the deck, set "Now Playing" or can be scrobbled.
+
+*** SSLScrobbler is currently incomplete, and does not yet actually scrobble. ***
 
 So far this app is designed for use on OS X, although it may also work on Windows.
 
-*** SSLScrobbler is currently incomplete, and makes no effort (yet) to be easy to install and use. ***
+SSLScrobbler could easily in future be hooked into a projector to show what's now playing,
+a Twitter account, or used to control other actions based on track listing - Scrobbling is
+only the first natural step!
+
+Running It
+==========
+
+OSX (Mac): 
+ * double click "historyreader-mac"
+ OR:
+ * Open Terminal, 'cd' to the folder and type "./historyreader.php" for help and options
+
+Windows:
+ * You will need to install PHP 5.3 and Growl, and figure the rest out yourself for now
 
 Unit Tests
 ==========
 
 Run with phpunit:
-
-  phpunit --bootstrap Tests/boostrap.php Tests
+ * phpunit --bootstrap Tests/boostrap.php Tests
