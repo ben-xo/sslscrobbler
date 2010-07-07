@@ -64,9 +64,6 @@ class HistoryReader
     {
         date_default_timezone_set('UTC');
         
-        // guess history file (always go for the most recently modified)
-        $this->historydir = getenv('HOME') . '/Music/ScratchLIVE/History/Sessions';
-                
         try
         {
             $this->parseOptions($argv);
@@ -85,6 +82,9 @@ class HistoryReader
             
             if(empty($filename))
             {
+                // guess history file (always go for the most recently modified)
+                $this->historydir = $this->getDefaultHistoryDir();
+                
                 if($this->wait_for_file)
                 {
                     echo "Waiting for new session file...\n";
@@ -143,6 +143,23 @@ class HistoryReader
         echo "    -l or --log-file <file>: Where to send logging output. (If this option is omitted, output goes to stdout)\n";
         echo "    -r or --replay:          Replay the session file, one batch per tick. (Tick by pressing enter at the console)\n"; 
         echo "    -c or --csv:             Parse the session file as a CSV, not a binary file, for testing purposes. Best used with --replay\n"; 
+    }
+    
+    protected function getDefaultHistoryDir()
+    {
+        // OSX
+        $dir = getenv('HOME') . '/Music/ScratchLIVE/History/Sessions';
+        if(is_dir($dir)) return $dir;
+        
+        // Windows Vista / Windows 7 ?
+        $dir = getenv('USERPROFILE') . '\Music\ScratchLIVE\History\Sessions';
+        if(is_dir($dir)) return $dir;
+        
+        // Windows XP
+        $dir = getenv('USERPROFILE') . '\My Documents\My Music\ScratchLIVE\History\Sessions';
+        if(is_dir($dir)) return $dir;
+        
+        throw new RuntimeException("Could not find your ScratchLive History folder; it wasn't where I was expecting.");
     }
     
     protected function parseOptions(array $argv)
