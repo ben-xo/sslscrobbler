@@ -75,24 +75,40 @@ abstract class Unpacker
         $width = strlen($datum);
         switch($width)
         {
+            case 8:
+                // Seems that ScratchLive 2.0 uses 64-bit timestamps. oh shi--
+                $vals = unpack('Nupper/Nlower', $datum);
+                if(PHP_INT_MAX == 0x7FFFFFFF)
+                {
+                    if($vals['upper'])
+                    {
+                        L::level(L::WARNING) &&
+                            L::log(L::WARNING, __CLASS__, "Encountered 64-bit integer > PHP_INT_MAX on a 32-bit PHP. Throwing away upper bytes. Original value was 0x%08X%08X",
+                                array(dechex($vals['upper']), dechex($vals['lower'])));
+                    }
+                    return $vals['lower'];
+                }
+                else
+                {
+                    return ($vals['upper'] << 32) + ($vals['lower']);
+                }
+                break;
                 
             case 4:
-                $w = 'N'; // unsigned long (always 32 bit, big endian byte order)
+                $vals = unpack('Nval', $datum); // unsigned long (always 32 bit, big endian byte order)
                 break;
                 
             case 2:
-                $w = 'n'; // unsigned short (always 16 bit, big endian byte order)
+                $vals = unpack('nval', $datum); // unsigned short (always 16 bit, big endian byte order)
                 break;
                 
             case 1:
-                $w = 'c'; // char
+                $vals = unpack('cval', $datum); // char
                 break;
                 
             default:
                 throw new InvalidArgumentException('Cannot unpack an odd-sized int of width ' . $width);
         }
-        
-        $vals = unpack($w . 'val', $datum);
         
         return $vals['val'];
     }    
