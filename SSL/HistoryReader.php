@@ -32,6 +32,7 @@ class HistoryReader
     protected $help = false;
     protected $replay = false;
     protected $csv = false;
+    protected $auth_lastfm = false;
     protected $log_file = '';
     protected $verbosity = L::INFO;
     
@@ -44,6 +45,7 @@ class HistoryReader
     protected $historydir;
     
     protected $growl_config;
+    protected $lastfm_config;
     
     /**
      * @var Logger
@@ -53,6 +55,11 @@ class HistoryReader
     public function setGrowlConfig(array $growlConfig)
     { 
         $this->growl_config = $growlConfig;
+    }
+    
+    public function setLastfmConfig(array $lastfmConfig)
+    {
+        $this->lastfm_config = $lastfmConfig;
     }
     
     public function setVerbosityOverride(array $override)
@@ -75,6 +82,12 @@ class HistoryReader
             if($this->help)
             {
                 $this->usage($appname, $argv);
+                return;
+            }
+            
+            if($this->auth_lastfm)
+            {
+                $this->authLastfm();
                 return;
             }
             
@@ -125,9 +138,12 @@ class HistoryReader
         }
         catch(Exception $e)
         {   
-            echo $e->getMessage() . "\n";  
-            echo $e->getTraceAsString() . "\n";  
-            $this->usage($appname, $argv);
+            echo $e->getMessage() . "\n";
+            if($this->verbosity > L::INFO)
+            {
+                echo $e->getTraceAsString() . "\n";
+            }  
+            echo "Try {$appname} --help\n";
         }
     }
     
@@ -137,6 +153,10 @@ class HistoryReader
         echo "Session file is optional. If omitted, the most recent history file from {$this->historydir} will be used automatically\n";
         echo "    -h or --help:            This message.\n";
         echo "    -i or --immediate:       Do not wait for the next history file to be created before monitoring. (Use if you started {$appname} mid way through a session)\n";
+        echo "\n";
+        echo "Last.fm options:\n";
+        echo "    -A or --auth-lastfm      Authorise the application with Last.fm\n";
+        echo "\n";
         echo "Debugging options:\n";
         echo "    -d or --dump:            Dump the file's complete structure and exit\n";
         echo "    -v or --verbosity <0-9>: How much logging to output. (default: 0 (none))\n";
@@ -207,6 +227,12 @@ class HistoryReader
             if($arg == '--csv' || $arg == '-c')
             {
                 $this->csv = true;
+                continue;
+            }
+            
+            if($arg == '--auth-lastfm' || $arg == '-A')
+            {
+                $this->auth_lastfm = true;
                 continue;
             }
             
@@ -304,7 +330,55 @@ class HistoryReader
         }
         if($fp) return $fp;
         throw new RuntimeException("No $type file found in $from_dir");
-    }  
+    }
+
+    protected function authLastfm()
+    {        
+        $vars = array();
+        $vars['apiKey'] = $this->lastfm_config['api_key'];
+        $vars['secret'] = $this->lastfm_config['api_secret'];
+        
+        $token = new lastfmApiAuth('gettoken', $vars);
+        if(!empty($token->error))
+        {
+            throw new RuntimeException("Error fetching Last.fm auth token: " . $token->error['desc']);
+        }
+        
+        $vars['token'] = $token->token;
+
+        $url = 'http://www.last.fm/api/auth?api_key=' . $vars['apiKey'] . '&token=' . $vars['token'];
+        
+        // Automatically send the user to the auth page.
+        
+        // Win
+        if(preg_match("/^win/i", PHP_OS))
+        {
+            exec('start ' . $url, $output, $retval);
+        }
+        
+        // Mac
+        elseif(preg_match("/^darwin/i", PHP_OS))
+        {
+            exec('open "' . $url . '"', $output, $retval);            
+        }
+        
+        readline("Please visit {$url} then press Enter...");
+        
+        $auth = new lastfmApiAuth('getsession', $vars);
+        if(!empty($auth->error))
+        {
+            throw new RuntimeException("Error fetching Last.fm session key: " . $auth->error['desc'] . ". (Did you authorize the app?)");            
+        }
+        
+        echo "Your session key is {$auth->sessionKey} (written to lastfm-key.txt)\n";
+        
+        if(file_put_contents('lastfm-key.txt', $auth->sessionKey))
+        {
+            return;
+        }
+        
+        throw new RuntimeException("Failed to save session key to lastfm-key.txt");
+    }
 
     /**
      * @return Growl

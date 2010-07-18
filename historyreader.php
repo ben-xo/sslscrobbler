@@ -27,7 +27,9 @@
 
 error_reporting(E_ALL | E_STRICT);
 
-require_once 'Growl/class.growl.php';
+require_once 'External/Growl/class.growl.php';
+require_once 'External/PHP-Scrobbler/Scrobbler.php';
+require_once 'External/phplastfmapi-0.7.1-xo/lastfmapi/lastfmapi.php';
 require_once 'SSL/Autoloader.php';
 
 function __autoload($class)
@@ -42,6 +44,11 @@ $growlConfig = array(
     'app_name' => 'SSLHistoryReader'
 );
 
+$lastfmConfig = array(
+    'api_key' => '9dc2c6ce26602ff23787a7ebd4066ad8',
+    'api_secret' => '9cc1995235704e14d9d9dcdb3a2ba693'
+);
+
 // set max log levels for various internal components. (The default is unlimited.)
 $log_levels = array(
 //    'TickSource' => L::SILENT,
@@ -52,5 +59,6 @@ $log_levels = array(
 
 $h = new HistoryReader();
 $h->setGrowlConfig($growlConfig);
+$h->setLastfmConfig($lastfmConfig);
 $h->setVerbosityOverride($log_levels);
 $h->main($argc, $argv);

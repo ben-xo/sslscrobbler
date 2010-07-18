@@ -1,0 +1,4 @@
+<Files phplastfmapi>
+	order allow,deny
+	deny from all
+</Files>
