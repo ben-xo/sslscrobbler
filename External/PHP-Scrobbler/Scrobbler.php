@@ -53,6 +53,10 @@ class md_Scrobbler
 	protected $queue             = array();
 	protected $nowPlayingUrl;
 	protected $submissionUrl;
+	
+	protected $api_key;
+	protected $api_secret;
+	protected $api_sk;
 
 	/**
 	 * New md_Scrobbler
@@ -161,7 +165,7 @@ class md_Scrobbler
 		}
 		
 		$data = $this->generatePostData();
-		if($this->sendSubmission( $this->submissionUrl, $data ))
+		if($this->sendSubmission( 'submission' , $data ))
 		{
 			$this->queue = array();		    
 		}		
@@ -170,15 +174,28 @@ class md_Scrobbler
 	public function nowPlaying($artist, $track, $album = '', $trackDuration, $trackNumber = '', $mbTrackId = '')
 	{
 	    $data = $this->generateNowPlayingPostData($artist, $track, $album, $trackDuration, $trackNumber, $mbTrackId);
-	    $this->sendSubmission( $this->nowPlayingUrl, $data );
+	    $this->sendSubmission( 'nowPlaying', $data );
 	}
 
-	protected function sendSubmission($url, $post_data)
+	protected function sendSubmission($url_type, $post_data)
 	{
 		if(empty($this->sessionId) or $this->submitFailures > 2)
 		{
 			$this->handShake();
 		}
+		
+		// add session id
+		$post_data = 's=' . $this->sessionId . '&' . $post_data;
+		
+		if($url_type == 'nowPlaying') 
+		{
+		    $url = $this->nowPlayingUrl;
+		}
+		elseif($url_type == 'submission')
+		{
+		    $url = $this->submissionUrl;
+		}
+		
 		
 		$data = $this->doCurl($url, $post_data);
 		$data = explode("\n", $data);	
@@ -216,12 +233,8 @@ class md_Scrobbler
 	
 	protected function handShake()
 	{
-		if(empty($this->user) or empty($this->password))
-		{
-			throw new md_Scrobbler_Exception('Authentification credentials missing.');
-			return false;
-		}
-		$curl = curl_init($this->generateScrobblerUrl());
+	    $url = $this->generateScrobblerUrl();
+		$curl = curl_init($url);
 		curl_setopt($curl, CURLOPT_TIMEOUT, self::TIMEOUT);
 		curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, self::TIMEOUT);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
@@ -275,8 +288,8 @@ class md_Scrobbler
 								 '<user>',
 								 '<timestamp>',
 								 '<auth>'),
-						   array(self::clientId,
-								 self::clientVer,
+						   array($this->clientId,
+								 $this->clientVer,
 								 $this->user,
 								 $stamp,
 								 md5(md5($this->password) . $stamp)),
@@ -293,14 +306,14 @@ class md_Scrobbler
 								 '<auth>',
 						         '<api_key>',
 						         '<session_key>'),
-						   array(self::clientId,
-								 self::clientVer,
+						   array($this->clientId,
+								 $this->clientVer,
 								 $this->user,
 								 $stamp,
 								 md5($this->api_secret . $stamp),
 								 $this->api_key,
-								 $this->session_key),
-						   self::SCROBBLER_URL
+								 $this->api_sk),
+						   self::SCROBBLER_WS_URL
 						   );
 		}
 						   
@@ -309,7 +322,7 @@ class md_Scrobbler
 
 	protected function generatePostData()
 	{
-		$body = 's=' . $this->sessionId . '&';
+	    $body = '';
 		$i = 0;
 		foreach($this->queue as $item)
 		{
@@ -330,8 +343,7 @@ class md_Scrobbler
 	
 	protected function generateNowPlayingPostData($artist, $track, $album = '', $trackDuration, $trackNumber = '', $mbTrackId = '')
 	{
-		$body = 's=' . $this->sessionId . '&';
-		$body .= 'a=' . rawurlencode($artist) . '&'
+		$body = 'a=' . rawurlencode($artist) . '&'
 		. 't=' . rawurlencode($track) . '&'
 		. 'l=' . $trackDuration . '&'
 		. 'b=' . rawurlencode($album) . '&'
