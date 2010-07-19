@@ -149,6 +149,11 @@ class md_Scrobbler
 							   );
 		return true;
 	}
+	
+	public function getQueueSize()
+	{
+	    return count($this->queue);
+	}
 
 	/**
 	 * Submission process

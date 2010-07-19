@@ -42,6 +42,10 @@ class SSLScrobblerAdaptor implements NowPlayingObserver, ScrobbleObserver
         {
             try
             {
+                L::level(L::DEBUG) &&
+                    L::log(L::DEBUG, __CLASS__, 'Sending Now Playing to Last.fm',
+                        array( ));
+                    
                 $this->scrobbler->nowPlaying(
                     $track->getArtist(),
                     $track->getTitle(),
@@ -60,6 +64,29 @@ class SSLScrobblerAdaptor implements NowPlayingObserver, ScrobbleObserver
     
     public function notifyScrobble(SSLTrack $track)
     {
-        
+        try
+        {
+            $this->scrobbler->add(
+                $track->getArtist(),
+                $track->getTitle(),
+                $track->getAlbum(),
+                $track->getLengthInSeconds(),
+                $track->getStartTime()
+            );
+            
+            L::level(L::DEBUG) &&
+                L::log(L::DEBUG, __CLASS__, 'Sending %d scrobble(s) to Last.fm',
+                    array( $this->scrobbler->getQueueSize() ));
+                    
+            $this->scrobbler->submit();
+            
+            // TODO: caching if scrobbling's down whilst playing.
+        }
+        catch(Exception $e)
+        {
+            L::level(L::WARNING) &&
+                L::log(L::WARNING, __CLASS__, 'Could not send %d scrobble(s) to Last.fm: %s',
+                    array( $this->scrobbler->getQueueSize(), $e->getMessage() ));
+        }
     }
 }
