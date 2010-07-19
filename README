@@ -8,9 +8,7 @@ ScratchLive! logs plays to a binary history file during playback. This app reads
 file and models what's going on. It sends you Growl popups when certain events happen,
 such as a track is loaded on the deck, set "Now Playing" or can be scrobbled.
 
-*** SSLScrobbler is currently incomplete, and does not yet actually scrobble. ***
-
-So far this app is designed for use on OS X, although it may also work on Windows.
+The app works on OSX and Windows.
 
 SSLScrobbler could easily in future be hooked into a projector to show what's now playing,
 a Twitter account, or used to control other actions based on track listing - Scrobbling is
@@ -25,7 +23,11 @@ OSX (Mac):
  * Open Terminal, 'cd' to the folder and type "./historyreader.php" for help and options
 
 Windows:
- * You will need to install PHP 5.3 and Growl, and figure the rest out yourself for now
+ * You will need to install PHP 5.3 and Growl
+ * Then start -> run -> "cmd", cd to the app, and type "php historyreader.php"
+
+Try "php historyreader.php --help" for more options.
+Try "php historyreader.php -L <lastfm username>" as well.
 
 Unit Tests
 ==========
