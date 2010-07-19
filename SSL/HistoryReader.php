@@ -313,7 +313,7 @@ class HistoryReader
         $growl_event_renderer = new SSLEventGrowlRenderer( $this->getGrowler() );
         $npm = new NowPlayingModel();
         $sm = new ScrobbleModel();
-        $scrobbler = new SSLScrobbler( $this->getScrobbler() );
+        $scrobbler = new SSLScrobblerAdaptor( $this->getScrobbler() );
 
         $ts->addTickObserver($hfm);
         $ts->addTickObserver($npm);
@@ -441,7 +441,7 @@ class HistoryReader
             $this->lastfm_config['api_key'], 
             $this->lastfm_config['api_secret'], 
             $this->lastfm_config['api_sk'], 
-            'tst', '0.1'
+            'xsl', '0.1'
         );
     }
 }
