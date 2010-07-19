@@ -369,7 +369,7 @@ class HistoryReader
         {
             // read and swallow a line
             fgets($fp);
-    	    fclose($fp);
+            fclose($fp);
         }
         else
         {
@@ -382,9 +382,9 @@ class HistoryReader
             throw new RuntimeException("Error fetching Last.fm session key: " . $auth->error['desc'] . ". (Did you authorize the app?)");            
         }
         
-        echo "Your session key is {$auth->sessionKey} (written to lastfm-key.txt)\n";
+        echo "Your session key is {$auth->sessionKey} for user {$auth->username} (written to lastfm-{$auth->username}.txt)\n";
         
-        if(file_put_contents('lastfm-key.txt', $auth->sessionKey))
+        if(file_put_contents("lastfm-{$auth->username}.txt", $auth->sessionKey))
         {
             return;
         }
