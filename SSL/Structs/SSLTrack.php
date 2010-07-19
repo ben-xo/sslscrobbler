@@ -48,7 +48,8 @@ class SSLTrack extends SSLStruct
         $row,
         $deck,
         $artist, 
-        $title, 
+        $title,
+        $album, 
         $played, 
         $length,
         $start_time, 
@@ -83,6 +84,7 @@ class SSLTrack extends SSLStruct
         isset($fields['updatedAt']) && $this->updated_at = $fields['updatedAt'];
         isset($fields['playtime']) && $this->playtime = $fields['playtime'];
         isset($fields['length']) && $this->length = $fields['length'];
+        isset($fields['album']) && $this->album = $fields['album'];
     }
     
     public function getRow()
@@ -103,6 +105,11 @@ class SSLTrack extends SSLStruct
     public function getTitle()
     {
         return $this->title;
+    }
+
+    public function getAlbum()
+    {
+        return $this->album;
     }
 
     public function getPlayed()
