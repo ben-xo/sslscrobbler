@@ -353,7 +353,7 @@ class HistoryReader
         // Win
         if(preg_match("/^win/i", PHP_OS))
         {
-            exec('start ' . $url, $output, $retval);
+            exec('start ' . str_replace('&', '^&', $url), $output, $retval);
         }
         
         // Mac
@@ -362,7 +362,19 @@ class HistoryReader
             exec('open "' . $url . '"', $output, $retval);            
         }
         
-        readline("Please visit {$url} then press Enter...");
+        echo "Please visit {$url} then press Enter...";
+        
+        // would be easier to do this with readline(), but some people don't have extension installed.
+        if(($fp = fopen("php://stdin", 'r')) !== false) 
+        {
+            // read and swallow a line
+            fgets($fp);
+    	    fclose($fp);
+        }
+        else
+        {
+            throw new RuntimeException('Failed to open stdin');
+        }
         
         $auth = new lastfmApiAuth('getsession', $vars);
         if(!empty($auth->error))
