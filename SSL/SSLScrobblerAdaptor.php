@@ -24,7 +24,7 @@
  *  THE SOFTWARE.
  */
 
-class SSLScrobbler implements NowPlayingObserver, ScrobbleObserver
+class SSLScrobblerAdaptor implements NowPlayingObserver, ScrobbleObserver
 {
     /**
      * @var md_Scrobbler
