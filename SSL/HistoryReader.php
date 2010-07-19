@@ -33,6 +33,7 @@ class HistoryReader
     protected $replay = false;
     protected $csv = false;
     protected $auth_lastfm = false;
+    protected $lastfm_username;
     protected $log_file = '';
     protected $verbosity = L::INFO;
     
@@ -89,6 +90,18 @@ class HistoryReader
             {
                 $this->authLastfm();
                 return;
+            }
+            
+            if(isset($this->lastfm_username))
+            {
+                $sk_file = 'lastfm-' . $this->lastfm_username . '.txt';
+                while(!file_exists($sk_file))
+                {
+                    echo "Last.fm username supplied, but no Session Key saved. Authorizing...\n";
+                    $this->authLastfm();
+                }
+                
+                $this->lastfm_config['api_sk'] = trim(file_get_contents($sk_file));
             }
             
             $filename = $this->filename;
@@ -151,18 +164,19 @@ class HistoryReader
     {
         echo "Usage: {$appname} [OPTIONS] [session file]\n";
         echo "Session file is optional. If omitted, the most recent history file from {$this->historydir} will be used automatically\n";
-        echo "    -h or --help:            This message.\n";
-        echo "    -i or --immediate:       Do not wait for the next history file to be created before monitoring. (Use if you started {$appname} mid way through a session)\n";
+        echo "    -h or --help:              This message.\n";
+        echo "    -i or --immediate:         Do not wait for the next history file to be created before monitoring. (Use if you started {$appname} mid way through a session)\n";
         echo "\n";
         echo "Last.fm options:\n";
-        echo "    -A or --auth-lastfm      Authorise the application with Last.fm\n";
+        echo "    -L or --lastfm <username>: Scrobble / send 'Now Playing' to Last.fm for user <username>. (Will ask you to authorize if you have not already)\n";
+        echo "    -A or --auth-lastfm        (Re-)Authorise the application with Last.fm\n";
         echo "\n";
         echo "Debugging options:\n";
-        echo "    -d or --dump:            Dump the file's complete structure and exit\n";
-        echo "    -v or --verbosity <0-9>: How much logging to output. (default: 0 (none))\n";
-        echo "    -l or --log-file <file>: Where to send logging output. (If this option is omitted, output goes to stdout)\n";
-        echo "    -r or --replay:          Replay the session file, one batch per tick. (Tick by pressing enter at the console)\n"; 
-        echo "    -c or --csv:             Parse the session file as a CSV, not a binary file, for testing purposes. Best used with --replay\n"; 
+        echo "    -d or --dump:              Dump the file's complete structure and exit\n";
+        echo "    -v or --verbosity <0-9>:   How much logging to output. (default: 0 (none))\n";
+        echo "    -l or --log-file <file>:   Where to send logging output. (If this option is omitted, output goes to stdout)\n";
+        echo "    -r or --replay:            Replay the session file, one batch per tick. (Tick by pressing enter at the console)\n"; 
+        echo "    -c or --csv:               Parse the session file as a CSV, not a binary file, for testing purposes. Best used with --replay\n"; 
     }
     
     protected function getDefaultHistoryDir()
@@ -236,6 +250,12 @@ class HistoryReader
                 continue;
             }
             
+            if($arg == '--lastfm' || $arg == '-L')
+            {
+                $this->lastfm_username = array_shift($argv);
+                continue;
+            }
+            
             $this->filename = $arg;
         }        
     }
@@ -293,6 +313,7 @@ class HistoryReader
         $growl_event_renderer = new SSLEventGrowlRenderer( $this->getGrowler() );
         $npm = new NowPlayingModel();
         $sm = new ScrobbleModel();
+        $scrobbler = new SSLScrobbler( $this->getScrobbler() );
 
         $ts->addTickObserver($hfm);
         $ts->addTickObserver($npm);
@@ -302,7 +323,9 @@ class HistoryReader
         $rtm->addTrackChangeObserver($npm);
         $rtm->addTrackChangeObserver($sm);
         $npm->addNowPlayingObserver($growl_event_renderer);
+        $npm->addNowPlayingObserver($scrobbler);
         $sm->addScrobbleObserver($growl_event_renderer);
+        $sm->addScrobbleObserver($scrobbler);
         
         $sh->install();
         
@@ -406,5 +429,19 @@ class HistoryReader
         $growler->addNotification('alert');
         $growler->register();
         return $growler;
+    }
+    
+    /**
+     * @return md_Scrobbler
+     */
+    protected function getScrobbler()
+    {
+        return new md_Scrobbler(
+            $this->lastfm_username, null, 
+            $this->lastfm_config['api_key'], 
+            $this->lastfm_config['api_secret'], 
+            $this->lastfm_config['api_sk'], 
+            'tst', '0.1'
+        );
     }
 }
