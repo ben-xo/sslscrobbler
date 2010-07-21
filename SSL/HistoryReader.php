@@ -307,13 +307,13 @@ class HistoryReader
         }
         
         $sh = new SignalHandler();
+        $ih = new InputHandler();
         
         $rtm = new SSLRealtimeModel();
         $rtm_printer = new SSLRealtimeModelPrinter($rtm);
         $growl_event_renderer = new SSLEventGrowlRenderer( $this->getGrowler() );
         $npm = new NowPlayingModel();
         $sm = new ScrobbleModel();
-        $scrobbler = new SSLScrobblerAdaptor( $this->getScrobbler() );
 
         $ts->addTickObserver($hfm);
         $ts->addTickObserver($npm);
@@ -323,14 +323,20 @@ class HistoryReader
         $rtm->addTrackChangeObserver($npm);
         $rtm->addTrackChangeObserver($sm);
         $npm->addNowPlayingObserver($growl_event_renderer);
-        $npm->addNowPlayingObserver($scrobbler);
         $sm->addScrobbleObserver($growl_event_renderer);
-        $sm->addScrobbleObserver($scrobbler);
+        
+        if($this->lastfm_username)
+        {
+            $scrobbler = new SSLScrobblerAdaptor( $this->getScrobbler() );
+            $npm->addNowPlayingObserver($scrobbler);
+            $sm->addScrobbleObserver($scrobbler);
+        }
         
         $sh->install();
+        $ih->install();
         
         // Tick tick tick. This only returns if a signal is caught
-        $ts->startClock($this->sleep, $sh);
+        $ts->startClock($this->sleep, $sh, $ih);
     }
     
     protected function getMostRecentFile($from_dir, $type)

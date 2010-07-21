@@ -41,7 +41,7 @@ class TickSource implements TickObservable
         }
     }
     
-    public function startClock($interval, SignalHandler $sh = null)
+    public function startClock($interval, SignalHandler $sh = null, InputHandler $ih = null)
     {
         L::level(L::DEBUG) && 
             L::log(L::DEBUG, __CLASS__, "Clock Started, interval %s", 
@@ -49,7 +49,9 @@ class TickSource implements TickObservable
         
         $elapsed = 0.0;
         $start_time = microtime(true);
-        while(($sh && $sh->test()) || (!$sh))
+        
+        $continue = true;
+        while($continue)
         {
             L::level(L::DEBUG) && 
                 L::log(L::DEBUG, __CLASS__, "Tick %s seconds", 
@@ -73,6 +75,20 @@ class TickSource implements TickObservable
             $end_time = microtime(true);
             $elapsed = $end_time - $start_time;
             $start_time = $end_time;
+            
+            // test for exit condition via CTRL-C / SIGTERM
+            if($sh)
+            {
+                $sh->test();
+                $continue = ($continue && !$sh->shouldExit());
+            }
+            
+            // test for exit condition via User Input
+            if($ih)
+            {
+                $ih->process();
+                $continue = ($continue && !$ih->shouldExit());  
+            } 
         }
     }
     

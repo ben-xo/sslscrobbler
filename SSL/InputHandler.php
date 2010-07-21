@@ -24,64 +24,45 @@
  *  THE SOFTWARE.
  */
 
-class SignalHandler
+class InputHandler
 {
-    private $should_exit = false;
+    protected $should_exit = false;
     
     public function install()
     {
-        if(function_exists('pcntl_signal'))
+        stream_set_blocking(STDIN, 0);
+    }
+    
+    public function process()
+    {
+        $this->clear();
+        $buffer = array();
+        while(($char = fgetc(STDIN)) !== false)
         {
-            pcntl_signal(SIGINT, array($this, 'handle'));
-        }
-        else
-        {
-            L::level(L::WARNING) &&
-                L::log(L::WARNING, __CLASS__, 'PCNTL extension not installed! Cannot trap Ctrl-C / SIGKILL',
-                    array());           
+            switch($char)
+            {
+                case 'x':
+                case 'X':
+                    $this->should_exit = true;
+                    break;
+                    
+                default:
+            }
         }
     }
     
-    /**
-     * @return false if we caught an exit signal, true otherwise
-     */
     public function shouldExit()
     {
         return $this->should_exit;
     }
     
-    /**
-     * Catch signals.
-     */
-    public function test()
+    protected function clear()
     {
-        if(version_compare(PHP_VERSION, '5.3', '<'))
-        {
-            // XXX: Not sure if this works, need to test.
-            declare(ticks = 1) {
-                $nop = true;
-            }
-        }
-        else
-        {
-            if(function_exists('pcntl_signal_dispatch'))
-            {
-                pcntl_signal_dispatch();
-            }
-        }
+        $this->should_exit = false;
     }
     
-    protected function handle($signal)
-    {     
-        switch ($signal)
-        {          
-            case SIGINT:
-                L::level(L::INFO) &&
-                    L::log(L::INFO, __CLASS__, 'Caught SIGINT',
-                        array());
-                        
-                $this->should_exit = true;
-                break;
-        }
-    }    
+    public function close()
+    {
+        fclose($this->fp);
+    }
 }
