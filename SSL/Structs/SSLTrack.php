@@ -74,8 +74,8 @@ class SSLTrack extends SSLStruct
     {
         $this->fields = $fields;
         isset($fields['row']) && $this->row = $fields['row'];
-        isset($fields['title']) && $this->title = $fields['title'];
-        isset($fields['artist']) && $this->artist = $fields['artist'];
+        isset($fields['title']) && $this->title = trim($fields['title']);
+        isset($fields['artist']) && $this->artist = trim($fields['artist']);
         isset($fields['deck']) && $this->deck = $fields['deck'];
         isset($fields['starttime']) && $this->start_time = $fields['starttime'];
         isset($fields['endtime']) && $this->end_time = $fields['endtime'];
@@ -84,7 +84,7 @@ class SSLTrack extends SSLStruct
         isset($fields['updatedAt']) && $this->updated_at = $fields['updatedAt'];
         isset($fields['playtime']) && $this->playtime = $fields['playtime'];
         isset($fields['length']) && $this->length = $fields['length'];
-        isset($fields['album']) && $this->album = $fields['album'];
+        isset($fields['album']) && $this->album = trim($fields['album']);
     }
     
     public function getRow()
