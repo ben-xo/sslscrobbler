@@ -36,3 +36,25 @@ Unit Tests
 
 Run with phpunit:
  * phpunit --bootstrap Tests/boostrap.php Tests
+
+License
+=======
+
+SSLScrobbler is Free Open Source Software, licensed under the MIT license.
+
+SSLScrobbler includes the following external libraries:
+
+* php-growl (http://github.com/tylerhall/php-growl/)
+  originally by Tyler Hall
+
+* PHP-Scrobbler (http://github.com/ben-xo/PHP-Scrobbler/)
+  originally by Mickael Desfrenes, licensed under the LGPL license.
+  
+* PHP Lastfm API (http://www.matto1990.com/projects/phplastfmapi/)
+  originally by Matt Oakes, licensed under the MIT license.
+  
+* Twitter OAuth (http://github.com/abraham/twitteroauth/)
+  originally by Abraham Williams, licensed under the MIT license.
+  
+* PHP-Twitter (http://code.google.com/p/php-twitter/)
+  originally by Tijs Verkoyen, licensed under the BSD license.
