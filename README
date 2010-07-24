@@ -45,7 +45,7 @@ SSLScrobbler is Free Open Source Software, licensed under the MIT license.
 SSLScrobbler includes the following external libraries:
 
 * php-growl (http://github.com/tylerhall/php-growl/)
-  originally by Tyler Hall
+  originally by Tyler Hall, licensed under the MIT license.
 
 * PHP-Scrobbler (http://github.com/ben-xo/PHP-Scrobbler/)
   originally by Mickael Desfrenes, licensed under the LGPL license.
