@@ -34,6 +34,7 @@ class HistoryReader
     protected $csv = false;
     protected $auth_lastfm = false;
     protected $lastfm_username;
+    protected $twitter_sessionname;
     protected $log_file = '';
     protected $verbosity = L::INFO;
     
@@ -47,6 +48,7 @@ class HistoryReader
     
     protected $growl_config;
     protected $lastfm_config;
+    protected $twitter_config;
     
     /**
      * @var Logger
@@ -63,6 +65,11 @@ class HistoryReader
         $this->lastfm_config = $lastfmConfig;
     }
     
+    public function setTwitterConfig(array $twitterConfig)
+    {
+        $this->twitter_config = $twitterConfig;
+    }
+    
     public function setVerbosityOverride(array $override)
     {
         $this->override_verbosity = $override;
@@ -71,38 +78,21 @@ class HistoryReader
     public function main($argc, array $argv)
     {
         date_default_timezone_set('UTC');
-        
+        mb_internal_encoding('UTF-8');
+                
         try
         {
             $this->parseOptions($argv);
-            
             $this->setupLogging();
                         
-            $appname = $this->appname;
-            
             if($this->help)
             {
-                $this->usage($appname, $argv);
+                $this->usage($this->appname, $argv);
                 return;
             }
             
-            if($this->auth_lastfm)
-            {
-                $this->authLastfm();
-                return;
-            }
-            
-            if(isset($this->lastfm_username))
-            {
-                $sk_file = 'lastfm-' . $this->lastfm_username . '.txt';
-                while(!file_exists($sk_file))
-                {
-                    echo "Last.fm username supplied, but no Session Key saved. Authorizing...\n";
-                    $this->authLastfm();
-                }
-                
-                $this->lastfm_config['api_sk'] = trim(file_get_contents($sk_file));
-            }
+            $this->loadOrAuthLastfmConfig();
+            $this->loadOrAuthTwitterConfig();
             
             $filename = $this->filename;
             
@@ -156,7 +146,7 @@ class HistoryReader
             {
                 echo $e->getTraceAsString() . "\n";
             }  
-            echo "Try {$appname} --help\n";
+            echo "Try {$this->appname} --help\n";
         }
     }
     
@@ -169,8 +159,9 @@ class HistoryReader
         echo "\n";
         echo "Last.fm options:\n";
         echo "    -L or --lastfm <username>: Scrobble / send 'Now Playing' to Last.fm for user <username>. (Will ask you to authorize if you have not already)\n";
-        echo "    -A or --auth-lastfm        (Re-)Authorise the application with Last.fm\n";
         echo "\n";
+        echo "Twitter options:\n";
+        echo "    -T or --twitter <session>: Post tracklists to Twitter. <session> is a 'save name' for the session. (Will ask you to authorize if you have not already)\n";
         echo "Debugging options:\n";
         echo "    -d or --dump:              Dump the file's complete structure and exit\n";
         echo "    -v or --verbosity <0-9>:   How much logging to output. (default: 0 (none))\n";
@@ -244,15 +235,15 @@ class HistoryReader
                 continue;
             }
             
-            if($arg == '--auth-lastfm' || $arg == '-A')
-            {
-                $this->auth_lastfm = true;
-                continue;
-            }
-            
             if($arg == '--lastfm' || $arg == '-L')
             {
                 $this->lastfm_username = array_shift($argv);
+                continue;
+            }
+            
+            if($arg == '--twitter' || $arg == '-T')
+            {
+                $this->twitter_sessionname = array_shift($argv);
                 continue;
             }
             
@@ -332,6 +323,13 @@ class HistoryReader
             $sm->addScrobbleObserver($scrobbler);
         }
         
+        if($this->twitter_sessionname)
+        {
+            $twitter = new SSLTwitterAdaptor( $this->getTwitter(), $this->twitter_config['message'] );
+            $npm->addNowPlayingObserver($twitter);
+            $sm->addScrobbleObserver($twitter);
+        }
+        
         $sh->install();
         $ih->install();
         
@@ -361,6 +359,39 @@ class HistoryReader
         throw new RuntimeException("No $type file found in $from_dir");
     }
 
+    protected function loadOrAuthLastfmConfig()
+    {
+        if(isset($this->lastfm_username))
+        {
+            $sk_file = 'lastfm-' . $this->lastfm_username . '.txt';
+            while(!file_exists($sk_file))
+            {
+                echo "Last.fm username supplied, but no Session Key saved. Authorizing...\n";
+                $this->authLastfm();
+            }
+            
+            $this->lastfm_config['api_sk'] = trim(file_get_contents($sk_file));
+        }
+    }
+    
+    protected function loadOrAuthTwitterConfig()
+    {
+        if(isset($this->twitter_sessionname))
+        {
+            $sk_file = 'twitter-' . $this->twitter_sessionname . '.txt';
+            while(!file_exists($sk_file))
+            {
+                echo "Twitter save name supplied, but no Auth Token saved. Authorizing...\n";
+                $this->authTwitter($this->twitter_sessionname);
+            }
+            
+            list(
+                $this->twitter_config['oauth_token'], 
+                $this->twitter_config['oauth_token_secret']
+            ) = explode("\n", trim(file_get_contents($sk_file)));
+        }
+    }
+        
     protected function authLastfm()
     {        
         $vars = array();
@@ -418,9 +449,71 @@ class HistoryReader
             return;
         }
         
-        throw new RuntimeException("Failed to save session key to lastfm-key.txt");
+        throw new RuntimeException("Failed to save session key to lastfm-{$auth->username}.txt");
     }
 
+    protected function authTwitter($save_name)
+    {   
+        $config = $this->twitter_config;
+        $conn = new TwitterOAuth($config['consumer_key'], $config['consumer_secret']);
+        $request_token = $conn->getRequestToken();
+        if($request_token === false || $conn->lastStatusCode() != 200)
+        {
+            throw new RuntimeException("Error fetching Twitter auth token: Status code" .  $conn->lastStatusCode());
+        }
+        
+        $url = $conn->getAuthorizeURL($request_token);
+        
+        // Automatically send the user to the auth page.
+        
+        // Win
+        if(preg_match("/^win/i", PHP_OS))
+        {
+            exec('start ' . str_replace('&', '^&', $url), $output, $retval);
+        }
+        
+        // Mac
+        elseif(preg_match("/^darwin/i", PHP_OS))
+        {
+            exec('open "' . $url . '"', $output, $retval);            
+        }
+        
+        echo "Please visit {$url} then type the pin number: ";
+        
+        // would be easier to do this with readline(), but some people don't have extension installed.
+        if(($fp = fopen("php://stdin", 'r')) !== false) 
+        {
+            // read and swallow a line
+            $pin = trim(fgets($fp));
+            fclose($fp);
+        }
+        else
+        {
+            throw new RuntimeException('Failed to open stdin');
+        }
+        
+        $conn = new TwitterOAuth($config['consumer_key'], $config['consumer_secret'], $request_token['oauth_token'], $request_token['oauth_token_secret']);
+        $access_token = $conn->getAccessToken($pin);        
+        if($access_token === false || $conn->lastStatusCode() != 200)
+        {
+            throw new RuntimeException("Error fetching Twitter auth token: Status code" .  $conn->lastStatusCode());
+        }
+        
+        $this->twitter_config['oauth_token'] = $access_token['oauth_token'];
+        $this->twitter_config['oauth_token_secret'] = $access_token['oauth_token_secret'];
+
+        echo "Your Twitter token is " . $access_token['oauth_token'] . "\n";
+        echo "Your Twitter token secret is " . $access_token['oauth_token_secret'] . "\n";
+        echo "(Written to twitter-{$save_name}.txt)\n";
+        
+        if(file_put_contents("twitter-{$save_name}.txt", $access_token['oauth_token'] . "\n" . $access_token['oauth_token_secret']))
+        {
+            return;
+        }
+        
+        throw new RuntimeException("Failed to save oauth token to twitter-{$save_name}.txt");
+    }
+        
     /**
      * @return Growl
      */
@@ -450,4 +543,17 @@ class HistoryReader
             'xsl', '0.1'
         );
     }
+    
+    /**
+     * @return Twitter
+     */
+    protected function getTwitter()
+    {
+        $config = $this->twitter_config;
+        $twitter = new Twitter($config['consumer_key'], $config['consumer_secret']);
+        $twitter->setOAuthToken($config['oauth_token']);
+        $twitter->setOAuthTokenSecret($config['oauth_token_secret']);
+        return $twitter;
+    }
+    
 }

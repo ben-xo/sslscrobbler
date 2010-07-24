@@ -30,6 +30,8 @@ error_reporting(E_ALL | E_STRICT);
 require_once 'External/Growl/class.growl.php';
 require_once 'External/PHP-Scrobbler/Scrobbler.php';
 require_once 'External/phplastfmapi-0.7.1-xo/lastfmapi/lastfmapi.php';
+require_once 'External/twitteroauth-0.2.0-beta3.0/twitteroauth/twitteroauth.php';
+require_once 'External/twitter.php';
 require_once 'SSL/Autoloader.php';
 
 function __autoload($class)
@@ -49,6 +51,12 @@ $lastfmConfig = array(
     'api_secret' => '9cc1995235704e14d9d9dcdb3a2ba693'
 );
 
+$twitterConfig = array(
+    'consumer_key' => 'muDxig9YR8URoKrv3GamA',
+    'consumer_secret' => 'UyOd1a9Gjicoc1Yt4dvZT3Ext8Z2paH40YSRYambc',
+    'message' => 'now playing: %s #np'
+);
+
 // set max log levels for various internal components. (The default is unlimited.)
 $log_levels = array(
 //    'TickSource' => L::SILENT,
@@ -60,5 +68,6 @@ $log_levels = array(
 $h = new HistoryReader();
 $h->setGrowlConfig($growlConfig);
 $h->setLastfmConfig($lastfmConfig);
+$h->setTwitterConfig($twitterConfig);
 $h->setVerbosityOverride($log_levels);
 $h->main($argc, $argv);
