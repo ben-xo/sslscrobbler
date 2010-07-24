@@ -410,31 +410,8 @@ class HistoryReader
         
         // Automatically send the user to the auth page.
         
-        // Win
-        if(preg_match("/^win/i", PHP_OS))
-        {
-            exec('start ' . str_replace('&', '^&', $url), $output, $retval);
-        }
-        
-        // Mac
-        elseif(preg_match("/^darwin/i", PHP_OS))
-        {
-            exec('open "' . $url . '"', $output, $retval);            
-        }
-        
-        echo "Please visit {$url} then press Enter...";
-        
-        // would be easier to do this with readline(), but some people don't have extension installed.
-        if(($fp = fopen("php://stdin", 'r')) !== false) 
-        {
-            // read and swallow a line
-            fgets($fp);
-            fclose($fp);
-        }
-        else
-        {
-            throw new RuntimeException('Failed to open stdin');
-        }
+        $this->openBrowser($url);
+        $this->readline("Please visit {$url} then press Enter...");
         
         $auth = new lastfmApiAuth('getsession', $vars);
         if(!empty($auth->error))
@@ -451,7 +428,7 @@ class HistoryReader
         
         throw new RuntimeException("Failed to save session key to lastfm-{$auth->username}.txt");
     }
-
+    
     protected function authTwitter($save_name)
     {   
         $config = $this->twitter_config;
@@ -466,32 +443,9 @@ class HistoryReader
         
         // Automatically send the user to the auth page.
         
-        // Win
-        if(preg_match("/^win/i", PHP_OS))
-        {
-            exec('start ' . str_replace('&', '^&', $url), $output, $retval);
-        }
-        
-        // Mac
-        elseif(preg_match("/^darwin/i", PHP_OS))
-        {
-            exec('open "' . $url . '"', $output, $retval);            
-        }
-        
-        echo "Please visit {$url} then type the pin number: ";
-        
-        // would be easier to do this with readline(), but some people don't have extension installed.
-        if(($fp = fopen("php://stdin", 'r')) !== false) 
-        {
-            // read and swallow a line
-            $pin = trim(fgets($fp));
-            fclose($fp);
-        }
-        else
-        {
-            throw new RuntimeException('Failed to open stdin');
-        }
-        
+        $this->openBrowser($url);
+        $pin = $this->readline("Please visit {$url} then type the pin number: ");
+                
         $conn = new TwitterOAuth($config['consumer_key'], $config['consumer_secret'], $request_token['oauth_token'], $request_token['oauth_token_secret']);
         $access_token = $conn->getAccessToken($pin);        
         if($access_token === false || $conn->lastStatusCode() != 200)
@@ -513,7 +467,40 @@ class HistoryReader
         
         throw new RuntimeException("Failed to save oauth token to twitter-{$save_name}.txt");
     }
+    
+    protected function openBrowser($url)
+    {
+        // Win
+        if(preg_match("/^win/i", PHP_OS))
+        {
+            exec('start ' . str_replace('&', '^&', $url), $output, $retval);
+        }
         
+        // Mac
+        elseif(preg_match("/^darwin/i", PHP_OS))
+        {
+            exec('open "' . $url . '"', $output, $retval);            
+        }
+    }
+
+    protected function readline($prompt)
+    {
+        echo $prompt;
+        
+        // would be easier to do this with readline(), but some people don't have the extension installed.
+        if(($fp = fopen("php://stdin", 'r')) !== false) 
+        {
+            $input = trim(fgets($fp));
+            fclose($fp);
+        }
+        else
+        {
+            throw new RuntimeException('Failed to open stdin');
+        }
+        
+        return $input;
+    }
+    
     /**
      * @return Growl
      */
