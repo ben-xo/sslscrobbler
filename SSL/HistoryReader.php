@@ -162,6 +162,7 @@ class HistoryReader
         echo "\n";
         echo "Twitter options:\n";
         echo "    -T or --twitter <session>: Post tracklists to Twitter. <session> is a 'save name' for the session. (Will ask you to authorize if you have not already)\n";
+        echo "\n";
         echo "Debugging options:\n";
         echo "    -d or --dump:              Dump the file's complete structure and exit\n";
         echo "    -v or --verbosity <0-9>:   How much logging to output. (default: 0 (none))\n";
@@ -335,6 +336,8 @@ class HistoryReader
         
         // Tick tick tick. This only returns if a signal is caught
         $ts->startClock($this->sleep, $sh, $ih);
+        
+        $rtm->shutdown();
     }
     
     protected function getMostRecentFile($from_dir, $type)
