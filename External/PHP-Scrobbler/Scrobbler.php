@@ -231,7 +231,13 @@ class md_Scrobbler
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($curl, CURLOPT_URL, $url);
 		curl_setopt($curl, CURLOPT_POSTFIELDS, $post_data);
+		if(defined('SCROBBLER_LOG')) {
+		    file_put_contents(SCROBBLER_LOG, time() . ' ' . $url . ': ' . $post_data . "\n", FILE_APPEND);
+		}
 		$data = curl_exec($curl);
+		if(defined('SCROBBLER_LOG')) {
+		    file_put_contents(SCROBBLER_LOG, time() . ' ' . $data . "\n", FILE_APPEND);
+		}
 		curl_close ($curl);
 		return $data;
 	}
@@ -342,6 +348,7 @@ class md_Scrobbler
 			. 'm[' . $i . ']=' . $item['mbTrackId'] . '&';
 			$i++;
 		}
+		$body = rtrim($body , '&');
 
 		return $body;
 	}
