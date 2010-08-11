@@ -32,6 +32,7 @@ require_once 'External/PHP-Scrobbler/Scrobbler.php';
 require_once 'External/phplastfmapi-0.7.1-xo/lastfmapi/lastfmapi.php';
 require_once 'External/twitteroauth-0.2.0-beta3.0/twitteroauth/twitteroauth.php';
 require_once 'External/twitter.php';
+require_once 'External/getID3/getid3.php';
 require_once 'SSL/Autoloader.php';
 
 //define('SCROBBLER_LOG', '/tmp/scrobbler.log');

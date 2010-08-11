@@ -45,6 +45,7 @@
 class SSLTrack extends SSLStruct
 {
     protected
+        $filename,
         $row,
         $deck,
         $artist, 
@@ -73,6 +74,7 @@ class SSLTrack extends SSLStruct
     public function populateFrom(array $fields)
     {
         $this->fields = $fields;
+        isset($fields['filename']) && $this->filename = $fields['filename'];
         isset($fields['row']) && $this->row = $fields['row'];
         isset($fields['title']) && $this->title = trim($fields['title']);
         isset($fields['artist']) && $this->artist = trim($fields['artist']);
@@ -85,6 +87,11 @@ class SSLTrack extends SSLStruct
         isset($fields['playtime']) && $this->playtime = $fields['playtime'];
         isset($fields['length']) && $this->length = $fields['length'];
         isset($fields['album']) && $this->album = trim($fields['album']);
+    }
+    
+    public function getFilename()
+    {
+        return $this->filename;
     }
     
     public function getRow()
@@ -191,6 +198,35 @@ class SSLTrack extends SSLStruct
     {
         return $this->getArtist() . ' - ' . $this->getTitle();
     }
+    
+    public function guessLengthFromFile()
+    {
+        $filename = $this->getFilename();
+        if(strlen($filename) == 0) return 0;
+        if(!file_exists($filename)) return 0;
+        
+        $getid3 = new getid3();
+        $getid3->option_tag_lyrics3 = false;
+        $getid3->option_tag_apetag = false;
+        $getid3->option_extra_info = true;
+        $getid3->encoding = 'UTF-8';
+            
+        try
+        {
+            $info = $getid3->Analyze($filename);
+            $playtime = $info['playtime_seconds'];
+            if($playtime) return $playtime;
+        }
+        catch(getid3_exception $e)
+        {
+            // MP3 couldn't be analyzed.
+            L::level(L::DEBUG) &&
+                L::log(L::DEBUG, __CLASS__, 'Guessing MP3 length from file failed: %s',
+                    array( $e->getMessage() ));
+        }
+        return 0;
+    }
+    
     
     public function __toString()
     {

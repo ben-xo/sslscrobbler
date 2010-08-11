@@ -64,13 +64,36 @@ class SSLScrobblerAdaptor implements NowPlayingObserver, ScrobbleObserver
     
     public function notifyScrobble(SSLTrack $track)
     {
+        $length = $track->getLengthInSeconds();
+        
+        if($length == 0)
+        {
+            // Sometimes ScratchLive doesn't supply the length, even when it knows the file. 
+            // Not sure why; perhaps file that have never been analysed.
+            
+            L::level(L::WARNING) &&
+                L::log(L::WARNING, __CLASS__, 'Track %s apparently has length 0. Attempting to guess length.',
+                    array( $track->getFullTitle() ));
+                    
+            $length = $track->guessLengthFromFile();
+        }
+        
+        if($length == 0)
+        {
+            // Perhaps this entry was added manually.
+            
+            L::level(L::WARNING) &&
+                L::log(L::WARNING, __CLASS__, 'Could not guess length. Last.fm will silently ignore the scrobble.',
+                    array( $track->getFullTitle() ));
+        }
+        
         try
         {
             $this->scrobbler->add(
                 $track->getArtist(),
                 $track->getTitle(),
                 $track->getAlbum(),
-                $track->getLengthInSeconds(),
+                $length,
                 $track->getStartTime()
             );
             

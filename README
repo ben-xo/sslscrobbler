@@ -1,4 +1,4 @@
-SSLScrobbler v0.4
+SSLScrobbler v0.5
 =================
 
 SSLScrobbler is a Scrobbler for Serato ScratchLive! (http://www.serato.com/) written in PHP.
@@ -58,3 +58,6 @@ SSLScrobbler includes the following external libraries:
   
 * PHP-Twitter (http://code.google.com/p/php-twitter/)
   originally by Tijs Verkoyen, licensed under the BSD license.
+  
+* getID3 (http://getid3.sourceforge.net/)
+  originally by James Heinrich, licensed under the GPL license.
