@@ -26,7 +26,17 @@
 
 class ScrobbleModel implements ScrobbleObservable, TrackChangeObserver
 {
+    /**
+     * @var ScrobblerTrackModelFactory
+     */
+    protected $stm_factory;
+    
     protected $scrobble_observers = array();
+
+    public function __construct()
+    {
+        $this->stm_factory = Inject::the(new ScrobblerTrackModelFactory());
+    }
     
     public function addScrobbleObserver(ScrobbleObserver $o)
     {    
@@ -73,6 +83,6 @@ class ScrobbleModel implements ScrobbleObservable, TrackChangeObserver
      */
     protected function newScrobblerTrackModel(SSLTrack $track)
     {
-        return new ScrobblerTrackModel($track);
+        return $this->stm_factory->create($track);
     }
 }

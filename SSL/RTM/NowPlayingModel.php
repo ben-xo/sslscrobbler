@@ -25,7 +25,12 @@
  */
 
 class NowPlayingModel implements TickObserver, TrackChangeObserver, NowPlayingObservable
-{    
+{   
+    /**
+     * @var ScrobblerTrackModelFactory
+     */
+    private $stm_factory;
+    
     /**
      * @var Array of NowPlayingObserver
      */
@@ -40,6 +45,11 @@ class NowPlayingModel implements TickObserver, TrackChangeObserver, NowPlayingOb
      * @var ScrobblerTrackModel
      */
     protected $now_playing_in_queue;
+    
+    public function __construct()
+    {
+        $this->stm_factory = Inject::the(new ScrobblerTrackModelFactory());
+    }
     
     public function notifyTick($seconds)
     {
@@ -335,6 +345,6 @@ class NowPlayingModel implements TickObserver, TrackChangeObserver, NowPlayingOb
      */
     protected function newScrobblerTrackModel(SSLTrack $track)
     {
-        return new ScrobblerTrackModel($track);
+        return $this->stm_factory->create($track);
     }
 }
