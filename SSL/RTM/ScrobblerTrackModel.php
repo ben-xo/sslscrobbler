@@ -24,6 +24,10 @@
  *  THE SOFTWARE.
  */
 
+/**
+ * Wrapper around a track which models how long the track has been playing for,
+ * and various properties such as "Now Playing" or "Can Be Scrobbled".
+ */
 class ScrobblerTrackModel
 {
     const SCROBBLE_DIVIDER = 2;
@@ -35,14 +39,17 @@ class ScrobblerTrackModel
      */
     protected $track;
     protected $scrobble_point;
+    protected $end_point;
     
     protected $playtime = 0;
     protected $passed_now_playing_point = false;
     protected $passed_scrobble_point = false;
+    protected $passed_end = false;
     
     public function __construct(SSLTrack $track)
     {
-        $this->scrobble_point = $track->getLengthInSeconds() / self::SCROBBLE_DIVIDER;
+        $this->end_point = $track->getLengthInSeconds();
+        $this->scrobble_point = $this->end_point / self::SCROBBLE_DIVIDER;
         $this->setTrack($track);
     }
     
@@ -71,9 +78,11 @@ class ScrobblerTrackModel
 
         $was_passed_now_playing_point = $this->passed_now_playing_point;
         $was_passed_scrobble_point = $this->passed_scrobble_point;
+        $was_ended = $this->passed_end;
         
         $this->passed_now_playing_point = ($this->playtime >= self::NOW_PLAYING_MIN);
         $this->passed_scrobble_point = ($this->playtime >= $this->scrobble_point);
+        $this->passed_end = ($this->playtime >= $this->end_point);
         
         if($this->passed_now_playing_point && !$was_passed_now_playing_point)
         {
@@ -88,24 +97,37 @@ class ScrobblerTrackModel
                 L::log(L::INFO, __CLASS__, '%s passed scrobble point', 
                     array($this->track->getFullTitle()));
         }
+
+        if($this->passed_end && !$was_ended)
+        {
+            L::level(L::INFO) &&
+                L::log(L::INFO, __CLASS__, '%s passed end point', 
+                    array($this->track->getFullTitle()));
+        }
     }
     
     /**
      * We model a track as potentially "Now Playing" if it's been on the deck for 
-     * "NOW_PLAYING_MIN" seconds, and has not yet reached the scrobble point.
-     * (SSL doesn't give us enough info to say if it's really playing or not.)
+     * "NOW_PLAYING_MIN" seconds, and has not yet been on the deck for long enough
+     * that it could have ended. (SSL doesn't give us enough info to say if it's 
+     * really playing or not.)
      * 
      * Note that edge cases, such as what's "Now Playing" when there's only 1 song
      * on the deck, are handled elsewhere (in NowPlayingModel)
      */
     public function isNowPlaying()
     {
-        return $this->passed_now_playing_point && !$this->passed_scrobble_point;
+        return $this->passed_now_playing_point && !$this->passed_end;
     }
     
     public function isScrobblable()
     {
         return $this->track->getPlayed() && $this->passed_scrobble_point;
+    }
+    
+    public function isEnded()
+    {
+        return $this->passed_end;
     }
     
     public function getRow()

@@ -85,6 +85,7 @@ class ScrobblerTrackModelTest extends PHPUnit_Framework_TestCase
     {
         $this->assertFalse($this->stm->isNowPlaying());
         $this->assertFalse($this->stm->isScrobblable());
+        $this->assertFalse($this->stm->isEnded());
         return $this->stm;
     }
 
@@ -94,14 +95,25 @@ class ScrobblerTrackModelTest extends PHPUnit_Framework_TestCase
         $stm = new ScrobblerTrackModel($track);   
         $this->assertTrue($stm->isNowPlaying());
         $this->assertFalse($stm->isScrobblable());
+        $this->assertFalse($stm->isEnded());
     }
 
     public function test_default_state_constructed_with_scrobblable()
     {
         $track = $this->trackMock(123, 300, true, 175);
         $stm = new ScrobblerTrackModel($track);   
-        $this->assertFalse($stm->isNowPlaying()); // we assume it's no longer "now playing" if it's past the scrobble point
+        $this->assertTrue($stm->isNowPlaying());
         $this->assertTrue($stm->isScrobblable());
+        $this->assertFalse($stm->isEnded());
+    }
+
+    public function test_default_state_constructed_with_ended()
+    {
+        $track = $this->trackMock(123, 300, true, 325);
+        $stm = new ScrobblerTrackModel($track);   
+        $this->assertFalse($stm->isNowPlaying());
+        $this->assertTrue($stm->isScrobblable());
+        $this->assertTrue($stm->isEnded());
     }
     
     /**
@@ -112,6 +124,7 @@ class ScrobblerTrackModelTest extends PHPUnit_Framework_TestCase
         $stm->elapse( 1 );
         $this->assertFalse($stm->isNowPlaying());
         $this->assertFalse($stm->isScrobblable());
+        $this->assertFalse($stm->isEnded());
         return $stm;
     }
     
@@ -123,6 +136,7 @@ class ScrobblerTrackModelTest extends PHPUnit_Framework_TestCase
         $stm->elapse( $this->now_playing_time );
         $this->assertTrue($stm->isNowPlaying());
         $this->assertFalse($stm->isScrobblable());
+        $this->assertFalse($stm->isEnded());
         return $stm;
     }
     
@@ -134,6 +148,7 @@ class ScrobblerTrackModelTest extends PHPUnit_Framework_TestCase
         $stm->elapse(1);
         $this->assertTrue($stm->isNowPlaying());
         $this->assertFalse($stm->isScrobblable());
+        $this->assertFalse($stm->isEnded());
         return $stm;
     }
     
@@ -145,6 +160,7 @@ class ScrobblerTrackModelTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(150, $this->scrobble_time);
         $this->assertTrue($stm->isNowPlaying());
         $this->assertFalse($stm->isScrobblable()); // not true until the track is marked 'played'
+        $this->assertFalse($stm->isEnded());
         return $stm;
     }
     
@@ -155,6 +171,7 @@ class ScrobblerTrackModelTest extends PHPUnit_Framework_TestCase
         $stm->update( $this->trackMock(123, 300, true) );
         $this->assertTrue($stm->isNowPlaying());
         $this->assertFalse($stm->isScrobblable()); // not true until the track is past the scrobble point
+        $this->assertFalse($stm->isEnded());
     }
 
     public function test_is_played_and_past_scrobble_point_is_scrobblable__pass_point_first()
@@ -162,8 +179,9 @@ class ScrobblerTrackModelTest extends PHPUnit_Framework_TestCase
         $stm = $this->stm;
         $stm->elapse( $this->scrobble_time + 5 );
         $stm->update( $this->trackMock(123, 300, true) );
-        $this->assertFalse($stm->isNowPlaying()); // we assume it's no longer "now playing" if it's past the scrobble point
+        $this->assertTrue($stm->isNowPlaying());
         $this->assertTrue($stm->isScrobblable());
+        $this->assertFalse($stm->isEnded());
     }
     
     public function test_is_played_and_past_scrobble_point_is_scrobblable__is_played_first()
@@ -171,8 +189,9 @@ class ScrobblerTrackModelTest extends PHPUnit_Framework_TestCase
         $stm = $this->stm;
         $stm->update( $this->trackMock(123, 300, true) );
         $stm->elapse( $this->scrobble_time + 5 );
-        $this->assertFalse($stm->isNowPlaying()); // we assume it's no longer "now playing" if it's past the scrobble point
+        $this->assertTrue($stm->isNowPlaying());
         $this->assertTrue($stm->isScrobblable());
+        $this->assertFalse($stm->isEnded());
     }
     
     public function test_play_time_update_is_obeyed_for_now_playing()
