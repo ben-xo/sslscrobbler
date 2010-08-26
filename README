@@ -61,3 +61,4 @@ SSLScrobbler includes the following external libraries:
   
 * getID3 (http://getid3.sourceforge.net/)
   originally by James Heinrich, licensed under the GPL license.
+
