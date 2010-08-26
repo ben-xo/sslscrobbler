@@ -29,7 +29,7 @@ class NowPlayingModel implements TickObserver, TrackChangeObserver, NowPlayingOb
     /**
      * @var ScrobblerTrackModelFactory
      */
-    private $stm_factory;
+    protected $stm_factory;
     
     /**
      * @var Array of NowPlayingObserver
