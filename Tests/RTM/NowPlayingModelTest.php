@@ -24,58 +24,132 @@
  *  THE SOFTWARE.
  */
 
+/*
+    Test plan for 'Now Playing' logic:
+    
+	Templates:
+    START    = (length 300, !isPlayed, playtime 0)
+    PLAYING  = (length 300,  isPlayed, playtime 125)
+    PLAYING2 = (length 300,  isPlayed, playtime 150)
+    PLAYED   = (length 300,  isPlayed, playtime 300)
+    
+    Actions:
+    1. Add track 123 PLAYING
+    1.1. Add track 456 PLAYING
+    1.1.1. Stop track 456 PLAYING
+    1.1.2. Stop track 123 PLAYING
+    1.1.3. Stop tracks 123 PLAYING and 456 PLAYING
+    1.2. Stop track 123 PLAYING
+    1.3. Wait 175
+    1.3.1. Add track 456 PLAYING
+    1.3.1.1. Wait 175
+    1.3.1.1.1. Add track 789 PLAYING
+    1.3.1.1.1.1. Wait 175
+    1.3.2. Add track 456 START
+    1.3.2.1. Wait 45
+    1.4. Wait 170
+    1.4.1. Add track 456 PLAYING
+    1.4.1.1. Wait 10
+    2. Add track 123 START
+    2.1. Add track 456 PLAYING
+    
+    Test Definitions:
+    OQT = Only Queued Track
+    OQTPNPP = Oldest Queued Track Past Now Playing Point
+    QIE = Queue Is Empty
+    SQMRNP = Still Queued Most Recently Now Playing
+    
+    Tests:
+    1.a >> When the first track is started, "Now Playing first track" is sent immediately as 1st is OQT
+    1.1.a >> When the second track is then started, no signal is sent immediately as 1st is OQTPNPP
+    1.1.1.a >> When the second track is then stopped, no signal is sent immediately as 1st is OQTPNPP
+    1.1.2.a >> When the first track is stopped, "Now Playing second track" is sent immediately as 2nd is OQT
+    1.1.3.a >> When both tracks are stopped at the same time, "Now Playing Stopped" is sent immediately as QIE
+    1.2.a >> When the only track is removed, "Now Playing Stopped" is sent immediately as QIE
+    1.3.a >> When the first track has played through to the end according to the timer, but not stopped, no signal is sent immediately as 1st is OQT
+    1.3.1.a >> When the second track is then started, "Now Playing second track" is sent immediately as 2nd is OQTPNPP
+    1.3.1.1.a >> When the second track has played through to the end according to the timer, but not stopped, no signal is sent immediately as 2nd track is SQMRNP
+    1.3.1.1.1.a >> When the third track is then started, "Now Playing third track" is sent immediately as 3rd is OQTPNPP
+    1.3.1.1.1.1.a >> When the third track has played through to the end according to the timer, but not stopped, no signal is sent immediately as 3rd track is SQMRNP
+    1.3.2.a >> When the second track is then started, no signal is sent immediately as 1st track is SQMRNP
+    1.3.2.1.a >> When the second track has played past NP point according to timer, "Now Playing second track" is sent immediately as 2nd track is OQTPNPP
+    1.4.a >> When the first track has played for some time, no signal is sent immediately as 1st track is OQT
+    1.4.1.a >> When the second track is then started, no signal is immediately sent as 1st is OQTPNPP
+    1.4.1.1.a >> When the first track has played through to the end according to the timer, but not stopped, "Now Playing second track" is sent immediately as 2nd track OQTPNPP
+    2.a >> When the first track is started, "Now Playing first track" is sent immediately as 1st is OQT
+    2.1.a >> When the second track is started, "Now Playing second track" is sent immediately, as 2nd is OQTPNPP
+
+*/
+
+/**
+ * A version of ScrobblerTrackModelFactory that does a lot more probe-able logging.
+ */
+class NowPlayingModelTest_ScrobblerTrackModelFactory extends ScrobblerTrackModelFactory
+{
+    public $decks = array();
+    public $call_count = 0;
+    
+    public function create(SSLTrack $track)
+    {
+        $this->call_count++;
+        $track_row = $track->getRow();
+        $this->decks[$track_row] = parent::create($track);
+        return $this->decks[$track_row];
+    }
+}
+
 class NowPlayingModelTest extends PHPUnit_Framework_TestCase implements NowPlayingObserver
 {
+    /**
+     * @var NowPlayingModel
+     */
     protected $srm;
     
-    protected $track0;
-    protected $track1;
-    protected $track2;
+    /**
+     * @var NowPlayingModelTest_ScrobblerTrackModelFactory
+     */
+    protected $stm_factory;
     
-    protected $deck0;
-    protected $deck1;
-    protected $deck2;
+    protected $track123_PLAYING;
+    protected $track456_PLAYING;
+    protected $track789_PLAYING;
+    
+    protected $track123_START;
+    protected $track456_START;
+    
+    // self-shunt variables
     
     protected $now_playing_called;
     protected $now_playing_called_with;
     
     public function setUp()
     {
-        $this->srm = $this->getMock('NowPlayingModel', 
-            array( 'newScrobblerTrackModel' )
-        );
-
-        $this->srm->addNowPlayingObserver($this);
-        
         // tracks
         $stm_test = new ScrobblerTrackModelTest();
-        $this->track0 = $stm_test->trackMock(123, 300, true, 125);
-        $this->track1 = $stm_test->trackMock(456, 300, true, 125);
-        $this->track2 = $stm_test->trackMock(789, 300, true, 125);
+        $this->track123_PLAYING = $stm_test->trackMock(123, 300, true, 125);
+        $this->track456_PLAYING = $stm_test->trackMock(456, 300, true, 125);
+        $this->track789_PLAYING = $stm_test->trackMock(789, 300, true, 125);
+        $this->track123_START   = $stm_test->trackMock(123, 300, false, 0);
+        $this->track456_START   = $stm_test->trackMock(456, 300, false, 0);
         
         // deck models
-        $this->deck0 = new ScrobblerTrackModel($this->track0);
-        $this->deck1 = new ScrobblerTrackModel($this->track1);
-        $this->deck2 = new ScrobblerTrackModel($this->track2);
+        $this->stm_factory = new NowPlayingModelTest_ScrobblerTrackModelFactory();
+        Inject::map('ScrobblerTrackModelFactory', $this->stm_factory);
         
         $this->now_playing_called = false;
         $this->now_playing_called_with = null;
+        
+        $this->srm = new NowPlayingModel();
+        $this->srm->addNowPlayingObserver($this);
+    }
+    
+    public function tearDown()
+    {
+        Inject::reset();
     }
     
     // support methods
-    
-    public function srmExpectsNewDeckExactly($exactly, $override0=null, $override1=null, $override2=null)
-    {
-        $this->srm->expects($this->exactly($exactly))
-             ->method('newScrobblerTrackModel')
-             ->will($this->onConsecutiveCalls( 
-                 isset($override0) ? $override0 : $this->deck0,
-                 isset($override1) ? $override1 : $this->deck1,
-                 isset($override2) ? $override2 : $this->deck2
-             ))
-        ;
-    }
-    
+        
     public function sendStart(SSLTrack $track)
     {
         $this->now_playing_called = false;
@@ -102,6 +176,40 @@ class NowPlayingModelTest extends PHPUnit_Framework_TestCase implements NowPlayi
         $this->srm->notifyTrackChange($events);
     }
     
+    public function sendMultiStart(array $tracks)
+    {
+        $this->now_playing_called = false;
+        $this->now_playing_called_with = null;
+        
+        $event_tracks = array();
+        foreach($tracks as $track)
+        {
+            $event_tracks[] = new TrackStartedEvent($track);    
+        }
+        
+        // events
+        $events = new TrackChangeEventList($event_tracks);
+            
+        $this->srm->notifyTrackChange($events);
+    }
+    
+    public function sendMultiStop(array $tracks)
+    {
+        $this->now_playing_called = false;
+        $this->now_playing_called_with = null;
+        
+        $event_tracks = array();
+        foreach($tracks as $track)
+        {
+            $event_tracks[] = new TrackStoppedEvent($track);    
+        }
+        
+        // events
+        $events = new TrackChangeEventList($event_tracks);
+            
+        $this->srm->notifyTrackChange($events);
+    }
+    
     public function sendTick($seconds)
     {
         $this->now_playing_called = false;
@@ -117,12 +225,51 @@ class NowPlayingModelTest extends PHPUnit_Framework_TestCase implements NowPlayi
         $this->now_playing_called_with = $track;
     }
     
+    // common assertions
+    
+    public function assertNowPlayingSentForTrack(SSLTrack $track)
+    {
+        $this->assertTrue($this->now_playing_called);
+        $this->assertSame($this->now_playing_called_with, $track);
+    }
+    
+    public function assertNowPlayingSentStop()
+    {
+        $this->assertTrue($this->now_playing_called);
+        $this->assertNull($this->now_playing_called_with);
+    }
+    
+    public function assertNowPlayingNotSent()
+    {
+        $this->assertFalse($this->now_playing_called);
+        $this->assertNull($this->now_playing_called_with);
+    }
+    
+    public function assertQueueSize($size)
+    {
+        $this->assertEquals($size, $this->srm->getQueueSize());
+    }
+    
+    public function assertDeckCount($count)
+    {
+        $this->assertEquals($count, $this->stm_factory->call_count);
+    }
+    
     // here be the tests!
+    
+    public function test_initial_state()
+    {
+        $this->assertNowPlayingNotSent();
+        $this->assertQueueSize(0);
+        $this->assertDeckCount(0);
+    }
     
     public function test_empty_deck_ticking_does_nothing_interesting()
     {
         $this->sendTick(1000);
-        $this->assertFalse($this->now_playing_called);
+        $this->assertNowPlayingNotSent();
+        $this->assertQueueSize(0);
+        $this->assertDeckCount(0);
     }
     
     // Tests for tracks that are marked "now playing" by their model when they're added.
@@ -133,326 +280,289 @@ class NowPlayingModelTest extends PHPUnit_Framework_TestCase implements NowPlayi
         $srm = $this->srm;
         
         // setup
-        
-        $this->srmExpectsNewDeckExactly(3);
-
         $events1 = new TrackChangeEventList( 
-            array(new TrackStartedEvent($this->track0)) 
+            array(new TrackStartedEvent($this->track123_PLAYING)) 
         );
         
         $events2 = new TrackChangeEventList( 
-            array(new TrackStartedEvent($this->track1), 
-                  new TrackStartedEvent($this->track2)) 
+            array(new TrackStartedEvent($this->track456_PLAYING), 
+                  new TrackStartedEvent($this->track789_PLAYING)) 
         );
-        
-        // initial state
-        $this->assertEquals(0, $srm->getQueueSize());
         
         // track start
         $srm->notifyTrackChange($events1);
-        $this->assertEquals(1, $srm->getQueueSize());
-        
+        $this->assertQueueSize(1);
+        $this->assertDeckCount(1);
+                
         // this tests that the same track is not double-added 
         $srm->notifyTrackChange($events1);
-        $this->assertEquals(1, $srm->getQueueSize());
-        
+        $this->assertQueueSize(1);
+        $this->assertDeckCount(1);
+                
         // second pair of track starts
         $srm->notifyTrackChange($events2);
-        $this->assertEquals(3, $srm->getQueueSize());
+        $this->assertQueueSize(3);
+        $this->assertDeckCount(3);
     }
     
+    // Here begin the tests for the actual Now Playing logic
+    
     /**
+     * 1.a >> When the first track is started, "Now Playing first track" is sent immediately as 1st is OQT
+     * 
      * @depends test_queue_size
      */
     public function test_start_a_track_sets_now_playing()
     {
-        $this->srmExpectsNewDeckExactly(1);
-        $this->sendStart($this->track0);
-        
-        $this->assertTrue($this->now_playing_called);
-        $this->assertSame($this->now_playing_called_with, $this->track0);
+        $this->sendStart($this->track123_PLAYING);
+        $this->assertQueueSize(1);
+        $this->assertDeckCount(1);
+        $this->assertNowPlayingSentForTrack($this->track123_PLAYING);
     }
     
     /**
+     * 1.1.a >> When the second track is then started, no signal is sent immediately as 1st is OQTPNPP
+     * 
      * @depends test_start_a_track_sets_now_playing
-     */
-    public function test_stop_track_removes_now_playing()
-    {
-        // expectations
-        $this->srmExpectsNewDeckExactly(1);
-        $this->sendStart($this->track0);
-        $this->assertTrue($this->now_playing_called);
-        $this->assertSame($this->now_playing_called_with, $this->track0);
-
-        $this->sendStop($this->track0);        
-        $this->assertEquals(0, $this->srm->getQueueSize());
-        $this->assertTrue($this->now_playing_called);
-        $this->assertNull($this->now_playing_called_with);
-    }
-    
-    /**
-     * @depends test_stop_track_removes_now_playing
      */
     public function test_start_second_track_leaves_first_now_playing()
     {
-        // expectations
-        $this->srmExpectsNewDeckExactly(2);
-        $this->sendStart($this->track0);        
-        $this->assertTrue($this->now_playing_called);
-        $this->assertSame($this->now_playing_called_with, $this->track0);
-
-        $this->sendStart($this->track1);
+        // chain to 1.a
+        $this->test_start_a_track_sets_now_playing();
+        
+        $this->sendStart($this->track456_PLAYING);
 
         // even though there are 2 in the queue...
-        $this->assertEquals(2, $this->srm->getQueueSize());
-        
+        $this->assertQueueSize(2);
+        $this->assertDeckCount(2);
+                
         // ...nobody was notified that the 2nd one is now playing
-        $this->assertFalse($this->now_playing_called);
+        $this->assertNowPlayingNotSent();
     }
-    
+
     /**
+     * 1.1.1.a >> When the second track is then stopped, no signal is sent immediately as 1st is OQTPNPP
+     * 
      * @depends test_start_second_track_leaves_first_now_playing
      */
-    public function test_stop_second_track_leaves_first_now_playing()
+    public function test_second_track_stopped_leaves_first_playing()
     {
-        // expectations
-        $this->srmExpectsNewDeckExactly(2);
-        $this->sendStart($this->track0);
+        // chain to 1.1.a
+        $this->test_start_second_track_leaves_first_now_playing();
         
-        $this->sendStart($this->track1);
-        
-        // even though a 2nd track was added (then removed)...
-        $this->assertEquals(2, $this->srm->getQueueSize());
-        
-        // ...nobody was notified that the 2nd one is now playing
-        $this->assertFalse($this->now_playing_called);
-        
-        $this->sendStop($this->track1);
-        
-        // even though a 2nd track was added (then removed)...
-        $this->assertEquals(1, $this->srm->getQueueSize());
-        
-        // ...nobody was notified that the 2nd one is now playing
-        $this->assertFalse($this->now_playing_called);
-    }
-    
-    public function test_stop_first_track_sets_second_now_playing()
-    {
-        // expectations
-        $this->srmExpectsNewDeckExactly(2);
-        $this->sendStart($this->track0);
-        $this->sendStart($this->track1);
-        $this->sendStop($this->track0);
-        
-        $this->assertEquals(1, $this->srm->getQueueSize());
-        
-        $this->assertTrue($this->now_playing_called);
-        $this->assertSame($this->now_playing_called_with, $this->track1);
-    }
-    
-    public function test_second_track_becomes_now_playing_before_first_and_notifies_observers()
-    {
-        // This tests that a track with isNowPlaying() == false, that is nevertheless the first
-        // added track, cedes control to the 2nd track if the second track becomes isNowPlaying().
-        
-        $stm_test = new ScrobblerTrackModelTest();
-        $track0 = $stm_test->trackMock(123, 300, false, 0); // definitely not "now playing"
-        $deck0 = new ScrobblerTrackModel($track0);
-        
-        // expectations
-        $this->srmExpectsNewDeckExactly(2, $deck0);
-        $this->sendStart($track0);
+        $this->sendStop($this->track456_PLAYING);
 
-        $this->assertTrue($this->now_playing_called);
-        $this->assertSame($this->now_playing_called_with, $track0);        
-
-        // now the actual test!
-        $this->sendStart($this->track1);
-        
-        $this->assertEquals(2, $this->srm->getQueueSize());
-        
-        $this->assertTrue($this->now_playing_called);
-        $this->assertSame($this->now_playing_called_with, $this->track1);
+        $this->assertQueueSize(1);
+        $this->assertDeckCount(2);
+        $this->assertNowPlayingNotSent();
     }
     
     /**
-     * @depends test_start_a_track_sets_now_playing
+     * 1.1.2.a >> When the first track is stopped, "Now Playing second track" is sent immediately as 2nd is OQT
+     * 
+     * @depends test_start_second_track_leaves_first_now_playing
      */
-    public function test_notifying_two_stops()
+    public function test_stop_first_track_sets_second_now_playing()
     {
-        // get the model into a state with a track playing, and a track queued...
+        // chain to 1.1.a
+        $this->test_start_second_track_leaves_first_now_playing();
         
-        $srm = $this->srm;
-        
-        $stm_test = new ScrobblerTrackModelTest();
-        
-        // expectations
-        $this->srmExpectsNewDeckExactly(2);
-        
-        // send multiple starts        
-        $srm->notifyTrackChange(new TrackChangeEventList( 
-            array(new TrackStartedEvent($this->track0), 
-                  new TrackStartedEvent($this->track1)) 
-        ));
+        $this->sendStop($this->track123_PLAYING);
 
-        $this->assertTrue($this->now_playing_called);
-        $this->assertSame($this->now_playing_called_with, $this->track0);        
-        
-        
-        // Now for the important bit of the test!
-        $stm_test = new ScrobblerTrackModelTest();
-        $track2 = $stm_test->trackMock(123, 300, true, 150); // track0, but "played"
-        $track3 = $stm_test->trackMock(456, 300, true, 150); // track1, but "played"
-        
-        // reset, and send multiple stops
-        $this->now_playing_called = false;
-        $this->now_playing_called_with = false;
-        $srm->notifyTrackChange(new TrackChangeEventList( 
-            array(new TrackStoppedEvent($track2), 
-                  new TrackStoppedEvent($track3)) 
-        ));
-        
-        $this->assertEquals(0, $srm->getQueueSize());
-        
-        $this->assertTrue($this->now_playing_called);
-        $this->assertNull($this->now_playing_called_with);
+        $this->assertQueueSize(1);
+        $this->assertDeckCount(2);
+        $this->assertNowPlayingSentForTrack($this->track456_PLAYING);
     }
     
-    /*
-     * "Tick" based tests 
+    /**
+     * 1.1.3.a >> When both tracks are stopped at the same time, "Now Playing Stopped" is sent immediately as QIE
      */
-    
-    public function test_now_playing_goes_to_newest_non_now_playing_track_as_default() 
+    public function test_stop_all_sends_stop_notification()
     {
-        // test that it doesn't revert to the previous track if they're both past the scrobble point, basically
-        
-        // get the model into a state with a track playing, and a track queued...
-        
-        // expectations
-        $this->srmExpectsNewDeckExactly(2);
-        $this->sendStart($this->track0);
-        $this->assertTrue($this->now_playing_called);
-        $this->assertSame($this->now_playing_called_with, $this->track0);
-        
-        $this->sendTick(50); // it's already at 125 seconds in, so bring it to 175 (past scrobble point)
-        
-        // even though it's past scrobble point, it's the first track, so it's still "now playing"
-        $this->assertFalse($this->now_playing_called);
-        
-        // MILK.
-        $this->sendStart($this->track1);
-        $this->assertTrue($this->now_playing_called); // should switch to 2nd track now
-        $this->assertSame($this->now_playing_called_with, $this->track1);
-        
-        $this->sendTick(1); // now they're both now playing (track0 at 176, track1 at 126)
-        
-        // get them both past the scrobble point
-        $this->sendTick(40); // track0 -> 216, track1 -> 166
-        
-        $this->assertFalse($this->now_playing_called); // it should stay with the 2nd track.        
+        // chain to 1.1.a
+        $this->test_start_second_track_leaves_first_now_playing();
+        $this->sendMultiStop(array( $this->track123_PLAYING, $this->track456_PLAYING));
+        $this->assertQueueSize(0);
+        $this->assertDeckCount(2);
+        $this->assertNowPlayingSentStop();
     }
     
-    public function test_now_playing_goes_to_newest_non_now_playing_track_as_default_2() 
+    /**
+     * 1.2.a >> When the only track is removed, "Now Playing Stopped" is sent immediately as QIE
+     */
+    public function test_stop_only_sends_stop_notification()
     {
-        // test that it doesn't revert to the previous track if they're both past the scrobble point, basically
-        
-        // get the model into a state with a track playing, and a track queued...
-        
-        // expectations
-        $this->srmExpectsNewDeckExactly(3);
-        
-        $this->sendStart($this->track0);
-        $this->assertTrue($this->now_playing_called);
-        $this->assertSame($this->now_playing_called_with, $this->track0);
-        
-        $this->sendTick(50); // it's already at 125 seconds in, so bring it to 175 (past scrobble point)
-        
-        // even though it's past scrobble point, it's the first track, so it's still "now playing"
-        $this->assertFalse($this->now_playing_called);
-        
-        // MILK.
-        $this->sendStart($this->track1);
-        $this->assertTrue($this->now_playing_called); // should switch to 2nd track now
-        $this->assertSame($this->now_playing_called_with, $this->track1);
-        
-        $this->sendTick(50); // now they're both now playing and past scrobble point (track0 at 225, track1 at 175)
+        // chain to 1.a
+        $this->test_start_a_track_sets_now_playing();
+        $this->sendStop($this->track123_PLAYING);
+        $this->assertQueueSize(0);
+        $this->assertDeckCount(1);
+        $this->assertNowPlayingSentStop();
+    }
+    
+    /**
+     * 1.3.a >> When the first track has played through to the end according to the timer, 
+     * but not stopped, no signal is sent immediately as 1st is OQT
+     */
+    public function test_first_track_plays_to_end_without_notice()
+    {
+        // chain to 1.a
+        $this->test_start_a_track_sets_now_playing();
+        $this->sendTick(175);
+        $this->assertQueueSize(1);
+        $this->assertDeckCount(1);
+        $this->assertNowPlayingNotSent();
+    }
+    
+    /**
+     * 1.3.1.a >> When the second track is then started, "Now Playing second track" is sent 
+     * immediately as 2nd is OQTPNPP
+     */
+    public function test_second_track_after_first_ended_sends_now_playing()
+    {
+       // chain to 1.3.a
+       $this->test_first_track_plays_to_end_without_notice();
+       $this->sendStart($this->track456_PLAYING);
+       $this->assertQueueSize(2);
+       $this->assertDeckCount(2);
+       $this->assertNowPlayingSentForTrack($this->track456_PLAYING);
+    }
+    
+    /**
+     * 1.3.1.1.a >> When the second track has played through to the end according to the 
+     * timer, but not stopped, no signal is sent immediately as 2nd track is SQMRNP
+     */
+    public function test_second_track_plays_to_end_without_notice()
+    {
+        // chain to 1.3.1.a
+        $this->test_second_track_after_first_ended_sends_now_playing();
+        $this->sendTick(175);
+        $this->assertQueueSize(2);
+        $this->assertDeckCount(2);
+        $this->assertNowPlayingNotSent();
+    }
+    
+    /**
+     * 1.3.1.1.1.a >> When the third track is then started, "Now Playing third track" 
+     * is sent immediately as 3rd is OQTPNPP
+     */
+    public function test_third_track_after_second_ended_sends_now_playing()
+    {
+       // chain to 1.3.1.1.a
+       $this->test_second_track_plays_to_end_without_notice();
+       $this->sendStart($this->track789_PLAYING);
+       $this->assertQueueSize(3);
+       $this->assertDeckCount(3);
+       $this->assertNowPlayingSentForTrack($this->track789_PLAYING);
+    }
+    
+    /**
+     * 1.3.1.1.1.1.a >> When the third track has played through to the end according 
+     * to the timer, but not stopped, no signal is sent immediately as 3rd track is SQMRNP
+     */
+    public function test_third_track_plays_to_end_without_notice()
+    {
+        // chain to 1.3.1.1.1.a
+        $this->test_third_track_after_second_ended_sends_now_playing();
+        $this->sendTick(175);
+        $this->assertQueueSize(3);
+        $this->assertDeckCount(3);
+        $this->assertNowPlayingNotSent();
+    } 
 
-        $this->assertFalse($this->now_playing_called); // it should stay with the 2nd track.        
-        
-        $this->sendStart($this->track2);
-        $this->assertTrue($this->now_playing_called); // should switch to 3rd track now
-        $this->assertSame($this->now_playing_called_with, $this->track2);
-        
-        // get them all past the scrobble point
-        $this->sendTick(40); // track0 -> 265, track1 -> 205, track2 -> 165
-        
-        $this->assertFalse($this->now_playing_called); // it should stay with the 3rd track.        
-    }
-    
-    public function test_second_track_becomes_now_playing_after_reaching_np_point() 
+    /**
+     * 1.3.2.a >> When the second track is then started, no signal is sent immediately as 
+     * 1st track is SQMRNP
+     */
+    public function test_second_track_doesnt_immediately_play_when_not_past_np_point_even_though_first_is_ended()
     {
-        // Override track1 / deck1 to be new on the deck with 0 seconds played for this test 
-        $stm_test = new ScrobblerTrackModelTest();
-        $this->track1 = $stm_test->trackMock(456, 300, false, 0); // new track pon de floor
-        $this->deck1 = new ScrobblerTrackModel($this->track1);
-        
-        // expectations
-        $this->srmExpectsNewDeckExactly(2);
-        $this->sendStart($this->track0);
-        $this->assertTrue($this->now_playing_called);
-        $this->assertSame($this->now_playing_called_with, $this->track0);
-        
-        $this->sendTick(50); // it's already at 125 seconds in, so bring it to 175 (past scrobble point)
-        
-        // even though it's past scrobble point, it's the first track, so it's still "now playing"
-        $this->assertFalse($this->now_playing_called);
-        $this->assertFalse($this->deck0->isNowPlaying());
-
-        // Now for the important bit of the test!        
-        $this->sendStart($this->track1);
-        $this->assertFalse($this->now_playing_called); // should not switch to the track immediately
-        $this->assertNull($this->now_playing_called_with);
-        
-        $this->sendTick(45); // get track 1 past the now playing point
-                        
-        $this->assertTrue($this->now_playing_called); // it should switch to 2nd track
-        $this->assertSame($this->now_playing_called_with, $this->track1);        
+       // chain to 1.3.a
+       $this->test_first_track_plays_to_end_without_notice();
+       $this->sendStart($this->track456_START);
+       $this->assertQueueSize(2);
+       $this->assertDeckCount(2);
+       $this->assertNowPlayingNotSent();
     }
     
-    public function test_second_track_becomes_now_playing_after_first_reaches_scrobble_point() 
+    /**
+     * 1.3.2.1.a >> When the second track has played past NP point according to timer, 
+     * "Now Playing second track" is sent immediately as 2nd track is OQTPNPP
+     */
+    public function test_second_track_becomes_now_playing_after_np_point()
     {
-        // expectations
-        $this->srmExpectsNewDeckExactly(2);
-        $this->sendStart($this->track0);
-        $this->assertTrue($this->now_playing_called);
-        $this->assertSame($this->now_playing_called_with, $this->track0);
-        
-        $this->sendTick(20); // it's already at 125 seconds in, so bring it to 145 (just before scrobble point)
-        $this->assertFalse($this->now_playing_called);
-
-        // Now for the important bit of the test!        
-        $this->sendStart($this->track1);
-        $this->assertFalse($this->now_playing_called); // should not switch to the track immediately
-        $this->assertNull($this->now_playing_called_with);
-        
-        $this->sendTick(10); // get first track past the scrobble point (145 -> 155, but track2 is still 'now playing'-able)(
-                        
-        $this->assertTrue($this->now_playing_called); // it should switch to 2nd track
-        $this->assertSame($this->now_playing_called_with, $this->track1);        
+       // chain to 1.3.2.a
+       $this->test_second_track_doesnt_immediately_play_when_not_past_np_point_even_though_first_is_ended();
+       $this->sendTick(45);
+       $this->assertQueueSize(2);
+       $this->assertDeckCount(2);
+       $this->assertNowPlayingSentForTrack($this->track456_START);
     }
     
-//    public function test_no_scrobbling_under_30s()
-//    {
-//        
-//    }
-//    
-//    public function test_no_scrobbling_unplayed()
-//    {
-//        
-//    }
-//    
-//    public function test_stop_all_tracks_on_shutdown()
-//    {
-//        
-//    }
+    /**
+     * 1.4.a >> When the first track has played for some time, no signal is sent immediately 
+     * as 1st track is OQT
+     */
+    public function test_elapsing_timer_doesnt_affect_now_playing()
+    {
+        // chain to 1.a
+        $this->test_start_a_track_sets_now_playing();
+        $this->sendTick(170);
+        $this->assertQueueSize(1);
+        $this->assertDeckCount(1);
+        $this->assertNowPlayingNotSent();
+    }
+    
+    /**
+     * 1.4.1.a >> When the second track is then started, no signal is immediately sent as 1st is OQTPNPP
+     */
+    public function test_second_track_doesnt_immediately_play_when_not_past_np_point()
+    {
+        // chain to 1.4.a
+        $this->test_elapsing_timer_doesnt_affect_now_playing();
+        $this->sendStart($this->track456_PLAYING);
+        $this->assertQueueSize(2);
+        $this->assertDeckCount(2);
+        $this->assertNowPlayingNotSent();
+    }
+    
+    /**
+     * 1.4.1.1.a >> When the first track has played through to the end according to the timer, but not 
+     * stopped, "Now Playing second track" is sent immediately as 2nd track OQTPNPP
+     */
+    public function test_second_track_becomes_now_playing_after_first_ends()
+    {
+        // chain to 1.4.1.a
+        $this->test_second_track_doesnt_immediately_play_when_not_past_np_point();
+        $this->sendTick(10);
+        $this->assertQueueSize(2);
+        $this->assertDeckCount(2);
+        $this->assertNowPlayingSentForTrack($this->track456_PLAYING);        
+    }
+    
+    /**
+     * 2.a >> When the first track is started, "Now Playing first track" is sent immediately as 1st is OQT
+     * 
+     * (this differs from 1.a because in 1.a the track was past the NP point and in 2.a it is not)
+     */
+    public function test_start_track_sets_now_playing_2()
+    {
+        $this->sendStart($this->track123_START);
+        $this->assertQueueSize(1);
+        $this->assertDeckCount(1);
+        $this->assertNowPlayingSentForTrack($this->track123_START);
+    }
+    
+    /**
+     * 2.1.a >> When the second track is started, "Now Playing second track" is sent immediately, 
+     * as 2nd is OQTPNPP
+     */
+    public function test_second_track_becomes_now_playing_immediately()
+    {
+       // chain to 2.a
+       $this->test_start_track_sets_now_playing_2();
+       $this->sendStart($this->track456_PLAYING);
+       $this->assertQueueSize(2);
+       $this->assertDeckCount(2);
+       $this->assertNowPlayingSentForTrack($this->track456_PLAYING);
+    }    
 }
