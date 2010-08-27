@@ -26,10 +26,16 @@
 
 class SSLChunkReader
 {
+    /**
+     * @var SSLRepo
+     */
+    protected $factory;
+    
     protected $fp;
     
     public function __construct($fp)
     { 
+        $this->factory = Inject::the(new SSLRepo());
         $this->fp = $fp;
     }
     
@@ -62,7 +68,7 @@ class SSLChunkReader
      */
     protected function readChunk()
     {
-        $cp = new SSLChunkParser();
+        $cp = $this->factory->newChunkParser();
         return $cp->parseFromFile($this->fp);
     }
 }
