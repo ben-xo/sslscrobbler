@@ -24,6 +24,13 @@
  *  THE SOFTWARE.
  */
 
+/**
+ * History file replayer yields one row on every tick event. Designed for use
+ * with the CrankHandle (which ticks on input, rather than on a timer) for
+ * testing transitions in a problem history file one at a time.
+ * 
+ * See the --replay option in HistoryReader for usage.
+ */
 class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver
 {
     protected $diff_observers = array();

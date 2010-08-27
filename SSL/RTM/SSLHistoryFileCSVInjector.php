@@ -24,6 +24,12 @@
  *  THE SOFTWARE.
  */
 
+/**
+ * History file replayer that reads rows from a CSV. Useful for testing transitions in the
+ * Realtime Model end-to-end without having to record a ScratchLive session. 
+ * 
+ * See the --csv option in HistoryReader for usage.
+ */
 class SSLHistoryFileCSVInjector extends SSLHistoryFileReplayer
 {
     /**
