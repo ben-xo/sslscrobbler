@@ -24,7 +24,7 @@
  *  THE SOFTWARE.
  */
 
-class SSLChunkFactory
+class SSLChunkFactory implements Factory
 {
     public function newChunk($type, $bin)
     {

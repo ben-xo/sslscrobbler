@@ -27,9 +27,9 @@
 class NowPlayingModel implements TickObserver, TrackChangeObserver, NowPlayingObservable
 {   
     /**
-     * @var ScrobblerTrackModelFactory
+     * @var SSLRepo
      */
-    protected $stm_factory;
+    protected $factory;
     
     /**
      * @var Array of NowPlayingObserver
@@ -48,7 +48,7 @@ class NowPlayingModel implements TickObserver, TrackChangeObserver, NowPlayingOb
     
     public function __construct()
     {
-        $this->stm_factory = Inject::the(new ScrobblerTrackModelFactory());
+        $this->factory = Inject::the(new SSLRepo());
     }
     
     public function notifyTick($seconds)
@@ -151,7 +151,7 @@ class NowPlayingModel implements TickObserver, TrackChangeObserver, NowPlayingOb
                                     
         // Put new tracks last in the queue for the purposes of determining what's now playing.
         // This means that tracks should transition to "Now Playing" when the previous track is stopped or taken off the deck.
-        $scrobble_model = $this->newScrobblerTrackModel($started_track);
+        $scrobble_model = $this->factory->newScrobblerTrackModel($started_track);
         $scrobble_model_row = $scrobble_model->getRow();
         if($scrobble_model_row != $started_row)
         {
@@ -336,15 +336,5 @@ class NowPlayingModel implements TickObserver, TrackChangeObserver, NowPlayingOb
         {
             $observer->notifyNowPlaying($track);
         }
-    }
-    
-    /**
-     * Override me in tests.
-     * 
-     * @param SSLTrack $track
-     */
-    protected function newScrobblerTrackModel(SSLTrack $track)
-    {
-        return $this->stm_factory->create($track);
-    }
+    }    
 }

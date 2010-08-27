@@ -84,16 +84,16 @@
 /**
  * A version of ScrobblerTrackModelFactory that does a lot more probe-able logging.
  */
-class NowPlayingModelTest_ScrobblerTrackModelFactory extends ScrobblerTrackModelFactory
+class NowPlayingModelTest_SSLRepo extends SSLRepo
 {
     public $decks = array();
     public $call_count = 0;
     
-    public function create(SSLTrack $track)
+    public function newScrobblerTrackModel(SSLTrack $track)
     {
         $this->call_count++;
         $track_row = $track->getRow();
-        $this->decks[$track_row] = parent::create($track);
+        $this->decks[$track_row] = parent::newScrobblerTrackModel($track);
         return $this->decks[$track_row];
     }
 }
@@ -106,7 +106,7 @@ class NowPlayingModelTest extends PHPUnit_Framework_TestCase implements NowPlayi
     protected $srm;
     
     /**
-     * @var NowPlayingModelTest_ScrobblerTrackModelFactory
+     * @var NowPlayingModelTest_SSLRepo
      */
     protected $stm_factory;
     
@@ -133,8 +133,8 @@ class NowPlayingModelTest extends PHPUnit_Framework_TestCase implements NowPlayi
         $this->track456_START   = $stm_test->trackMock(456, 300, false, 0);
         
         // deck models
-        $this->stm_factory = new NowPlayingModelTest_ScrobblerTrackModelFactory();
-        Inject::map('ScrobblerTrackModelFactory', $this->stm_factory);
+        $this->stm_factory = new NowPlayingModelTest_SSLRepo();
+        Inject::map('SSLRepo', $this->stm_factory);
         
         $this->now_playing_called = false;
         $this->now_playing_called_with = null;

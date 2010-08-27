@@ -91,9 +91,19 @@
 
 class SSLRealtimeModel implements SSLDiffObserver, TrackChangeObservable
 {
+    /**
+     * @var SSLRepo
+     */
+    protected $factory;
+    
     protected $decks = array();
     
     protected $trackchange_observers = array();
+    
+    public function __construct()
+    {
+        $this->factory = Inject::the(new SSLRepo());
+    }
        
     public function addTrackChangeObserver(TrackChangeObserver $o)
     {
@@ -116,7 +126,7 @@ class SSLRealtimeModel implements SSLDiffObserver, TrackChangeObservable
     {
         if(!isset($this->decks[$deck]))
         {
-            $this->decks[$deck] = $this->newSSLRealtimeModelDeck($deck);
+            $this->decks[$deck] = $this->factory->newRealtimeModelDeck($deck);
             ksort($this->decks);
         }
         
@@ -202,25 +212,25 @@ class SSLRealtimeModel implements SSLDiffObserver, TrackChangeObservable
             $stopped_track = $deck->trackStopped();
             if($stopped_track)
             {
-                $events[] = new TrackStoppedEvent($stopped_track);
+                $events[] = $this->factory->newTrackStoppedEvent($stopped_track);
             }
             
             $started_track = $deck->trackStarted();
             if($started_track)
             {
-                $events[] = new TrackStartedEvent($started_track);
+                $events[] = $this->factory->newTrackStartedEvent($started_track);
             } 
             
             $updated_track = $deck->trackUpdated();
             if($updated_track)
             {
-                $events[] = new TrackUpdatedEvent($updated_track);
+                $events[] = $this->factory->newTrackUpdatedEvent($updated_track);
             }
         }
                 
         if(count($events))
         {
-            $events = new TrackChangeEventList($events);
+            $events = $this->factory->newTrackChangeEventList($events);
             
             L::level(L::DEBUG) && 
                 L::log(L::DEBUG, __CLASS__, "notifying %s", 
@@ -242,15 +252,10 @@ class SSLRealtimeModel implements SSLDiffObserver, TrackChangeObservable
             $track = $deck->getCurrentTrack();
             if($track)
             {
-                $events[] = new TrackStoppedEvent($track);
+                $events[] = $this->factory->newTrackStoppedEvent($track);
             }
         }
-        $events = new TrackChangeEventList($events);
+        $events = $this->factory->newTrackChangeEventList($events);
         $this->notifyTrackChangeObservers($events);
-    }
-    
-    protected function newSSLRealtimeModelDeck($deck_number)
-    {
-        return new SSLRealtimeModelDeck($deck_number);
-    }
+    }    
 }

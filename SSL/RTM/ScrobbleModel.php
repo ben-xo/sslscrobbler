@@ -27,15 +27,15 @@
 class ScrobbleModel implements ScrobbleObservable, TrackChangeObserver
 {
     /**
-     * @var ScrobblerTrackModelFactory
+     * @var SSLRepo
      */
-    protected $stm_factory;
+    protected $factory;
     
     protected $scrobble_observers = array();
 
     public function __construct()
     {
-        $this->stm_factory = Inject::the(new ScrobblerTrackModelFactory());
+        $this->factory = Inject::the(new SSLRepo());
     }
     
     public function addScrobbleObserver(ScrobbleObserver $o)
@@ -65,7 +65,7 @@ class ScrobbleModel implements ScrobbleObservable, TrackChangeObserver
     
     protected function trackStopped(SSLTrack $track)
     {
-        $stm = $this->newScrobblerTrackModel($track);
+        $stm = $this->factory->newScrobblerTrackModel($track);
         if($stm->isScrobblable())
         {
             L::level(L::INFO) &&
@@ -74,15 +74,5 @@ class ScrobbleModel implements ScrobbleObservable, TrackChangeObserver
                     
             $this->notifyScrobbleObservers($track);
         }
-    }
-
-    /**
-     * Override me in tests.
-     * 
-     * @param SSLTrack $track
-     */
-    protected function newScrobblerTrackModel(SSLTrack $track)
-    {
-        return $this->stm_factory->create($track);
     }
 }

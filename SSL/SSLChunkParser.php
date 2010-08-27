@@ -30,6 +30,11 @@
  */
 class SSLChunkParser
 {
+    /**
+     * @var SSLChunkFactory
+     */
+    protected $chunk_factory;
+    
     protected $ptr = 0;
     protected $eos = false;
     protected $data;
@@ -37,6 +42,7 @@ class SSLChunkParser
     
     public function __construct($data=null)
     {
+        $this->chunk_factory = Inject::the(new SSLChunkFactory());
         $this->data = $data;
         $this->data_len = strlen($data);
     }
@@ -60,7 +66,7 @@ class SSLChunkParser
                 
         $body_bin = substr($string, $this->ptr + 8, $chunk_size);
         
-        $chunk = $this->newChunk($chunk_type, $body_bin);
+        $chunk = $this->chunk_factory->newChunk($chunk_type, $body_bin);
         
         $this->ptr += 8 + $chunk_size;
         if($this->ptr >= $this->data_len) 
@@ -102,7 +108,7 @@ class SSLChunkParser
         
         $body_bin = fread($fp, $chunk_size);
         
-        $chunk = $this->newChunk($chunk_type, $body_bin);
+        $chunk = $this->chunk_factory->newChunk($chunk_type, $body_bin);
         
         L::level(L::DEBUG) &&
             L::log(L::DEBUG, __CLASS__, "Read %s chunk from file", 
@@ -120,11 +126,5 @@ class SSLChunkParser
         $header = unpack('c4chars/Nlength', $bin);
         $block_type = chr($header['chars1']) . chr($header['chars2']) . chr($header['chars3']) . chr($header['chars4']);
         return array($block_type, $header['length']);
-    }
-
-    protected function newChunk($type, $bin)
-    {
-        $cf = new SSLChunkFactory();
-        return $cf->newChunk($type, $bin);   
     }
 }

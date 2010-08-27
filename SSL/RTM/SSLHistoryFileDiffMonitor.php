@@ -26,6 +26,11 @@
 
 class SSLHistoryFileDiffMonitor implements SSLDiffObservable, TickObserver
 {
+    /**
+     * @var SSLRepo
+     */
+    protected $factory;
+
     protected $diff_observers = array();
     
     protected $filename;
@@ -37,8 +42,9 @@ class SSLHistoryFileDiffMonitor implements SSLDiffObservable, TickObserver
 
     public function __construct($filename)
     {
+        $this->factory = Inject::the(new SSLRepo());
         $this->filename = $filename;
-        $this->tree = new SSLHistoryDom(); // start on empty
+        $this->tree = $this->factory->newHistoryDom(); // start on empty
     }
     
     public function addDiffObserver(SSLDiffObserver $observer)
@@ -91,7 +97,7 @@ class SSLHistoryFileDiffMonitor implements SSLDiffObservable, TickObserver
      */
     protected function read($filename)
     {
-        $parser = new SSLParser(new SSLHistoryDom());
+        $parser = $this->factory->newParser( $this->factory->newHistoryDom() );
         $tree = $parser->parse($filename);
         $parser->close();
         return $tree;

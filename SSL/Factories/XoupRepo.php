@@ -24,10 +24,32 @@
  *  THE SOFTWARE.
  */
 
-class ScrobblerTrackModelFactory implements Factory
-{
-    public function create(SSLTrack $track)
+/**
+ * Static Repository for constructors related to XOUP classes.
+ */
+class XoupRepo implements Factory
+{    
+    /**
+     * @return XoupLoader
+     */
+    public function newLoader()
     {
-        return new ScrobblerTrackModel($track);
+        return new XoupLoader();
+    }
+    
+    /**
+     * @return XoupCompiler
+     */
+    public function newCompiler($program)
+    {
+        return new XoupCompiler($program);
+    }
+    
+    /**
+     * @return XoupInterpreter
+     */
+    public function newInterpreter($program)
+    {
+        return new XoupInterpreter($program);
     }
 }

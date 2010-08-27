@@ -24,9 +24,24 @@
  *  THE SOFTWARE.
  */
 
+class SSLRealtimeModelTest_SSLRepo extends SSLRepo
+{
+    public $decks = array();
+    public $call_count = 0;
+    public $decks_called = array();
+    
+    public function newRealtimeModelDeck($deck_number)
+    {
+        $this->call_count++;
+        $this->decks_called[] = $deck_number;
+        return $this->decks[$deck_number];
+    }
+}
+
 class SSLRealtimeModelTest extends PHPUnit_Framework_TestCase implements TrackChangeObserver
 {
     protected $rtm;
+    protected $repo;
 
     /**
      * @var TrackChangeEventList
@@ -36,8 +51,11 @@ class SSLRealtimeModelTest extends PHPUnit_Framework_TestCase implements TrackCh
     
     public function setUp()
     {
+        $this->repo = new SSLRealtimeModelTest_SSLRepo();
+        Inject::map('SSLRepo', $this->repo);
+        
         $this->tcel = null;
-        $this->rtm = $this->getMock('SSLRealtimeModel', array('newSSLRealtimeModelDeck'));
+        $this->rtm = new SSLRealtimeModel();
         $this->rtm->addTrackChangeObserver($this);
         foreach( array(0, 1, 2) as $i)
         {
@@ -51,6 +69,12 @@ class SSLRealtimeModelTest extends PHPUnit_Framework_TestCase implements TrackCh
                 array($i)
             );
         }
+        $this->repo->decks = $this->decks;
+    }
+    
+    public function tearDown()
+    {
+        Inject::reset();
     }
     
     public function notifyTrackChange(TrackChangeEventList $events)
@@ -97,11 +121,6 @@ class SSLRealtimeModelTest extends PHPUnit_Framework_TestCase implements TrackCh
     {
         $track0 = $this->trackMock(123, 0);
         
-        $this->rtm->expects($this->once())
-                  ->method('newSSLRealtimeModelDeck')
-                  ->with(0)
-                  ->will($this->returnValue($this->decks[0]));
-                  
         $this->decks[0]->expects($this->once())
                        ->method('notify')
                        ->will($this->returnValue(null));
@@ -117,17 +136,14 @@ class SSLRealtimeModelTest extends PHPUnit_Framework_TestCase implements TrackCh
         $this->assertEquals($this->rtm->getDeckIDs(), array( 0 ));
         $this->assertNotNull($this->tcel);
         $this->assertEquals($this->tcel[0], new TrackStartedEvent($track0));
+        $this->assertEquals($this->repo->decks_called, array(0));
+        $this->assertEquals($this->repo->call_count, 1);
     }
 
     public function test_single_deck_update_2()
     {
         $track0 = $this->trackMock(123, 1);
         
-        $this->rtm->expects($this->once())
-                  ->method('newSSLRealtimeModelDeck')
-                  ->with(1)
-                  ->will($this->returnValue($this->decks[1]));
-                  
         $this->decks[1]->expects($this->once())
                        ->method('notify')
                        ->will($this->returnValue(null));
@@ -143,6 +159,8 @@ class SSLRealtimeModelTest extends PHPUnit_Framework_TestCase implements TrackCh
         $this->assertEquals($this->rtm->getDeckIDs(), array( 1 ));
         $this->assertNotNull($this->tcel);
         $this->assertEquals($this->tcel[0], new TrackStartedEvent($track0));
+        $this->assertEquals($this->repo->decks_called, array(1));
+        $this->assertEquals($this->repo->call_count, 1);
     }
     
     /**
@@ -155,12 +173,7 @@ class SSLRealtimeModelTest extends PHPUnit_Framework_TestCase implements TrackCh
         foreach(array(0, 1, 2) as $i)
         {
             $track = $this->trackMock(100+$i, $i);
-            
-            $this->rtm->expects($this->at($i))
-                      ->method('newSSLRealtimeModelDeck')
-                      ->with(2 - $i) // the array is in reverse order
-                      ->will($this->returnValue($this->decks[2 - $i]));
-                      
+                                  
             $this->decks[$i]->expects($this->once())
                            ->method('notify')
                            ->will($this->returnValue(null));
@@ -175,6 +188,8 @@ class SSLRealtimeModelTest extends PHPUnit_Framework_TestCase implements TrackCh
         $this->rtm->notifyDiff( new SSLHistoryDiffDom( $tracks ));    
         $this->assertEquals($this->rtm->getDeckIDs(), array( 0, 1, 2 ));
         $this->assertNotNull($this->tcel);
+        $this->assertEquals($this->repo->decks_called, array(2,1,0));
+        $this->assertEquals($this->repo->call_count, 3);
         
         foreach(array(0, 1, 2) as $i)
         {

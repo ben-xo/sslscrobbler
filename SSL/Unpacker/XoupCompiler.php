@@ -119,7 +119,7 @@ class XoupCompiler
             {                
                 $body .= "        /* $op */\n";
                 
-                if(!preg_match('/^(?:([a-zA-Z0-9_]+)\.|(c|(r)(\d+|_|\*)(b|w|l))(>)(s|i|h|t|r)(_|([a-zA-Z]+)))/', $op, $matches))
+                if(!preg_match('/^(?:([a-zA-Z0-9_]+)\.|(c|(r)(\d+|_|\*)(b|w|l))(>)(s|i|h|t|r|f)(_|([a-zA-Z]+)))/', $op, $matches))
                     throw new RuntimeException("Could not parse Unpacker op '$op' in sub '$sub'");
                                 
                 $callsub = $matches[1];
@@ -280,6 +280,10 @@ class XoupCompiler
                 
             case 't': // timestamp -> date
                 $body .= "        $dest = date('Y-m-d H:i:s', (int) \$this->unpackint(\$datum));\n";
+                break;
+                    
+            case 'f': // float
+                $body .= "        $dest = (float) \$this->unpackfloat(\$datum);\n";
                 break;
                     
             default:

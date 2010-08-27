@@ -52,6 +52,16 @@
 abstract class SSLStruct
 {
     /**
+     * @var XoupRepo
+     */
+    protected $xoup_factory;
+    
+    public function __construct()
+    {
+        $this->xoup_factory = Inject::the(new XoupRepo());
+    }
+    
+    /**
      * Returns an Unpacker
      * 
      * @return Unpacker
@@ -71,14 +81,6 @@ abstract class SSLStruct
      */
     protected function getUnpackerForFile($filename)
     {
-        return $this->newXoupLoader()->load($filename);
-    }
-    
-    /**
-     * @return XoupLoader
-     */
-    protected function newXoupLoader()
-    {
-        return new XoupLoader();
-    }
+        return $this->xoup_factory->newLoader()->load($filename);
+    }    
 }

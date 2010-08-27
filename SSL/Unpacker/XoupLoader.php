@@ -27,6 +27,16 @@
 class XoupLoader
 {
     /**
+     * @var XoupRepo
+     */
+    protected $factory;
+    
+    public function __construct()
+    {
+        $this->factory = Inject::the(new XoupRepo());
+    }
+    
+    /**
      * @return Unpacker
      */
     public function load($filename, $load_compiled=true, $compile=true)
@@ -43,7 +53,7 @@ class XoupLoader
         $program = file_get_contents($filename);
         if($compile)
         {
-            $compiler = $this->newXoupCompiler($program);
+            $compiler = $this->factory->newCompiler($program);
             $compiler->compile($filename);
             
             // load the compiled file, but don't recursively recompile if
@@ -56,7 +66,7 @@ class XoupLoader
             throw new RuntimeException("Could not load {$filename}");
         }
         
-        return $this->newXoupInterpreter($program);
+        return $this->factory->newInterpreter($program);
     }
     
     /**
@@ -97,15 +107,5 @@ class XoupLoader
             }
         }
         return new $class;
-    }
-    
-    protected function newXoupInterpreter($program)
-    {
-        return new XoupInterpreter($program);
-    }
-    
-    protected function newXoupCompiler($program)
-    {
-        return new XoupCompiler($program);
     }
 }

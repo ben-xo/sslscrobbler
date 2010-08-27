@@ -26,9 +26,19 @@
 
 class SSLParser
 {
+    /**
+     * @var SSLRepo
+     */
+    protected $factory;
+    
+    /**
+     * File pointer
+     */
     protected $fp;
     
     /**
+     * Prototype DOM which is cloned for new chunks to be read into.
+     * 
      * @var SSLDom
      */
     protected $dom_prototype;
@@ -44,17 +54,22 @@ class SSLParser
      */
     public function __construct(SSLDom $dom = null)
     {
+        $this->factory = Inject::the(new SSLRepo());
+        
         if(isset($dom))
         {
             $this->dom_prototype = $dom;
         }
         else
         {
-            $this->dom_prototype = $this->newSSLDom();        
+            $this->dom_prototype = $this->factory->newDom();  
         }
+        
     }
     
     /**
+     * Open a file and read its chunks.
+     * 
      * @return SSLDom
      */
     public function parse($filename)
@@ -84,14 +99,10 @@ class SSLParser
             throw new RuntimeException("readChunks() called with no file open.");
         }
         
-        $reader = new SSLChunkReader($this->fp);
+        $reader = $this->factory->newChunkReader($this->fp);
         $dom = clone $this->dom_prototype;
         $dom->addChunks( $reader->getChunks() );
         return $dom;
     }
     
-    protected function newSSLDom()
-    {
-        return new SSLDom();
-    }
 }

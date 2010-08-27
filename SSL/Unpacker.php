@@ -111,5 +111,24 @@ abstract class Unpacker
         }
         
         return $vals['val'];
-    }    
+    }
+
+    protected function unpackfloat($datum)
+    {
+        $width = strlen($datum);
+        switch($width)
+        {
+            case 8:
+                $vals = unpack('dval', $datum);
+                break;
+                
+            case 4:
+                $vals = unpack('fval', $datum);
+                break;
+                
+            default:
+                throw new InvalidArgumentException('Cannot unpack an odd-sized float of width ' . $width);
+        }
+        return $vals['val'];
+    }
 }

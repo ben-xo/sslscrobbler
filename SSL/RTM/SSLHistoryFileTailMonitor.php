@@ -52,7 +52,7 @@ class SSLHistoryFileTailMonitor extends SSLHistoryFileDiffMonitor
     
     protected function newTailParser($filename)
     {
-        $parser = new SSLParser(new SSLHistoryDom());
+        $parser = $this->factory->newParser( $this->factory->newHistoryDom() );
         $parser->open($filename);
         return $parser;
     }

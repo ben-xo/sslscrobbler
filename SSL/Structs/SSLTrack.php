@@ -61,11 +61,6 @@ class SSLTrack extends SSLStruct
         $fields = array()
     ;
     
-    protected function newUnpacker($program)
-    {
-        return new Unpacker($program);
-    }
-    
     public function getUnpacker()
     {
         return $this->getUnpackerForFile(dirname(__FILE__) . '/SSLTrackAdat.xoup');

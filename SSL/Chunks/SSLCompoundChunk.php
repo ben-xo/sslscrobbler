@@ -24,31 +24,94 @@
  *  THE SOFTWARE.
  */
 
-class SSLCompoundChunk extends SSLChunk
+/**
+ * A Compound Chunk is a chunk that contains sub-chunks. OENT and OREN are both
+ * compound in this way. The last parsed inner chunk is treated as the Compound-
+ * Chunk's canonical chunk for getData() etc by default, although this can be
+ * changed with selectIndex().
+ */
+class SSLCompoundChunk extends SSLChunk implements ArrayAccess, Iterator
 {
     /**
      * @var array of SSLStructChunk
      */
     protected $chunks = array();
     
-    /**
-     * @var SSLStructChunk
-     */
-    protected $last_inner_chunk;
+    protected $selected_index = -1;
     
     public function __construct($type, $data)
     {
         parent::__construct($type, '');
         
-        $cp = new SSLChunkParser($data);
+        // normally we'd save the factory here but this
+        // is the only place we're using it
+        $cp = Inject::the(new SSLRepo())->newChunkParser($data);
         while($cp->hasMore())
         {
             $chunk = $cp->parse();
             $this->chunks[] = $chunk;
-            $this->last_inner_chunk = $chunk;
+            $this->selected_index++;
         }
     }
     
+    public function select($index)
+    {
+        $this->selected_index = $index;
+    }
+    
+    public function count()
+    {
+        return count($this->chunks);
+    }
+    
+    // ArrayAccess implementation
+    public function offsetExists ($offset) 
+    {
+        return isset($this->chunks[$offset]);
+    }
+    
+    public function offsetGet ($offset) 
+    {
+        return $this->chunks[$offset];
+    }
+    
+    public function offsetSet ($offset, $value) 
+    {
+        throw new RuntimeException('SSLCompoundChunks are immutable');
+    }
+    
+    public function offsetUnset ($offset) 
+    {
+        throw new RuntimeException('SSLCompoundChunks are immutable');
+    }
+    
+    // Iterator implementation
+    public function current () 
+    {
+        return current($this->chunks);
+    }
+    
+    public function next () 
+    {
+        return next($this->chunks);
+    }
+
+    public function key () 
+    {
+        return key($this->chunks);
+    }
+
+    public function valid () 
+    {
+        return (bool) current($this->chunks);
+    }
+
+    public function rewind () 
+    {
+        return reset($this->chunks);
+    }
+    
+        
     protected function chunkDebugBody($indent=0)
     {
         $string = '';
@@ -64,12 +127,12 @@ class SSLCompoundChunk extends SSLChunk
      */
     public function getData()
     {
-        if(isset($this->last_inner_chunk))
+        if(isset($this->chunks[$this->selected_index]))
         {
-            return $this->last_inner_chunk->getData();
+            return $this->chunks[$this->selected_index]->getData();
         }
         
-        throw new OutOfBoundException("This {$this->type} chunk contains no inner chunk");
+        throw new OutOfBoundsException("This {$this->type} chunk contains no inner chunk with index {$this->selected_index}");
     }
     
     /**
@@ -77,13 +140,13 @@ class SSLCompoundChunk extends SSLChunk
      */
     public function getDataInto(SSLStruct $struct)
     {
-        if(isset($this->last_inner_chunk))
+        if(isset($this->chunks[$this->selected_index]))
         {
             $parser = $struct->getUnpacker();
-            $this->last_inner_chunk->unpackWith( $parser );
-            return $this->last_inner_chunk->getDataInto($struct);
+            $this->chunks[$this->selected_index]->unpackWith( $parser );
+            return $this->chunks[$this->selected_index]->getDataInto($struct);
         }
         
-        throw new OutOfBoundException("This {$this->type} chunk contains no inner chunk");
+        throw new OutOfBoundsException("This {$this->type} chunk contains no inner chunk with index {$this->selected_index}");
     }
 }
