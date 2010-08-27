@@ -70,16 +70,22 @@
  */
 class XoupInterpreter extends Unpacker
 {
+    /**
+     * @var XoupRepo
+     */
+    protected $factory;
+    
     protected $subs = array();
     
     public function __construct($program)
     {
+        $this->factory = Inject::the(new XoupRepo()); 
         $this->subs = $this->parse($program);
     }
     
     public function parse($program)
     {
-        $parser = new XoupParser();
+        $parser = $this->factory->newParser();
         return $parser->parse($program);
     }
     
