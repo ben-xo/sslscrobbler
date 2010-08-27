@@ -26,6 +26,7 @@
 
 class XoupCompiler
 {
+    private $factory;
     private $debug = true;
     private $oobcheck = false;
     
@@ -36,12 +37,13 @@ class XoupCompiler
         
     public function __construct($program)
     {   
+        $this->factory = Inject::the(new XoupRepo());
         $this->subs = $this->parse($program);
     }
     
     public function parse($program)
     {
-        $parser = new XoupParser();
+        $parser = $this->factory->newParser();
         return $parser->parse($program);
     }    
     
