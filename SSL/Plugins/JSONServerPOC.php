@@ -56,6 +56,10 @@ class JSONServerPOC implements SSLPlugin, NowPlayingObserver, TickObserver
         }
         
         socket_set_nonblock($this->socket);
+        
+        L::level(L::DEBUG) && 
+            L::log(L::DEBUG, __CLASS__, "Installed JSON listener...", 
+                array());
     }
     
     public function onStop() 
@@ -89,16 +93,32 @@ class JSONServerPOC implements SSLPlugin, NowPlayingObserver, TickObserver
             L::log(L::DEBUG, __CLASS__, "Forking to handle request...", 
                 array());
                     
-        $pid = pcntl_fork();
-        if($pid)
-        {
-            // parent
-            if($pid == -1)
-            {            
-                throw new RuntimeException("Fork failed!");
+        if(function_exists('pcntl_fork'))
+        { 
+            $pid = pcntl_fork();
+            if($pid)
+            {
+                // parent
+                if($pid == -1)
+                {            
+                    throw new RuntimeException("Fork failed!");
+                }
+                $is_child = false;
             }
+            else
+            {
+                $is_child = true;
+                $do_exit = true;
+            }
+            
         }
         else
+        {
+            $is_child = true;
+            $do_exit = false;
+        }
+        
+        if($is_child)
         {
             // child
             
@@ -109,8 +129,10 @@ class JSONServerPOC implements SSLPlugin, NowPlayingObserver, TickObserver
             {
                 L::level(L::DEBUG) && 
                     L::log(L::DEBUG, __CLASS__, "Problem reading from socket: %s", 
-                        array(socket_last_error($conn)));   
-                exit;
+                        array(socket_last_error($conn)));
+                           
+                if($do_exit) exit;
+                return;
             }
             
             $request = explode("\n", $request);
@@ -168,7 +190,7 @@ class JSONServerPOC implements SSLPlugin, NowPlayingObserver, TickObserver
                         array());
             }
             
-            exit;
+            if($do_exit) exit;
         }
     }
     
