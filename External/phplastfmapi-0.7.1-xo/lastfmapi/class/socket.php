@@ -47,7 +47,7 @@ class lastfmApiSocket {
 		$this->port = $port;
 		
 		// Open a connection in the class variable
-		$this->handle = fsockopen($this->host, $this->port, $this->error_number, $this->error_string);
+		$this->handle = @fsockopen($this->host, $this->port, $this->error_number, $this->error_string);
 		if ( $this->handle ) {
 			return TRUE;
 		}

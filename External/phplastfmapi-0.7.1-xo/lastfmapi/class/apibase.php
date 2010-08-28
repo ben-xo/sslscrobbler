@@ -64,7 +64,8 @@ class lastfmApi {
 		$this->port = 80;
 		$this->connected = 0;
 		
-		if ( $this->socket = new lastfmApiSocket($this->host, $this->port) ) {
+		$this->socket = new lastfmApiSocket($this->host, $this->port);
+		if ( !$this->socket->error_number && !$this->socket->error_string ) {
 			$this->connected = 1;
 			return true;
 		}
