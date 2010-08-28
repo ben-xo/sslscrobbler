@@ -27,11 +27,6 @@
 
 error_reporting(E_ALL | E_STRICT);
 
-require_once 'External/Growl/class.growl.php';
-require_once 'External/PHP-Scrobbler/Scrobbler.php';
-require_once 'External/phplastfmapi-0.7.1-xo/lastfmapi/lastfmapi.php';
-require_once 'External/twitteroauth-0.2.0-beta3.0/twitteroauth/twitteroauth.php';
-require_once 'External/twitter.php';
 require_once 'External/getID3/getid3.php';
 require_once 'SSL/Autoloader.php';
 
@@ -69,8 +64,15 @@ $log_levels = array(
 );
 
 $h = new HistoryReader();
-$h->setGrowlConfig($growlConfig);
-$h->setLastfmConfig($lastfmConfig);
-$h->setTwitterConfig($twitterConfig);
 $h->setVerbosityOverride($log_levels);
+
+$growl_plugin = new GrowlPlugin($growlConfig);
+$h->addPlugin($growl_plugin);
+
+$lastfm_plugin = new LastfmPlugin($lastfmConfig);
+$h->addPlugin($lastfm_plugin);
+
+$twitter_plugin = new TwitterPlugin($twitterConfig);
+$h->addPlugin($twitter_plugin);
+
 $h->main($argc, $argv);
