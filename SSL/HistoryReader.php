@@ -48,17 +48,48 @@ class HistoryReader
      * @var Logger
      */
     protected $logger;
-        
+    
+    /**
+     * Takes an array of class names => log levels. Mainly
+     * you can use this to shut certain classes up that are too noisy
+     * at a particular log level, e.g. TickSource (which normally 
+     * sends a L::DEBUG message every 2 seconds).
+     * 
+     * @param array $override
+     */
     public function setVerbosityOverride(array $override)
     {
         $this->override_verbosity = $override;
     }
-    
+
+    /**
+     * Enable a plugin.
+     * 
+     * @param SSLPlugin $plugin
+     */
     public function addPlugin(SSLPlugin $plugin)
     {
         $this->plugins[] = $plugin;
     }
     
+    /**
+     * The main entry point to the application. Start here!
+     * When this returns, the program is done.
+     * 
+     * Program flow:
+     * * Parse options
+     * * Set up logging, if requested
+     * * Ask plugins to do any early setup - this is where Last.fm / Twitter do OAuth etc
+     * * If no filename was supplied, either wait for a new one to be created in the default 
+     *   ScratchLive history folder (polls every 2 seconds), or go for the most recent 
+     *   (when --immediate is specified). 
+     * * If --dump was specified, display the structure of the file and exit. (Very useful for
+     *   probing ScratchLive files).
+     * * Otherwise, start monitoring the file.
+     * 
+     * @param $argc (from GLOBAL)
+     * @param $argv (from GLOBAL)
+     */
     public function main($argc, array $argv)
     {
         date_default_timezone_set('UTC');
@@ -255,15 +286,32 @@ class HistoryReader
         L::setOverrides($this->override_verbosity);
     }
     
+    /**
+     * Sets up and couples the event-driven history monitoring components, 
+     * and then starts the clock.
+     * 
+     *  A signal handler is installed to catch Ctrl-C, although it's still
+     *  safer to shutdown ScratchLive! first if you want everything scrobbled
+     *  correctly.
+     *  
+     * --replay can be used to replay a file with ticks on user input (for debugging).
+     * --replay --csv can be used to replay from a CSV fake-file.
+     * 
+     */
     protected function monitor($filename)
     {
-        // set up and couple the various parts of the system
-        
         if($this->replay) 
         {
             // tick when the user presses enter
             $ts = new CrankHandle();
-            $hfm = new SSLHistoryFileReplayer($filename);
+            if($this->csv)
+            {
+                $hfm = new SSLHistoryFileCSVInjector($filename);
+            }
+            else
+            {
+                $hfm = new SSLHistoryFileReplayer($filename);
+            }
         }
         else
         {
@@ -271,11 +319,6 @@ class HistoryReader
             $ts  = new TickSource();
             $hfm = new SSLHistoryFileTailMonitor($filename);
             //$hfm = new SSLHistoryFileDiffMonitor($filename);
-        }
-
-        if($this->csv)
-        {
-            $hfm = new SSLHistoryFileCSVInjector($filename);
         }
 
         $sh = new SignalHandler();
