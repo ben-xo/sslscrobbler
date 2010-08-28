@@ -24,7 +24,7 @@
  *  THE SOFTWARE.
  */
 
-class SSLTwitterAdaptor implements NowPlayingObserver, ScrobbleObserver
+class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObserver
 {
     /**
      * @var Twitter
@@ -32,6 +32,11 @@ class SSLTwitterAdaptor implements NowPlayingObserver, ScrobbleObserver
     protected $twitter;
     protected $msg_format;
     protected $max_title_length;
+    
+    /**
+     * @var SSLTrack
+     */
+    protected $track_to_notify;
     
     public function __construct(Twitter $twitter, $msg_format)
     {
@@ -50,43 +55,18 @@ class SSLTwitterAdaptor implements NowPlayingObserver, ScrobbleObserver
     {
         if($track)
         {
-            if(function_exists('pcntl_fork'))
-            {
-                // Send tweet in a new process, so that it doesn't block other plugins.
-                $pid = pcntl_fork();
-                if($pid)
-                {
-                    // parent
-                    if($pid == -1)
-                    {
-                        L::level(L::WARNING) &&
-                            L::log(L::WARNING, __CLASS__, 'Fork failed! Update will block',
-                                array());
-
-                        // do it in the parent thread instead (blocking).
-                        $this->sendNowPlaying($track);
-                    }
-                }
-                else
-                {
-                    // child
-                    $this->sendNowPlaying($track);
-                    exit;
-                }
-            }
-            else
-            {
-                L::level(L::WARNING) &&
-                    L::log(L::WARNING, __CLASS__, 'PCNTL extension not installed, so cannot multi-thread. If Twitter is slow, tweeting will delay other plugins from updating.',
-                        array());
-
-                $this->sendNowPlaying($track);
-            }
+            $this->track_to_notify = $track;
+            
+            // Send tweet in a new process, so that it doesn't block other plugins.
+            $runner = new ParallelRunner();
+            $runner->spinOff($this, 'Twitter update');
+            unset($this->track_to_notify);            
         }
     }
     
-    protected function sendNowPlaying(SSLTrack $track)
+    protected function sendNowPlaying()
     {
+        $track = $this->track_to_notify;
         $title = $track->getFullTitle();
         $title_length = mb_strlen($title);
 
@@ -116,5 +96,10 @@ class SSLTwitterAdaptor implements NowPlayingObserver, ScrobbleObserver
     public function notifyScrobble(SSLTrack $track)
     {
 
+    }
+    
+    public function run()
+    {
+        $this->sendNowPlaying();
     }
 }

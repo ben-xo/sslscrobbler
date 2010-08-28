@@ -24,11 +24,12 @@
  *  THE SOFTWARE.
  */
 
-class JSONServerPOC implements SSLPlugin, NowPlayingObserver, TickObserver
+class JSONServerPOC implements SSLPlugin, NowPlayingObserver, TickObserver, ParallelTask
 {
     protected $socket;
     
     protected $most_recent_track;
+    protected $most_recent_accepted_connection;
     
     public function usage($appname, array $argv)
     {
@@ -79,119 +80,93 @@ class JSONServerPOC implements SSLPlugin, NowPlayingObserver, TickObserver
     
     public function notifyTick($seconds)
     {
-        $conn = @socket_accept($this->socket);
-        if($conn !== false)
+        do
         {
-            $this->handleRequest($conn);
+            // handle all pending requests in parallel
+            $conn = @socket_accept($this->socket);
+            if($conn !== false)
+            {
+                $this->most_recent_accepted_connection = $conn;
+                $runner = new ParallelRunner();
+                $runner->spinOff($this, 'JSON Request');
+                unset($this->most_recent_accepted_connection);
+            }
         }
+        while($conn !== false);
     }
     
+    public function run()
+    {
+        $this->handleRequest($this->most_recent_accepted_connection);
+    }
     
     protected function handleRequest($conn)
     {
-        L::level(L::DEBUG) && 
-            L::log(L::DEBUG, __CLASS__, "Forking to handle request...", 
-                array());
-                    
-        if(function_exists('pcntl_fork'))
-        { 
-            $pid = pcntl_fork();
-            if($pid)
+        socket_set_block($conn);
+        $request = '';
+        $bytes = socket_recv($conn, $request, 16384, 0);
+        if($bytes === false)
+        {
+            L::level(L::DEBUG) && 
+                L::log(L::DEBUG, __CLASS__, "Problem reading from socket: %s", 
+                    array(socket_last_error($conn)));
+                       
+            return;
+        }
+        
+        $request = explode("\n", $request);
+        $get_line = explode(' ', $request[0]);
+        if(preg_match('#^/nowplaying\.json(?:\?.*|$)#', $get_line[1]))
+        {
+            $data = array();
+            if(isset($this->most_recent_track))
             {
-                // parent
-                if($pid == -1)
-                {            
-                    throw new RuntimeException("Fork failed!");
-                }
-                $is_child = false;
-            }
-            else
-            {
-                $is_child = true;
-                $do_exit = true;
+                $track = $this->most_recent_track;
+                $data = array(
+                    'artist' => $track->getArtist(),
+                    'title' => $track->getTitle(),
+                    'album' => $track->getAlbum(),
+                    'length' => $track->getLengthInSeconds()
+                );
             }
             
+            $body = json_encode($data);
+            $len = strlen($body);
+            $lines = array(
+                'HTTP/1.0 200 OK',
+                'Date: ' . date('r'),
+                'Content-Type: application/json',
+                'Content-Length: ' . $len,
+                'Server: ScratchLive! Scrobbler',
+                'Connection: close', 
+                '',
+                $body
+            );
+            socket_write($conn, implode("\n", $lines));
+            socket_close($conn);
+            L::level(L::DEBUG) && 
+                L::log(L::DEBUG, __CLASS__, "Finished handling request.", 
+                    array());
         }
         else
         {
-            $is_child = true;
-            $do_exit = false;
-        }
-        
-        if($is_child)
-        {
-            // child
-            
-            socket_set_block($conn);
-            $request = '';
-            $bytes = socket_recv($conn, $request, 16384, 0);
-            if($bytes === false)
-            {
-                L::level(L::DEBUG) && 
-                    L::log(L::DEBUG, __CLASS__, "Problem reading from socket: %s", 
-                        array(socket_last_error($conn)));
-                           
-                if($do_exit) exit;
-                return;
-            }
-            
-            $request = explode("\n", $request);
-            $get_line = explode(' ', $request[0]);
-            if(preg_match('#^/nowplaying\.json(?:\?.*|$)#', $get_line[1]))
-            {
-                $data = array();
-                if(isset($this->most_recent_track))
-                {
-                    $track = $this->most_recent_track;
-                    $data = array(
-                        'artist' => $track->getArtist(),
-                        'title' => $track->getTitle(),
-                        'album' => $track->getAlbum(),
-                        'length' => $track->getLengthInSeconds()
-                    );
-                }
-                
-                $body = json_encode($data);
-                $len = strlen($body);
-                $lines = array(
-                    'HTTP/1.0 200 OK',
-                    'Date: ' . date('r'),
-                    'Content-Type: application/json',
-                    'Content-Length: ' . $len,
-                    'Server: ScratchLive! Scrobbler',
-                    'Connection: close', 
-                    '',
-                    $body
-                );
-                socket_write($conn, implode("\n", $lines));
-                socket_close($conn);
-                L::level(L::DEBUG) && 
-                    L::log(L::DEBUG, __CLASS__, "Finished handling request.", 
-                        array());
-            }
-            else
-            {
-                $body = '<html><head><title>404 Not Found</title></head><body>No Dice.</body></html>';
-                $len = strlen($body);
-                $lines = array(
-                    'HTTP/1.0 404 Not Found',
-                    'Date: ' . date('r'),
-                    'Content-Type: text/html',
-                    'Content-Length: ' . $len,
-                    'Server: ScratchLive! Scrobbler',
-                    'Connection: close', 
-                    '',
-                    $body
-                );
-                socket_write($conn, implode("\n", $lines));
-                socket_close($conn);
-                L::level(L::DEBUG) && 
-                    L::log(L::DEBUG, __CLASS__, "Handled unknown request.", 
-                        array());
-            }
-            
-            if($do_exit) exit;
+            $body = '<html><head><title>404 Not Found</title></head><body>No Dice.</body></html>';
+            $len = strlen($body);
+            $lines = array(
+                'HTTP/1.0 404 Not Found',
+                'Date: ' . date('r'),
+                'Content-Type: text/html',
+                'Content-Length: ' . $len,
+                'Server: ScratchLive! Scrobbler',
+                'Connection: close', 
+                '',
+                $body
+            );
+            socket_write($conn, implode("\n", $lines));
+            socket_close($conn);
+            L::level(L::DEBUG) && 
+                L::log(L::DEBUG, __CLASS__, "Handled unknown request.", 
+                    array());
         }
     }
-    
 }
