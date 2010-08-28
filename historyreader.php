@@ -65,14 +65,7 @@ $log_levels = array(
 
 $h = new HistoryReader();
 $h->setVerbosityOverride($log_levels);
-
-$growl_plugin = new GrowlPlugin($growlConfig);
-$h->addPlugin($growl_plugin);
-
-$lastfm_plugin = new LastfmPlugin($lastfmConfig);
-$h->addPlugin($lastfm_plugin);
-
-$twitter_plugin = new TwitterPlugin($twitterConfig);
-$h->addPlugin($twitter_plugin);
-
+$h->addPlugin(new GrowlPlugin($growlConfig));
+$h->addPlugin(new LastfmPlugin($lastfmConfig));
+$h->addPlugin(new TwitterPlugin($twitterConfig));
 $h->main($argc, $argv);
