@@ -322,7 +322,7 @@ class HistoryReader
         }
 
         $sh = new SignalHandler();
-        $ih = new InputHandler();
+        //$ih = new InputHandler();
 
         $rtm = new SSLRealtimeModel();
         $rtm_printer = new SSLRealtimeModelPrinter($rtm);
@@ -362,7 +362,7 @@ class HistoryReader
         }
         
         $sh->install();
-        $ih->install();
+        //$ih->install();
 
         foreach($this->plugins as $plugin)
         {
@@ -370,7 +370,7 @@ class HistoryReader
         }
 
         // Tick tick tick. This only returns if a signal is caught
-        $ts->startClock($this->sleep, $sh, $ih);
+        $ts->startClock($this->sleep, $sh/*, $ih*/);
 
         $rtm->shutdown();
 
