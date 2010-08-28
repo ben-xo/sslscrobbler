@@ -50,33 +50,69 @@ class SSLTwitterAdaptor implements NowPlayingObserver, ScrobbleObserver
     {
         if($track)
         {
-            $title = $track->getFullTitle();
-            $title_length = mb_strlen($title);
-            
-            if($title_length > $this->max_title_length)
+            if(function_exists('pcntl_fork'))
             {
-                $title = mb_substr($title, 0, $this->max_title_length - 1) . '…';
+                // Send tweet in a new process, so that it doesn't block other plugins.
+                $pid = pcntl_fork();
+                if($pid)
+                {
+                    // parent
+                    if($pid == -1)
+                    {
+                        L::level(L::WARNING) &&
+                            L::log(L::WARNING, __CLASS__, 'Fork failed! Update will block',
+                                array());
+
+                        // do it in the parent thread instead (blocking).
+                        $this->sendNowPlaying($track);
+                    }
+                }
+                else
+                {
+                    // child
+                    $this->sendNowPlaying($track);
+                    exit;
+                }
             }
-            
-            $status = sprintf($this->msg_format, $title);
-            
-            try
-            {
-                L::level(L::DEBUG) &&
-                    L::log(L::DEBUG, __CLASS__, 'Sending Now Playing to Twitter',
-                        array( ));
-                                       
-                $this->twitter->statusesUpdate($status);                        
-            }
-            catch(Exception $e)
+            else
             {
                 L::level(L::WARNING) &&
-                    L::log(L::WARNING, __CLASS__, 'Could not send Now Playing to Twitter: %s',
-                        array( $e->getMessage() ));
+                    L::log(L::WARNING, __CLASS__, 'PCNTL extension not installed, so cannot multi-thread. If Twitter is slow, tweeting will delay other plugins from updating.',
+                        array());
+
+                $this->sendNowPlaying($track);
             }
         }
     }
     
+    protected function sendNowPlaying(SSLTrack $track)
+    {
+        $title = $track->getFullTitle();
+        $title_length = mb_strlen($title);
+
+        if($title_length > $this->max_title_length)
+        {
+            $title = mb_substr($title, 0, $this->max_title_length - 1) . '…';
+        }
+
+        $status = sprintf($this->msg_format, $title);
+
+        try
+        {
+            L::level(L::DEBUG) &&
+                L::log(L::DEBUG, __CLASS__, 'Sending Now Playing to Twitter',
+                    array( ));
+
+            $this->twitter->statusesUpdate($status);
+        }
+        catch(Exception $e)
+        {
+            L::level(L::WARNING) &&
+                L::log(L::WARNING, __CLASS__, 'Could not send Now Playing to Twitter: %s',
+                    array( $e->getMessage() ));
+        }
+    }
+
     public function notifyScrobble(SSLTrack $track)
     {
 
