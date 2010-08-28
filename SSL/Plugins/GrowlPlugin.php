@@ -41,7 +41,10 @@ class GrowlPlugin implements SSLPlugin
     
     public function usage($appname, array $argv) {}
     
-    public function parseOption($arg, array &$argv) {}
+    public function parseOption($arg, array &$argv) 
+    {
+        return false;
+    }
     
     public function onSetup() {}
     public function onInstall() {}
