@@ -191,13 +191,22 @@ class HistoryReader
         // OSX
         $dir = getenv('HOME') . '/Music/ScratchLIVE/History/Sessions';
         if(is_dir($dir)) return $dir;
+
+        $dir = getenv('HOME') . '/Music/_Serato_/History/Sessions';
+        if(is_dir($dir)) return $dir;
         
         // Windows Vista / Windows 7 ?
         $dir = getenv('USERPROFILE') . '\Music\ScratchLIVE\History\Sessions';
         if(is_dir($dir)) return $dir;
+
+        $dir = getenv('USERPROFILE') . '\Music\_Serato_\History\Sessions';
+        if(is_dir($dir)) return $dir;
         
         // Windows XP
         $dir = getenv('USERPROFILE') . '\My Documents\My Music\ScratchLIVE\History\Sessions';
+        if(is_dir($dir)) return $dir;
+
+        $dir = getenv('USERPROFILE') . '\My Documents\My Music\_Serato_\History\Sessions';
         if(is_dir($dir)) return $dir;
         
         throw new RuntimeException("Could not find your ScratchLive History folder; it wasn't where I was expecting.");
