@@ -31,7 +31,7 @@ That means that if you click 'End Session' in the ScratchLive! history pane, you
 have to restart SSLScrobbler.
 
 If you have not installed ScratchLive! into the default location, you will have to provide
-the full path to the current session file to SSLScrobbler. See section 3, Troubleshooting,
+the full path to the current session file to SSLScrobbler. See section 4, TROUBLESHOOTING,
 for more information.
 
 1.1 Installation
@@ -147,17 +147,73 @@ Twitter options:
   The first time you specify this option, it will ask you to authorize the app to your 
   Twitter account. The authorization information is stored in a file called 
   <session>-twitter.txt
+
+2. HOW IT WORKS
+=================
+
+SSLScrobbler monitors the current ScratchLive! history file. The history file is a binary
+file containing information about all the tracks in the session. ScratchLive! updates this
+file every time you add a track to a deck or eject a track from a deck (and in a few other
+situations). The history file actually contains a lot of information - everything you see
+in the history pane, and then some. ScratchLive never removes or rewrites information in
+this file while you're performing, so it may append several chunks of information referring
+to the same track. (Later, when you shut ScratchLive! down, it compacts the file to remove
+duplicate information).
+
+However, SSLScrobbler does not have access to the actual play time or play position of the
+songs, so it has to guess this.
+
+
+3. ADVANCED USE
+=================
+
+If you're interested in exploring the ScratchLive! binary file format, check out the --dump
+option. You can even use this to dump non-history files (such as the file 'database v2'). 
+ 
+ 
+4. TROUBLESHOOTING
+====================
+
+* make sure display_errors = On in your php.ini if you want more useful help, and
+  before reporting bugs.
   
-2. FOR DEVELOPERS
+* If the internet is down or drops out, Scrobbling to Last.fm may make the whole
+  app freeze until the scrobbling times out. This means that updates to Now Playing
+  will not appear during this period, although no scrobbles will be lost.
+  
+* If you find Scrobbling, Tweeting etc to be particularly slowing down the app (that is
+  causing delays when Now Playing is not updated), try installing the PCNTL extension
+  to PHP. (Without the PCNTL extension, the app will be single-threaded).
+  
+ 
+5. FOR DEVELOPERS
 ===================
 
-2.1 Unit Tests
+5.1 Unit Tests
 -----------------
 
 Run with phpunit:
  * phpunit --bootstrap Tests/boostrap.php Tests
+ 
+5.2 Plugins
+-----------------
 
-3. CREDITS & LICENSE
+It's quite easy to write plugins for SSLScrobbler. Examine the examples in the folder
+SSL/Plugins. 
+
+A plugin is a class which implements SSLPlugin, and can provide zero-or-more Observers
+for the different events (zero would be quite uninteresting, though) from the 
+getObservers() method.
+
+The following observer types are currently provided:
+* TickObserver - triggered by a timer interrupt (usually every 2 seconds).
+* SSLDiffObserver - notified of new changes to the ScratchLive! history file.
+* TrackChangeObserver - triggered every time a track is loaded or unloaded from a deck.
+* NowPlayingObserver - triggered when a new track becomes the canonical 'Now Playing' track
+* ScrobbleObserver - triggered when a track is definitively scrobble-able. 
+
+
+6. CREDITS & LICENSE
 ======================
 
 SSLScrobbler is Free Open Source Software by Ben XO, licensed under the MIT license.
@@ -182,4 +238,3 @@ SSLScrobbler includes the following external libraries:
 * getID3 (http://getid3.sourceforge.net/)
   originally by James Heinrich, licensed under the GPL license.
 
- 
