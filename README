@@ -16,31 +16,151 @@ happen, such as a track is loaded on the deck, set "Now Playing" or can be scrob
 
 The app works on OSX and Windows.
 
-Running It
-==========
 
-OSX (Mac): 
- * double click "historyreader-mac"
- OR:
- * Open Terminal, 'cd' to the folder and type "./historyreader.php" for help and options
+1. OPERATING SSLSCROBBLER
+===========================
 
-Windows:
- * You will need to install PHP 5.3 and Growl
- * Then start -> run -> "cmd", cd to the app, and type "php historyreader.php"
+You should start SSLScrobbler before starting ScratchLive!, and then close it down after
+closing down ScratchLive!. If you have no idea how to start it, See 1.2 for the 
+'Getting Started' guide. 
 
-Try "php historyreader.php --help" for more options.
-Try "php historyreader.php -L <lastfm username>" as well.
+To close SSL Scrobbler, press Ctrl-C.
 
-Unit Tests
-==========
+SSLScrobbler will read the current 'session' file from the ScratchLive! history folder. 
+That means that if you click 'End Session' in the ScratchLive! history pane, you will 
+have to restart SSLScrobbler.
+
+If you have not installed ScratchLive! into the default location, you will have to provide
+the full path to the current session file to SSLScrobbler. See section 3, Troubleshooting,
+for more information.
+
+1.1 Installation
+-------------------
+
+* OSX (Mac):
+  
+  SSLScrobbler needs no particular installation, although if it's not already installed,
+  you might like to install Growl. (In my experience, most Mac users already have Growl).
+  
+  SSLScrobbler is best started from the Terminal.
+  
+* Windows:
+
+  You should install PHP 5.3 and Growl. You must reboot after installing these, even if 
+  it doesn't ask!
+  
+  I strongly suggest you make the following change to your php.ini file (which can usually be 
+  found in C:\Program Files\PHP). Open the file in Notepad, and then find the line which 
+  says...
+  
+    display_errors = 
+    
+  ...and change it to On if it is Off.  
+  
+  SSLScrobbler is best started from a DOS box.
+
+
+1.2 Getting Started
+----------------------
+
+SSLScrobbler is currently designed to be run from the command line. For convenience only,
+there are shortcuts provided to double-click for Mac and Windows. But best results can be
+obtained by running from Terminal (Mac) or a DOS box (Win).
+
+Very very quick start:
+
+ * OSX (Mac): double click "historyreader-mac"
+ * Windows:   double click "historyreader-win"
+ 
+ To quit SSL Scrobbler, click on its window and press Ctrl-C. 
+ 
+Better start, from Terminal:
+
+ OSX (Mac):
+ 
+ * Open Terminal (I have it in my dock, but you can open it quickly from Spotlight)
+ * Drag the file historyreader.php into the Terminal window, and hit enter. It should 
+   say something like: 
+    
+   $ /Users/ben/Downloads/sslscrobbler/historyreader.php 
+    
+ * For help and information on options, type --help before hitting enter. e.g: 
+
+   $ ./historyreader.php --help
+
+   To quit SSL Scrobbler, click on its window and press Ctrl-C.
+    
+ Windows:
+ 
+ * Open a DOS box. You can do this by clicking 'Start' -> Run -> typing "cmd" and 
+   pressing enter. 
+ * Type 'php' and then drag the file historyreader.php into the DOS box, and hit enter. 
+   It should say something like:
+    
+   C:\> php "C:\Documents and Settings\ben\Desktop\historyreader.php"
+    
+ * For help and information on options, type --help before hitting enter. e.g.:
+ 
+   C:\> php "C:\Documents and Settings\ben\Desktop\historyreader.php" --help
+ 
+   To quit SSL Scrobbler, click on its window and press Ctrl-C.
+    
+ 
+1.3 Options
+--------------
+
+Add the following options to the command when running from Terminal / DOS: 
+
+ -h or --help
+  A reminder of this information.
+
+ -i or --immediate
+  Do not wait for the next history file to be created, but use the most recent one
+  found.
+   
+  You must use this option if you started SSLScrobbler mid-way through a session, 
+  or if you had to restart SSLScrobbler for some reason.
+   
+  This option is ignored if you specify the full path to a specific history file.
+   
+ -v or --verbosity <0-9>:   
+  Increase the amount of information shown in the console. If you really want to see
+  a lot about what's going on, try -v 9 . 
+   
+  You should try -v 9 and save the output if you are having problems, before reporting
+  a bug to me, or contacting me for advice...
+   
+ -l or --log-file <file>:   
+  Write the output to a file. (If this option is omitted, output goes to the screen)
+ 
+Last.fm options:
+ -L or --lastfm <username>: 
+  Scrobble / send 'Now Playing' to Last.fm for user <username>. 
+  
+  The first time you specify this, it will ask you to authorize the app to your Last.fm
+  account. The authorization information is stored in a file called <username>-lastfm.txt
+  
+Twitter options:
+ -T or --twitter <session>:
+  Post tracklists to Twitter. It will tweet once for every 'Now Playing'. 
+  
+  The first time you specify this option, it will ask you to authorize the app to your 
+  Twitter account. The authorization information is stored in a file called 
+  <session>-twitter.txt
+  
+2. FOR DEVELOPERS
+===================
+
+2.1 Unit Tests
+-----------------
 
 Run with phpunit:
  * phpunit --bootstrap Tests/boostrap.php Tests
 
-License
-=======
+3. CREDITS & LICENSE
+======================
 
-SSLScrobbler is Free Open Source Software, licensed under the MIT license.
+SSLScrobbler is Free Open Source Software by Ben XO, licensed under the MIT license.
 
 SSLScrobbler includes the following external libraries:
 
@@ -62,3 +182,4 @@ SSLScrobbler includes the following external libraries:
 * getID3 (http://getid3.sourceforge.net/)
   originally by James Heinrich, licensed under the GPL license.
 
+ 
