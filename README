@@ -7,14 +7,13 @@ See http://www.last.fm/help/faq?category=99 for an explanation of Scrobbling.
 SSLScrobbler is designed to update Last.fm and/or Twitter when a track is playing or played. 
 
 SSLScrobbler could easily in future be hooked into a projector to show what's now playing,
-a Twitter account, or used to control other actions based on track listing - Scrobbling is
-only the first natural step!
+or used to control other actions based on track listing.
 
 ScratchLive itself logs plays to a binary history file during playback. This app reads the 
 binary file and models what's going on. It sends you Growl popups when certain events 
 happen, such as a track is loaded on the deck, set "Now Playing" or can be scrobbled.
 
-The app works on OSX and Windows.
+The app works on OS X (Mac) and Windows.
 
 
 1. OPERATING SSLSCROBBLER
@@ -39,8 +38,8 @@ for more information.
 
 * OSX (Mac):
   
-  SSLScrobbler needs no particular installation, although if it's not already installed,
-  you might like to install Growl. (In my experience, most Mac users already have Growl).
+  SSLScrobbler needs no particular installation, although if it's not already, you might 
+  like to install Growl. (In my experience, most Mac users already have Growl).
   
   SSLScrobbler is best started from the Terminal.
   
@@ -115,8 +114,7 @@ Add the following options to the command when running from Terminal / DOS:
   A reminder of this information.
 
  -i or --immediate
-  Do not wait for the next history file to be created, but use the most recent one
-  found.
+  Do not wait for the next history file to be created, but use the most recent one.
    
   You must use this option if you started SSLScrobbler mid-way through a session, 
   or if you had to restart SSLScrobbler for some reason.
@@ -167,13 +165,33 @@ songs, so it has to guess this.
 3. ADVANCED USE
 =================
 
-If you're interested in exploring the ScratchLive! binary file format, check out the --dump
-option. You can even use this to dump non-history files (such as the file 'database v2'). 
+* If you want to change the message sent to Twitter, edit historyreader.php.
+
+* If you're interested in exploring the ScratchLive! binary file format, check out the 
+  --dump option. You can even use this to dump non-history files (such as the file 
+  'database v2'). 
  
  
 4. TROUBLESHOOTING
 ====================
 
+* SSLScrobbler looks for history files in the default locations, which are:
+  
+  Mac:
+  * $HOME/Music/ScratchLIVE/History/Sessions
+  
+    ($HOME is usually something like /Users/<username>)
+  
+  Windows Vista / Windows 7:
+  * %USERPROFILE%\Music\ScratchLIVE\History\Sessions
+
+    (%USERPROFILE% is usually something like C:\Users\<username>)
+    
+  Windows XP:
+  * %USERPROFILE%\My Documents\My Music\ScratchLive\History\Sessions
+  
+    (%USERPROFILE% is usually something like C:\Documents and Settings\<username>)
+  
 * make sure display_errors = On in your php.ini if you want more useful help, and
   before reporting bugs.
   
