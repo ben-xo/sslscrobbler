@@ -32,7 +32,7 @@ class UI
     /**
      * Opens a browser on Windows and OS X.
      */
-    public function openBrowser($url)
+    protected function openBrowser($url)
     {
         // Win
         if(preg_match("/^win/i", PHP_OS))
@@ -50,7 +50,7 @@ class UI
     /**
      * Reads a line from stdin.
      */
-    public function readline($prompt)
+    protected function readline($prompt)
     {
         echo $prompt;
         
