@@ -63,6 +63,10 @@ section 4, TROUBLESHOOTING, for more information.
   You should install PHP 5.3 and Growl. You must reboot after installing these, 
   even if it doesn't ask!
   
+  You can download and install PHP 5.3 from http://windows.php.net/download/
+  (You probably want the 'Installer' nearest the top of the page, unless you
+  know better.)
+  
   I strongly suggest you make the following change to your php.ini file (which 
   can usually be found in C:\Program Files\PHP). Open the file in Notepad, and 
   then find the line which says...
