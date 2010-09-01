@@ -58,6 +58,7 @@ class SSLTrack extends SSLStruct
         $updated_at = 0,
         $added,
         $playtime,
+        $fullpath,
         $fields = array()
     ;
     
@@ -82,11 +83,17 @@ class SSLTrack extends SSLStruct
         isset($fields['playtime']) && $this->playtime = $fields['playtime'];
         isset($fields['length']) && $this->length = $fields['length'];
         isset($fields['album']) && $this->album = trim($fields['album']);
+        isset($fields['fullpath']) && $this->fullpath = trim($fields['fullpath']);
     }
     
     public function getFilename()
     {
         return $this->filename;
+    }
+    
+    public function getFullpath()
+    {
+        return $this->fullpath;
     }
     
     public function getRow()
@@ -196,9 +203,9 @@ class SSLTrack extends SSLStruct
     
     public function guessLengthFromFile()
     {
-        $filename = $this->getFilename();
-        if(strlen($filename) == 0) return 0;
-        if(!file_exists($filename)) return 0;
+        $fullpath = $this->getFullpath();
+        if(strlen($fullpath) == 0) return 0;
+        if(!file_exists($fullpath)) return 0;
         
         $getid3 = new getid3();
         $getid3->option_tag_lyrics3 = false;
@@ -208,9 +215,9 @@ class SSLTrack extends SSLStruct
             
         try
         {
-            $info = $getid3->Analyze($filename);
+            $info = $getid3->Analyze($fullpath);
             $playtime = $info['playtime_seconds'];
-            if($playtime) return $playtime;
+            if($playtime) return ceil($playtime);
         }
         catch(getid3_exception $e)
         {
