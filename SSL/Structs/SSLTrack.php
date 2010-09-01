@@ -204,9 +204,25 @@ class SSLTrack extends SSLStruct
     public function guessLengthFromFile()
     {
         $fullpath = $this->getFullpath();
-        if(strlen($fullpath) == 0) return 0;
-        if(!file_exists($fullpath)) return 0;
-        
+
+        if(strlen($fullpath) == 0)
+        {
+            L::level(L::WARNING) &&
+                L::log(L::WARNING, __CLASS__, 'Guessing MP3 length from file failed: full path was empty. Perhaps this entry was manually added?',
+                    array( ));
+
+            return 0;
+        }
+
+        if(!file_exists($fullpath))
+        {
+            L::level(L::WARNING) &&
+                L::log(L::WARNING, __CLASS__, 'Guessing MP3 length from file failed: file not found (%s)',
+                    array( $fullpath ));
+
+            return 0;
+        }
+
         $getid3 = new getid3();
         $getid3->option_tag_lyrics3 = false;
         $getid3->option_tag_apetag = false;
@@ -222,8 +238,8 @@ class SSLTrack extends SSLStruct
         catch(getid3_exception $e)
         {
             // MP3 couldn't be analyzed.
-            L::level(L::DEBUG) &&
-                L::log(L::DEBUG, __CLASS__, 'Guessing MP3 length from file failed: %s',
+            L::level(L::WARNING) &&
+                L::log(L::WARNING, __CLASS__, 'Guessing MP3 length from file failed: %s',
                     array( $e->getMessage() ));
         }
         return 0;
