@@ -41,7 +41,9 @@ class SSLEventGrowlRenderer implements TrackChangeObserver, NowPlayingObserver, 
         foreach($events as $event)
         {
             /* @var $event TrackChangeEvent */
-            $this->growler->notify('alert', 'Track Change', $event);
+            
+            // Commented out as this is actually quite noisy
+            // $this->growler->notify('alert', 'Track Change', $event);
             
             L::level(L::INFO) &&
                 L::log(L::INFO, __CLASS__, '>> Track change: >> %s', 
