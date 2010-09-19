@@ -238,7 +238,7 @@ position of the songs, so it has to guess this.
 -----------------
 
 Run with phpunit:
- * phpunit --bootstrap Tests/boostrap.php Tests
+ * phpunit --bootstrap Tests/bootstrap.php Tests
  
 5.2 Plugins
 -----------------
