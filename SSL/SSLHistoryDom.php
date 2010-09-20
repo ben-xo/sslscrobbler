@@ -48,7 +48,7 @@ class SSLHistoryDom extends SSLDom
         {
             if($chunk instanceof SSLOentChunk)
             {
-                $tracks[] = $chunk->getDataInto($ths->track_factory->newTrack());
+                $tracks[] = $chunk->getDataInto($this->track_factory->newTrack());
             }
             
             elseif($chunk instanceof SSLOrenChunk)
