@@ -41,6 +41,7 @@ class RuntimeCachingSSLTrack extends SSLTrack
     public function __construct(SSLTrackCache $cache)
     {
         $this->track_cache = $cache;
+        parent::__construct();
     }
     
     public function setLengthIfUnknown()
