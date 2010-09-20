@@ -41,6 +41,16 @@ class SSLTrackTest extends PHPUnit_Framework_TestCase
     var $external_repo;
     var $mock_getid3;
     
+    function newSSLTrack()
+    {
+        return new SSLTrack();
+    }
+    
+    function mockSSLTrack($methods=array())
+    {
+        return $this->getMock('SSLTrack', $methods);
+    }
+    
     function setUp()
     {
         $this->external_repo = new SSLTrackTest_ExternalRepo();
@@ -58,23 +68,23 @@ class SSLTrackTest extends PHPUnit_Framework_TestCase
     {
         $this->mock_getid3->expects($this->never())->method('Analyze');
         
-        $t = new SSLTrack();
-        $t->populateFrom(array('length' => '1:23'));
+        $t = $this->newSSLTrack();
+        $t->populateFrom(array('row' => 1, 'length' => '1:23'));
         $this->assertSame('1:23', $t->getLength());
         $this->assertSame(83, $t->getLengthInSeconds());
         $this->assertSame('1:23', $t->getLength(SSLTrack::TRY_HARD));
         $this->assertSame(83, $t->getLengthInSeconds(SSLTrack::TRY_HARD));
 
-        $t = new SSLTrack();
-        $t->populateFrom(array('length' => '0:00'));
+        $t = $this->newSSLTrack();
+        $t->populateFrom(array('row' => 2, 'length' => '0:00'));
         $this->mock_getid3->expects($this->never())->method('Analyze');
         $this->assertSame('0:00', $t->getLength());
         $this->assertSame(0, $t->getLengthInSeconds());
         $this->assertSame('0:00', $t->getLength(SSLTrack::TRY_HARD));
         $this->assertSame(0, $t->getLengthInSeconds(SSLTrack::TRY_HARD));
 
-        $t = new SSLTrack();
-        $t->populateFrom(array('length' => '1:00.1'));
+        $t = $this->newSSLTrack();
+        $t->populateFrom(array('row' => 3, 'length' => '1:00.1'));
         $this->mock_getid3->expects($this->never())->method('Analyze');
         $this->assertSame('1:00.1', $t->getLength());
         $this->assertSame(60, $t->getLengthInSeconds());
@@ -84,7 +94,8 @@ class SSLTrackTest extends PHPUnit_Framework_TestCase
 
     function test_guess_length_necessary_without_try_hard()
     {
-        $t = new SSLTrack();
+        $t = $this->newSSLTrack();
+        $t->populateFrom(array('row' => 4));
         $this->mock_getid3->expects($this->never())->method('Analyze');
         $this->assertSame(null, $t->getLength());
         $this->assertSame(0, $t->getLengthInSeconds());
@@ -98,13 +109,13 @@ class SSLTrackTest extends PHPUnit_Framework_TestCase
              ->will( $this->returnValue( array('playtime_seconds' => 83.123) ) )
         ;
         
-        $t = $this->getMock('SSLTrack', array('file_exists'));
+        $t = $this->mockSSLTrack(array('file_exists'));
         $t->expects($this->once())
           ->method('file_exists')
           ->will($this->returnValue(true))
         ;
         
-        $t->populateFrom(array('fullpath' => '/file.mp3'));
+        $t->populateFrom(array('row' => 5, 'fullpath' => '/file.mp3'));
         
         $this->assertSame('1:23', $t->getLength(SSLTrack::TRY_HARD));
         $this->assertSame(83, $t->getLengthInSeconds(SSLTrack::TRY_HARD));
@@ -115,7 +126,8 @@ class SSLTrackTest extends PHPUnit_Framework_TestCase
         $this->mock_getid3->expects($this->never())->method('Analyze');
         
         // don't add fullpath
-        $t = new SSLTrack();
+        $t = $this->newSSLTrack();
+        $t->populateFrom(array('row' => 6));
         $this->assertSame('0:00', $t->getLength(SSLTrack::TRY_HARD));
         $this->assertSame(0, $t->getLengthInSeconds(SSLTrack::TRY_HARD));
     }
@@ -124,13 +136,13 @@ class SSLTrackTest extends PHPUnit_Framework_TestCase
     {
         $this->mock_getid3->expects($this->never())->method('Analyze');
         
-        $t = $this->getMock('SSLTrack', array('file_exists'));
+        $t = $this->mockSSLTrack(array('file_exists'));
         $t->expects($this->once())
           ->method('file_exists')
           ->will($this->returnValue(false))
         ;
         
-        $t->populateFrom(array('fullpath' => '/file.mp3'));
+        $t->populateFrom(array('row' => 7, 'fullpath' => '/file.mp3'));
         $this->assertSame('0:00', $t->getLength(SSLTrack::TRY_HARD));
         $this->assertSame(0, $t->getLengthInSeconds(SSLTrack::TRY_HARD));
     }
@@ -143,13 +155,13 @@ class SSLTrackTest extends PHPUnit_Framework_TestCase
              ->will( $this->returnValue( array('playtime_seconds' => 83.123) ) )
         ;
         
-        $t = $this->getMock('SSLTrack', array('file_exists'));
+        $t = $this->mockSSLTrack(array('file_exists'));
         $t->expects($this->once())
           ->method('file_exists')
           ->will($this->returnValue(true))
         ;
         
-        $t->populateFrom(array('fullpath' => '/file.mp3'));
+        $t->populateFrom(array('row' => 8, 'fullpath' => '/file.mp3'));
         
         $this->assertSame(null, $t->getLength());
         $this->assertSame(0, $t->getLengthInSeconds());
