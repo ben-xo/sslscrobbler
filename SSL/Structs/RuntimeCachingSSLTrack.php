@@ -44,6 +44,22 @@ class RuntimeCachingSSLTrack extends SSLTrack
         parent::__construct();
     }
     
+    /**
+     * This version of setLengthIfUnknown() looks in the cache that the track was
+     * constructed with for a track with the same row ID. If it finds one, it 
+     * inquired if this (possibly expensive) question has already been answered.
+     * If it has, we use the answer from the cache.
+     * 
+     * If no answer is found in the cache, we fall back to scanning the file with
+     * getID3 in the usual way. If results are found we are sure to poke them 
+     * back in to the cache.
+     * 
+     * This is necessary because ScratchLive! can create several objects for the
+     * same row (as it will write multiple, updated, versions of the row to the
+     * history file over time). Several of these may be missing expensive info,
+     * so we want to cache it from object to object.
+     * 
+     */
     public function setLengthIfUnknown()
     {
         if(!isset($this->length))
