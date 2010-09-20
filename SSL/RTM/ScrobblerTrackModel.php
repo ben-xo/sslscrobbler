@@ -48,7 +48,7 @@ class ScrobblerTrackModel
     
     public function __construct(SSLTrack $track)
     {
-        $this->end_point = $track->getLengthInSeconds();
+        $this->end_point = $track->getLengthInSeconds(SSLTrack::TRY_HARD);
         $this->scrobble_point = $this->end_point / self::SCROBBLE_DIVIDER;
         $this->setTrack($track);
     }

@@ -116,4 +116,27 @@ class SSLRepo implements Factory
     {
         return new ScrobblerTrackModel($started_track);
     }
+    
+    /**
+     * @return SSLTrack
+     */
+    public function newTrack()
+    {
+        return new SSLTrack();
+    }
+    
+    /**
+     * @return RuntimeCachingSSLTrack
+     */
+    public function newRuntimeCachingTrack(SSLTrackCache $cache)
+    {
+        return new RuntimeCachingSSLTrack($cache);
+    }
+    /**
+     * @return SSLTrackCache 
+     */
+    public function newTrackCache()
+    {
+        return new SSLTrackCache();
+    }
 }

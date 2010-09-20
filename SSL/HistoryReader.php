@@ -269,7 +269,7 @@ class HistoryReader
             }
             
             $this->filename = $arg;
-        }        
+        }
     }
     
     protected function setupLogging()

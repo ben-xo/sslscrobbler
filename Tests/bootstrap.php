@@ -31,10 +31,11 @@
 error_reporting(E_ALL | E_STRICT);
 
 require_once 'SSL/Autoloader.php';
-require_once 'PHPUnit/Framework.php';
 
 function __autoload($class)
 {
     $a = new Autoloader();
     return $a->load($class);
 }
+
+require_once 'PHPUnit/Framework.php';

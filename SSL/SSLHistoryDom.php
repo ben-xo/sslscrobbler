@@ -27,6 +27,17 @@
 class SSLHistoryDom extends SSLDom
 {
     /**
+     * @var SSLTrackFactory
+     */
+    protected $track_factory;
+    
+    public function __construct($array=array())
+    {
+        $this->track_factory = Inject::the(new SSLTrackFactory());
+        parent::__construct($array);
+    }
+    
+    /**
      * @return array of SSLAdatChunk
      */
     public function getTracks()
@@ -37,7 +48,7 @@ class SSLHistoryDom extends SSLDom
         {
             if($chunk instanceof SSLOentChunk)
             {
-                $tracks[] = $chunk->getDataInto(new SSLTrack());
+                $tracks[] = $chunk->getDataInto($ths->track_factory->newTrack());
             }
             
             elseif($chunk instanceof SSLOrenChunk)

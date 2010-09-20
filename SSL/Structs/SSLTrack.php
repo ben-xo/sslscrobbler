@@ -44,6 +44,13 @@
  */
 class SSLTrack extends SSLStruct
 {
+    /**
+     * Flag used by getLength to indicate that the client would
+     * like the length by any means necessary, even if that means
+     * an expensive full-file-scan.
+     */
+    const TRY_HARD = 1;
+    
     protected
         $filename,
         $row,
@@ -141,14 +148,43 @@ class SSLTrack extends SSLStruct
         return $this->end_time;
     }
     
-    public function getLength()
+    /**
+     * Get the length of the file, as a string (e.g. "1:23.45" 
+     * for 1 minute 23.45 seconds). This is how Serato
+     * returns it from the file.
+     * 
+     * Pass SSLTrack::TRY_HARD if you would like the file 
+     * length to be guessed from the file itself, if possible,
+     * and don't mind that this is possibly an expensive operation.
+     * 
+     * @param $flags
+     */
+    public function getLength($flags=0)
     {
+        if($flags & self::TRY_HARD)
+        {
+            $this->setLengthIfUnknown();
+        }
         return $this->length;
     }
     
-    public function getLengthInSeconds()
+    /**
+     * Get the length of the file, as an integer number of seconds.
+     * 
+     * Pass SSLTrack::TRY_HARD if you would like the file 
+     * length to be guessed from the file itself, if possible,
+     * and don't mind that this is possibly an expensive operation.
+     * 
+     * @param $flags
+     */
+    public function getLengthInSeconds($flags=0)
     {
-        if(preg_match('/^(\d+):(\d+)\./', $this->length, $matches))
+        if($flags & self::TRY_HARD)
+        {
+            $this->setLengthIfUnknown();
+        }
+        
+        if(preg_match('/^(\d+):(\d+)/', $this->getLength(), $matches))
         {
             return $matches[1] * 60 + $matches[2];
         }
@@ -201,7 +237,24 @@ class SSLTrack extends SSLStruct
         return $this->getArtist() . ' - ' . $this->getTitle();
     }
     
-    public function guessLengthFromFile()
+    /**
+     * This will attempt to set the length via guess work, if it's not already set.
+     */
+    protected function setLengthIfUnknown()
+    {
+        if(!isset($this->length))
+        {
+            $this->length = $this->guessLengthFromFile();
+        }
+    }
+
+    /**
+     * Sometimes ScratchLive doesn't supply the length, even when it knows the file.
+     * Not sure why; perhaps files that have never been analysed.
+     * 
+     * So, let's attempt to guess it by analysing the full file.
+     */
+    protected function guessLengthFromFile()
     {
         $fullpath = $this->getFullpath();
 
@@ -211,19 +264,22 @@ class SSLTrack extends SSLStruct
                 L::log(L::WARNING, __CLASS__, 'Guessing MP3 length from file failed: full path was empty. Perhaps this entry was manually added?',
                     array( ));
 
-            return 0;
+            return "0:00";
         }
 
-        if(!file_exists($fullpath))
+        if(!$this->file_exists($fullpath))
         {
             L::level(L::WARNING) &&
                 L::log(L::WARNING, __CLASS__, 'Guessing MP3 length from file failed: file not found (%s)',
                     array( $fullpath ));
 
-            return 0;
+            return "0:00";
         }
 
-        $getid3 = new getid3();
+        $external_factory = Inject::the(new ExternalRepo());
+        /* @var $external_factory ExternalFactory */
+        $getid3 = $external_factory->newGetID3();
+        /* @var $getid3 getid3 */
         $getid3->option_tag_lyrics3 = false;
         $getid3->option_tag_apetag = false;
         $getid3->option_extra_info = true;
@@ -233,7 +289,21 @@ class SSLTrack extends SSLStruct
         {
             $info = $getid3->Analyze($fullpath);
             $playtime = $info['playtime_seconds'];
-            if($playtime) return ceil($playtime);
+            if($playtime)
+            {
+                L::level(L::WARNING) &&
+                    L::log(L::WARNING, __CLASS__, 'Guessed MP3 length %d seconds from file.',
+                        array( $playtime ));
+
+                $minutes = floor($playtime / 60);
+                $seconds = $playtime % 60;
+                return sprintf("%d:%02d", $minutes, $seconds);
+            }
+
+            L::level(L::WARNING) &&
+                L::log(L::WARNING, __CLASS__, 'Guessing MP3 length from file failed for an unknown reason. Hmmph.',
+                    array( ));
+            
         }
         catch(getid3_exception $e)
         {
@@ -242,7 +312,7 @@ class SSLTrack extends SSLStruct
                 L::log(L::WARNING, __CLASS__, 'Guessing MP3 length from file failed: %s',
                     array( $e->getMessage() ));
         }
-        return 0;
+        return "0:00";
     }
     
     
@@ -261,5 +331,10 @@ class SSLTrack extends SSLStruct
             $s .= "$k => $v\n";
         }
         return $s;
+    }
+    
+    protected function file_exists($filename)
+    {
+        return file_exists($filename);
     }
 }
