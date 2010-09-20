@@ -309,6 +309,11 @@ class HistoryReader
      */
     protected function monitor($filename)
     {
+        // Use the caching version via Dependency Injection. This means that all 
+        // new SSLTracks created using a SSLTrackFactory will get a RuntimeCachingSSLTrack
+        // that nows how to ask the cache about expensive lookups (such as getID3 stuff). 
+        Inject::map('SSLTrackFactory', new SSLTrackCache());
+        
         if($this->replay) 
         {
             // tick when the user presses enter
