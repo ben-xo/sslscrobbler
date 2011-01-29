@@ -77,7 +77,7 @@ class SSLTrack extends SSLStruct
     public function populateFrom(array $fields)
     {
         $this->fields = $fields;
-        isset($fields['filename']) && $this->filename = $fields['filename'];
+        isset($fields['filename']) && $this->filename = trim($fields['filename']);
         isset($fields['row']) && $this->row = $fields['row'];
         isset($fields['title']) && $this->title = trim($fields['title']);
         isset($fields['artist']) && $this->artist = trim($fields['artist']);
@@ -88,9 +88,29 @@ class SSLTrack extends SSLStruct
         isset($fields['added']) && $this->added = $fields['added'];
         isset($fields['updatedAt']) && $this->updated_at = $fields['updatedAt'];
         isset($fields['playtime']) && $this->playtime = $fields['playtime'];
-        isset($fields['length']) && $this->length = $fields['length'];
+        isset($fields['length']) && $this->length = trim($fields['length']);
         isset($fields['album']) && $this->album = trim($fields['album']);
         isset($fields['fullpath']) && $this->fullpath = trim($fields['fullpath']);
+    }
+    
+    public function toArray()
+    {
+        return array(
+            'filename' => $this->filename,
+            'row' => $this->row,
+            'title' => $this->title,
+            'artist' => $this->artist,
+            'deck' => $this->deck,
+            'starttime' => $this->start_time,
+            'endtime' => $this->end_time,
+            'played' => $this->played,
+            'added' => $this->added,
+            'updatedAt' => $this->updated_at,
+            'playtime' => $this->playtime,
+            'length' => $this->length,
+            'album' => $this->album,
+            'fullpath' => $this->fullpath
+        );
     }
     
     public function getFilename()

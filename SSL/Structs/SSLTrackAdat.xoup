@@ -36,6 +36,9 @@ int:
 hex:
     r1l>i_ r_b>h_
     
+float:
+    r1l>i_ r_b>f_
+    
 timestamp:
     # r1l>i_ r_b>t_
     r1l>i_ r_b>i_ # timestamps are actually more useful as integers, not date-strings
