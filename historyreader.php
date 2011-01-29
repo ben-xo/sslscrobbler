@@ -31,6 +31,7 @@ require_once 'External/getID3/getid3.php';
 require_once 'SSL/Autoloader.php';
 
 //define('SCROBBLER_LOG', '/tmp/scrobbler.log');
+//define('SINGLE_THREADED', true);
 
 function __autoload($class)
 {
@@ -55,6 +56,10 @@ $twitterConfig = array(
     'message' => 'now playing: %s #np'
 );
 
+$nowplayingloggerConfig = array(
+    'filename' => dirname(__FILE__) . '/SSL/Plugins/NowPlaying/nowplaying.txt'
+);
+
 // set max log levels for various internal components. (The default is unlimited.)
 $log_levels = array(
 //    'TickSource' => L::SILENT,
@@ -68,4 +73,10 @@ $h->setVerbosityOverride($log_levels);
 $h->addPlugin(new GrowlPlugin($growlConfig));
 $h->addPlugin(new LastfmPlugin($lastfmConfig));
 $h->addPlugin(new TwitterPlugin($twitterConfig));
+$h->addPlugin(new NowPlayingLoggerPlugin($nowplayingloggerConfig));
+
+/* Disabled plugins */
+//$h->addPlugin(new JSONServerPOC());
+//$h->addPlugin(new AnalyzerPlugin(array('db' => dirname(__FILE__) . '/analyze.db')));
+
 $h->main($argc, $argv);
