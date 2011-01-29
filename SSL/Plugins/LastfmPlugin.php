@@ -149,4 +149,26 @@ class LastfmPlugin implements SSLPlugin
             'xsl', '0.1'
         );
     }
+    
+    public function getInfo(SSLTrack $track)
+    {
+        $vars = array();
+        $vars['apiKey'] = $this->config['api_key'];
+        $vars['secret'] = $this->config['api_secret'];
+        
+        $auth = new lastfmApiAuth('setsession', $vars);
+        $lfm = new lastfmApi();
+        
+        /* @var $trackP lastfmApiTrack */
+        /* @var $artistP lastfmApiArtist */
+        $trackP = $lfm->getPackage($auth, 'track');
+        $artistP = $lfm->getPackage($auth, 'artist');
+
+        //$track_info = $trackP->getInfo(array('artist' => $track->getArtist(), 'title' => $track->getTitle()));
+        $artist_info = $artistP->getInfo(array('artist' => $track->getArtist()));
+        $artist_images = $artistP->getImages(array('artist' => $track->getArtist()));
+        $all = array('artist' => $artist_info, 'images' => $artist_images);
+        
+        return $all;
+    }
 }
