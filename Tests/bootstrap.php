@@ -38,4 +38,5 @@ function __autoload($class)
     return $a->load($class);
 }
 
-require_once 'PHPUnit/Framework.php';
+// oh PHPUnit.
+spl_autoload_register('__autoload');
