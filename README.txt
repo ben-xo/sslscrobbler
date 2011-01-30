@@ -297,3 +297,13 @@ SSLScrobbler includes the following external libraries:
 * getID3 (http://getid3.sourceforge.net/)
   originally by James Heinrich, licensed under the GPL license.
 
+The "NowPlaying" plugin, written for Boston Music Hack Day 
+(http://musichackdayboston.pbworks.com/w/page/31299401/sQRatchLive) also 
+comes bundled with the following:
+
+* 7Digital PHP Wrapper (https://github.com/gregsochanik/api_php_example)
+  originally by Greg Sochanik, licensed under XXXXXXXX
+  (Includes JSON.php by Michal Migurski, licensed under the BSD license.)
+  
+* JQuery (http://jquery.com/)
+  originally by John Resig, licensed under the MIT license.
