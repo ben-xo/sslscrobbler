@@ -31,24 +31,22 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
      */
     protected $twitter;
     protected $msg_format;
-    protected $max_title_length;
+    
+    /**
+     * @var Array of ITrackMessageFilter
+     */
+    protected $message_filters;
     
     /**
      * @var SSLTrack
      */
     protected $track_to_notify;
     
-    public function __construct(Twitter $twitter, $msg_format)
+    public function __construct(Twitter $twitter, $msg_format, array $message_filters)
     {
         $this->twitter = $twitter;
         $this->msg_format = $msg_format;
-        
-        // string length minus '%s'
-        $this->max_title_length = 160 - (mb_strlen($msg_format) - 2);
-        if($this->max_title_length < 80)
-        {
-            throw new RuntimeException("Twitter message is longer than 80 chars even without title!");
-        }
+        $this->message_filters = $message_filters;
     }
     
     public function notifyNowPlaying(SSLTrack $track=null)
@@ -67,10 +65,22 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
     protected function sendNowPlaying()
     {
         $track = $this->track_to_notify;
+        
+        $message = $this->msg_format;
+        foreach($this->message_filters as $mf)
+        {
+            /* @var $mf ITrackMessageFilter */
+            $message = $mf->apply($message, $track);
+        }
+        
+        // Twitter max message length, minus the pre-processed message,
+        // and give back 2 chars for '%s'
+        $max_title_length = 160 - (mb_strlen($message) - 2); 
+        
         $title = $track->getFullTitle();
         $title_length = mb_strlen($title);
 
-        if($title_length > $this->max_title_length)
+        if($title_length > $max_title_length)
         {
             $title = mb_substr($title, 0, $this->max_title_length - 1) . '…';
         }

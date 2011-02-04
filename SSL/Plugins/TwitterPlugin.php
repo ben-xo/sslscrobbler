@@ -72,7 +72,7 @@ class TwitterPlugin implements SSLPlugin
         if($this->sessionname)
         {
             return array(
-                new SSLTwitterAdaptor( $this->getTwitter(), $this->config['message'] )
+                new SSLTwitterAdaptor( $this->getTwitter(), $this->config['message'], $this->config['filters'] )
             );
         }
 
