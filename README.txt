@@ -296,6 +296,9 @@ SSLScrobbler includes the following external libraries:
   
 * getID3 (http://getid3.sourceforge.net/)
   originally by James Heinrich, licensed under the GPL license.
+  
+* vgd.php (http://v.gd/developers.php)
+  originally by Richard West, released into the public domain.
 
 The "NowPlaying" plugin, written for Boston Music Hack Day 
 (http://musichackdayboston.pbworks.com/w/page/31299401/sQRatchLive) also 
