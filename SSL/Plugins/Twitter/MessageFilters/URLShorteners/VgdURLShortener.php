@@ -24,7 +24,7 @@
  *  THE SOFTWARE.
  */
 
-require_once 'Externel/vgd.php';
+require_once 'External/vgd.php';
 
 class VgdURLShortener implements IURLShortener
 {
