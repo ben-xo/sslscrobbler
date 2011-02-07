@@ -44,6 +44,14 @@ class SSLRepo implements Factory
     {
         return new SSLHistoryDom();
     }
+
+    /**
+     * @return SSLHistoryIndexDom
+     */
+    public function newHistoryIndexDom()
+    {
+        return new SSLHistoryIndexDom();
+    }
     
     /**
      * @return SSLDom

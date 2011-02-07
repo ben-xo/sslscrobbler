@@ -28,6 +28,7 @@ class HistoryReader
 {
     // command line switches
     protected $dump_and_exit = false;
+    protected $dump_type = 'sessionfile';
     protected $wait_for_file = true;
     protected $help = false;
     protected $replay = false;
@@ -148,9 +149,26 @@ class HistoryReader
                 
             if($this->dump_and_exit)
             {
-                $monitor = new SSLHistoryFileDiffMonitor($filename);
-                $monitor->dump();
-                return;
+                switch($this->dump_type)
+                {
+                    case 'sessionfile':
+                        $monitor = new SSLHistoryFileDiffMonitor($filename);
+                        $monitor->dump();
+                        return;
+
+                    case 'sessionindex':
+                        $factory = Inject::the(new SSLRepo());
+                        /* @var $factory SSLRepo */
+                        $parser = $factory->newParser( $factory->newHistoryIndexDom() );
+                        $tree = $parser->parse($filename);
+                        $parser->close();
+                        $tree->getSessions();
+                        echo $tree;
+                        return;
+                        
+                    default:
+                        throw new RuntimeException('Unknown dump type');
+                }
             }
 
             // start monitoring.
@@ -180,6 +198,7 @@ class HistoryReader
         }
         echo "Debugging options:\n";
         echo "    -d or --dump:              Dump the file's complete structure and exit\n";
+        echo "          --dump-type <x>:     Use a specific parser. Options are: sessionfile, sessionindex\n";
         echo "    -v or --verbosity <0-9>:   How much logging to output. (default: 0 (none))\n";
         echo "    -l or --log-file <file>:   Where to send logging output. (If this option is omitted, output goes to stdout)\n";
         echo "    -r or --replay:            Replay the session file, one batch per tick. (Tick by pressing enter at the console)\n"; 
@@ -227,6 +246,12 @@ class HistoryReader
             if($arg == '--dump' || $arg == '-d')
             {
                 $this->dump_and_exit = true;
+                continue;
+            }
+
+            if($arg == '--dump-type')
+            {
+                $this->dump_type = array_shift($argv);
                 continue;
             }
             

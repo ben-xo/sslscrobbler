@@ -70,7 +70,7 @@ field57: string.     c>rsoftware
 field58: int.     c>rsoftwareBuild
 field59: hex.     c>rr59
 field60: hex.     c>rr60
-field61: hex.     c>rr61
+field61: int.     c>rendRow
 field62: hex.     c>rr62
 field63: string.     c>rdevice
 field64: hex.     c>rr64
