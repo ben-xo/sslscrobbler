@@ -56,7 +56,8 @@
  * * [write-type] is one of 'r', 's', 'i', 'h', 't'.
  *   'r' leaves the value as read (a binary string)
  *   's' converts the string from UTF-16 to UTF-8
- *   'i' unpacks a binary string into a PHP integer (supports byte, word and longword).
+ *   'i' unpacks a binary string into a (signed) PHP integer (supports byte, word and longword).
+ *   'u' unpacks a binary string into an (unsigned) PHP integer.
  *   'h' converts the binary string to a formatted hexdump using Hexdumper
  *   't' unpacks into a PHP integer (like 'i') and then formats it as a timestamp string.
  * * [dest] is either '_' for the accumulator, or the name of a key in the output.
@@ -113,7 +114,7 @@ class XoupInterpreter extends Unpacker
             
             foreach($this->subs[$sub] as $opindex => $op)
             {                
-                if(!preg_match('/^(?:([a-zA-Z0-9_]+)\.|(c|(r)(\d+|_|\*)(b|w|l))(>)(s|i|h|t|r|f)(_|([a-zA-Z][a-zA-Z0-9]*)))/', $op, $matches))
+                if(!preg_match('/^(?:([a-zA-Z0-9_]+)\.|(c|(r)(\d+|_|\*)(b|w|l))(>)(s|i|u|h|t|r|f)(_|([a-zA-Z][a-zA-Z0-9]*)))/', $op, $matches))
                     throw new RuntimeException("Could not parse Unpacker op '$op' in sub '$sub'");
                                 
                 $callsub = $matches[1];
@@ -273,7 +274,11 @@ class XoupInterpreter extends Unpacker
                 break;
                 
             case 'i': // int
-                $dest = (int) $this->unpackint($datum);
+                $dest = (int) $this->unpacksint($datum);
+                break;
+                
+            case 'u': // int
+                $dest = (int) $this->unpackuint($datum);
                 break;
                 
             case 'h': // hexdump
@@ -282,7 +287,7 @@ class XoupInterpreter extends Unpacker
                 break;
                 
             case 't': // timestamp -> date
-                $dest = date("Y-m-d H:i:s", (int) $this->unpackint($datum));
+                $dest = date("Y-m-d H:i:s", (int) $this->unpackuint($datum));
                 break;
                 
             case 'f': // float
@@ -290,7 +295,7 @@ class XoupInterpreter extends Unpacker
                 break;
                     
             default:
-                throw new RuntimeException("Unknown type '$type'. Expected 's' or 'i'");                
+                throw new RuntimeException("Unknown type '{$type}'.");                
         }
         
         // echo "$dest $to\n";

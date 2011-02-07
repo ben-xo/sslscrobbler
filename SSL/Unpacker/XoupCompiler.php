@@ -124,7 +124,7 @@ class XoupCompiler
             {                
                 $body .= "        /* $op */\n";
                 
-                if(!preg_match('/^(?:([a-zA-Z0-9_]+)\.|(c|(r)(\d+|_|\*)(b|w|l))(>)(s|i|h|t|r|f)(_|([a-zA-Z][a-zA-Z0-9]*)))/', $op, $matches))
+                if(!preg_match('/^(?:([a-zA-Z0-9_]+)\.|(c|(r)(\d+|_|\*)(b|w|l))(>)(s|i|u|h|t|r|f)(_|([a-zA-Z][a-zA-Z0-9]*)))/', $op, $matches))
                     throw new RuntimeException("Could not parse Unpacker op '$op' in sub '$sub'");
                                 
                 $callsub = $matches[1];
@@ -274,8 +274,12 @@ class XoupCompiler
                 $body .= "        $dest = (string) \$this->unpackstr(\$datum);\n";
                 break;
                 
-            case 'i': // int
-                $body .= "        $dest = (int) \$this->unpackint(\$datum);\n";
+            case 'i': // signed int
+                $body .= "        $dest = (int) \$this->unpacksint(\$datum);\n";
+                break;
+                
+            case 'u': // unsigned int
+                $body .= "        $dest = (int) \$this->unpackuint(\$datum);\n";
                 break;
                 
             case 'h': // hexdump
@@ -284,7 +288,7 @@ class XoupCompiler
                 break;
                 
             case 't': // timestamp -> date
-                $body .= "        $dest = date('Y-m-d H:i:s', (int) \$this->unpackint(\$datum));\n";
+                $body .= "        $dest = date('Y-m-d H:i:s', (int) \$this->unpackuint(\$datum));\n";
                 break;
                     
             case 'f': // float
@@ -292,7 +296,7 @@ class XoupCompiler
                 break;
                     
             default:
-                throw new RuntimeException("Unknown type '$type'. Expected 's' or 'i'");                
+                throw new RuntimeException("Unknown type '{$type}'.");                
         }        
         return $body;
     }

@@ -68,9 +68,9 @@ abstract class Unpacker
     }
     
     /**
-     * Converts an SSL binary string into a PHP integer
+     * Converts an SSL unsigned binary string into a PHP integer
      */
-    protected function unpackint($datum)
+    protected function unpackuint($datum, $intmax = PHP_INT_MAX)
     {
         $width = strlen($datum);
         switch($width)
@@ -78,7 +78,7 @@ abstract class Unpacker
             case 8:
                 // Seems that ScratchLive 2.0 uses 64-bit timestamps. oh shi--
                 $vals = unpack('Nupper/Nlower', $datum);
-                if(PHP_INT_MAX == 0x7FFFFFFF)
+                if($intmax == 0x7FFFFFFF)
                 {
                     if($vals['upper'])
                     {
@@ -90,12 +90,18 @@ abstract class Unpacker
                 }
                 else
                 {
-                    return ($vals['upper'] << 32) + ($vals['lower']);
+                    // this will be unsigned on a 64-bit machine, but watch out for PHP's dastardly float() overflow with (very) large values.
+                    return ($vals['upper'] * 0x100000000) + ($vals['lower']);
                 }
                 break;
                 
             case 4:
                 $vals = unpack('Nval', $datum); // unsigned long (always 32 bit, big endian byte order)
+                if($vals['val'] & 0x80000000 && $intmax == 0x7FFFFFFF)
+                {
+                    // uh-oh - 32-bit overflow on 32-bit machine. Force PHP's (nasty) float coercion to re-unsign this number.
+                    $vals['val'] += 0x7FFFFFFFF;
+                }
                 break;
                 
             case 2:
@@ -113,6 +119,108 @@ abstract class Unpacker
         return $vals['val'];
     }
 
+    /**
+     * Converts an SSL signed binary string into a PHP integer
+     */
+    protected function unpacksint($datum, $intmax = PHP_INT_MAX)
+    {
+        $width = strlen($datum);
+        
+        switch($intmax)
+        {
+            case 0x7FFFFFFFF:
+                // 32-bit mode
+                switch($width)
+                {
+                    case 8:
+                        // Seems that ScratchLive 2.0 uses 64-bit timestamps. oh shi--
+                        $vals = unpack('Nupper/Nlower', $datum);
+                        if(
+                            // lots of sign-bit boundary conditions when dealing with signed 64->32 clamping.
+                            ( $vals['upper'] != 0xFFFFFFFF && $vals['upper'] != 0 ) ||                 
+                            ( $vals['upper'] == 0xFFFFFFFF && $vals['lower'] & 0x80000000 == 0 ) || 
+                            ( $vals['upper'] == 0 && $vals['lower'] & 0x80000000 == 0x80000000 )
+                        ) {
+                            L::level(L::WARNING) &&
+                                L::log(L::WARNING, __CLASS__, "Encountered signed 64-bit integer > PHP_INT_MAX on a 32-bit PHP. Throwing away upper bytes. Original value was 0x%08X%08X",
+                                    array(dechex($vals['upper']), dechex($vals['lower'])));
+                        }
+                        // 32-bit range -ve vals will already be in the right sign. All bets are already off for other vals. 
+                        $vals['val'] = $vals['lower'];
+                        break;
+                        
+                    case 4:
+                        // this will be signed on a 32-bit machine
+                        $vals = unpack('Nval', $datum); // unsigned long (always 32 bit, big endian byte order)
+                        break;
+                        
+                    case 2:
+                        $vals = unpack('nval', $datum); // unsigned short (always 16 bit, big endian byte order)
+                        if($vals['val'] & 0x8000)
+                        {
+                            $vals['val'] |= 0xFFFF0000; // extend sign
+                        }
+                        break;
+                        
+                    case 1:
+                        $vals = unpack('cval', $datum); // char
+                        if($vals['val'] & 0x80)
+                        {
+                            $vals['val'] |= 0xFFFFFF00; // extend sign
+                        }
+                        break;
+                        
+                    default:
+                        throw new InvalidArgumentException('Cannot unpack an odd-sized int of width ' . $width);
+                }
+                
+                return $vals['val'];
+                                
+            case 0x7FFFFFFFFFFFFFFF:
+                // 64-bit mode
+                switch($width)
+                {
+                    case 8:
+                        // Seems that ScratchLive 2.0 uses 64-bit timestamps. oh shi--
+                        $vals = unpack('Nupper/Nlower', $datum);
+                        // this will be signed on a 64-bit machine.
+                        $vals['val'] = ($vals['upper'] << 32) + ($vals['lower']);
+                        break;
+                        
+                    case 4:
+                        $vals = unpack('Nval', $datum); // unsigned long (always 32 bit, big endian byte order)
+                        if($vals['val'] & 0x8000000)
+                        {
+                            $vals['val'] |= 0xFFFFFFFF00000000; // extend sign
+                        }
+                        break;
+                        
+                    case 2:
+                        $vals = unpack('nval', $datum); // unsigned short (always 16 bit, big endian byte order)
+                        if($vals['val'] & 0x8000)
+                        {
+                            $vals['val'] |= 0xFFFFFFFFFFFF0000; // extend sign
+                        }
+                        break;
+                        
+                    case 1:
+                        $vals = unpack('cval', $datum); // char
+                        if($vals['val'] & 0x80)
+                        {
+                            $vals['val'] |= 0xFFFFFFFFFFFFFF00; // extend sign
+                        }
+                        break;
+                        
+                    default:
+                        throw new InvalidArgumentException('Cannot unpack an odd-sized int of width ' . $width);
+                }
+                
+                return $vals['val'];
+                
+            default:
+                throw new RuntimeException('Unsupported architecture (neither 32-bit or 64-bit)');
+        }
+    }    
     protected function unpackfloat($datum)
     {
         $width = strlen($datum);
