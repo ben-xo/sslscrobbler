@@ -113,7 +113,7 @@ class XoupInterpreter extends Unpacker
             
             foreach($this->subs[$sub] as $opindex => $op)
             {                
-                if(!preg_match('/^(?:([a-zA-Z0-9_]+)\.|(c|(r)(\d+|_|\*)(b|w|l))(>)(s|i|h|t|r|f)(_|([a-zA-Z]+)))/', $op, $matches))
+                if(!preg_match('/^(?:([a-zA-Z0-9_]+)\.|(c|(r)(\d+|_|\*)(b|w|l))(>)(s|i|h|t|r|f)(_|([a-zA-Z][a-zA-Z0-9]*)))/', $op, $matches))
                     throw new RuntimeException("Could not parse Unpacker op '$op' in sub '$sub'");
                                 
                 $callsub = $matches[1];
