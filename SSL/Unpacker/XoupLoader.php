@@ -79,18 +79,29 @@ class XoupLoader
         
         if(!class_exists($class, false))
         {
-        
             $dirname  = dirname($filename);
             $compiled_name = $dirname . '/' . $basename . '.php';
             if(file_exists($dirname . '/' . $basename . '.php'))
             {
-                require_once $compiled_name;
+                $source_ts = filemtime($filename);
+                $compiled_ts = filemtime($compiled_name);
+
+                if($compiled_ts < $source_ts)
+                {
+                    L::level(L::DEBUG) &&
+                        L::log(L::DEBUG, __CLASS__, 'source modified since last compilation',
+                            array());
+
+                    return null;
+                }
                 
+                require_once $compiled_name;
+
                 if(!class_exists($class))
                 {
                     throw new RuntimeException("{$class} not present in {$compiled_name}");
                 }
-                
+
                 L::level(L::DEBUG) && 
                     L::log(L::DEBUG, __CLASS__, 'loaded compiled XOUP class %s from file %s', 
                         array($class, $compiled_name));                
