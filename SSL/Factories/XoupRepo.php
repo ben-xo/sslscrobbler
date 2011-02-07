@@ -56,8 +56,8 @@ class XoupRepo implements Factory
     /**
      * @return XoupParser
      */
-    public function newParser($program)
+    public function newParser()
     {
-        return new XoupParser($program);
+        return new XoupParser();
     }
 }
