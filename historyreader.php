@@ -53,10 +53,10 @@ $lastfmConfig = array(
 $twitterConfig = array(
     'consumer_key' => 'muDxig9YR8URoKrv3GamA',
     'consumer_secret' => 'UyOd1a9Gjicoc1Yt4dvZT3Ext8Z2paH40YSRYambc',
-    'message' => 'now playing: %s #np',
+    'message' => 'now playing: %s → :beatport:"',
     'filters' => array(
         // filters from SSL/Plugins/Twitter/MessageFilters
-        new BeatportTrackMessageFilter()
+        new BeatportTrackMessageFilter( new VgdURLShortener() )
     )
 );
 

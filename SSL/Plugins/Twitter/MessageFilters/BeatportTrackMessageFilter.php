@@ -40,13 +40,20 @@ class BeatportTrackMessageFilter implements ITrackMessageFilter
     
     public function apply(SSLTrack $track, $message)
     {
-        $url = $this->getBeatportURL($track);
-        if($url && $this->url_shortener)
+        if(preg_match('/:beatport:/', $message))
         {
-            $url = $this->url_shortener->shorten($url);
+            $url = $this->getBeatportURL($track);
+            if($url && $this->url_shortener)
+            {
+                $url = $this->url_shortener->shorten($url);
+            }
+            return preg_replace('/:beatport:/', $url, $message);
         }
-        
-        return preg_replace('/:beatport:/', $url, $message);
+        else 
+        {
+            // do nothing expensive if the message doesn't even contain the right placeholder.  
+            return $message;
+        }
     }
     
     protected function getBeatportURL(SSLTrack $track)
