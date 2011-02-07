@@ -1,0 +1,81 @@
+#  @author      Ben XO (me@ben-xo.com)
+#  @copyright   Copyright (c) 2010 Ben XO
+#  @license     MIT License (http://www.opensource.org/licenses/mit-license.html)
+#  
+#  Permission is hereby granted, free of charge, to any person obtaining a copy
+#  of this software and associated documentation files (the "Software"), to deal
+#  in the Software without restriction, including without limitation the rights
+#  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#  copies of the Software, and to permit persons to whom the Software is
+#  furnished to do so, subject to the following conditions:
+#  
+#  The above copyright notice and this permission notice shall be included in
+#  all copies or substantial portions of the Software.
+#  
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+#  THE SOFTWARE.
+
+main:
+
+    field.        
+        
+ascii:
+    r1l>i_ r_b>r_
+    
+string:
+    r1l>i_ r_b>s_
+    
+int:
+    r1l>i_ r_b>i_
+    
+hex:
+    r1l>i_ r_b>h_
+    
+float:
+    r1l>i_ r_b>f_
+    
+timestamp:
+     r1l>i_ r_b>t_
+    # r1l>i_ r_b>i_ # timestamps are actually more useful as integers, not date-strings
+    
+field: 
+    # tail-recurses to gobble up all available fields. 
+    # (last field exits program)
+    r1l>i_ field_. field. 
+    
+field1: int.     c>rrow
+
+field41: string.     c>rdate
+field42: int.     c>rcollapsed
+field43: timestamp.     c>rstart
+field44: timestamp.     c>rend
+field45: hex.     c>rr45
+field46: hex.     c>rr46
+field47: hex.     c>rr47
+field48: hex.     c>rr48
+field49: hex.     c>rr49
+field50: hex.     c>rr50
+field51: hex.     c>rr51
+field52: hex.     c>rr52
+field53: hex.     c>rr53
+field54: timestamp.     c>rr54unknownTimestamp
+field55: hex.     c>rr55
+field56: hex.     c>rr56
+field57: string.     c>rsoftware
+field58: int.     c>rsoftwareBuild
+field59: hex.     c>rr59
+field60: hex.     c>rr60
+field61: hex.     c>rr61
+field62: hex.     c>rr62
+field63: string.     c>rdevice
+field64: hex.     c>rr64
+field65: hex.     c>rr65
+field66: hex.     c>rr66
+field67: hex.     c>rr67
+field68: hex.     c>rr68
+field69: hex.     c>rr69
