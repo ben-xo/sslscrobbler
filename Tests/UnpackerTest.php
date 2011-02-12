@@ -75,43 +75,59 @@ class UnpackerTest extends PHPUnit_Framework_TestCase
         }
     }
     
-//    public function test_unpack_unsigned_int_64()
-//    {
-//        $zero = chr(0) . chr(0) . chr(0) . chr(0) . chr(0) . chr(0) . chr(0) . chr(0);
-//        $one = chr(0) . chr(0) . chr(0) . chr(0) . chr(0) . chr(0) . chr(0) . chr(1);
-//        
-//        // As an unsigned int, this should represent a very large +ve number
-//        // - but as all ints in PHP are signed, this should end up as a double due to PHP's overflow rules
-//        $minusone = chr(255) . chr(255) . chr(255) . chr(255) . chr(255) . chr(255) . chr(255) . chr(255);
-//        
-//        // on 64-bit systems this should be 0x7FFFFFFFFFFFFFFF
-//        // on 32-bit systems this will overflow horribly but should be clamped to 0x7FFFFFFF
-//        $max_int_64 = chr(127) . chr(255) . chr(255) . chr(255) . chr(255) . chr(255) . chr(255) . chr(255);
-//        
-//        // on 64-bit systems this should be 0x7FFFFFF
-//        // on 32-bit systems this should be 0x7FFFFFF
-//        $max_int_32 = chr(0) . chr(0) . chr(0) . chr(0) . chr(127) . chr(255) . chr(255) . chr(255);
-//        
-//        
-//        $this->assertSame(0, $this->u->unpackuint($zero));
-//        $this->assertSame(1, $this->u->unpackuint($one));
-//        $this->assertSame(0x7FFFFFFF, $this->u->unpackuint($max_int_32));
-//        
-//        if(PHP_INT_SIZE == 8)
-//        {
-//            $this->assertSame(0x7FFFFFFFFFFFFFFF, $this->u->unpackuint($minusone));
-//            $this->assertSame(0x7FFFFFFFFFFFFFFF, $this->u->unpackuint($max_int_64));
-//            $this->assertSame(0x7FFFFFFF, $this->u->unpackuint($max_int_32));
-//        }
-//        else
-//        {
-//            $this->assertSame(0x7FFFFFFF, $this->u->unpackuint($max_int_64));
-//            $this->assertSame(0x7FFFFFFF, $this->u->unpackuint($max_int_32));
-//            $this->assertSame(0x7FFFFFFF, $this->u->unpackuint($minusone));
-//        }
-//    }
-    
-    
+    public function test_unpack_signed_int_64()
+    {
+        $zero = chr(0) . chr(0) . chr(0) . chr(0) . chr(0) . chr(0) . chr(0) . chr(0);
+        $one = chr(0) . chr(0) . chr(0) . chr(0) . chr(0) . chr(0) . chr(0) . chr(1);
+        
+        // As an signed int, this should represent -1
+        $minusone = chr(255) . chr(255) . chr(255) . chr(255) . chr(255) . chr(255) . chr(255) . chr(255);
+        
+        // on 64-bit systems this should be 0x7FFFFFFFFFFFFFFF
+        // on 32-bit systems this will overflow horribly but should be clamped to 0x7FFFFFFF
+        $max_int_64 = chr(127) . chr(255) . chr(255) . chr(255) . chr(255) . chr(255) . chr(255) . chr(255);
+        
+        // on 64-bit systems this should be 0x7FFFFFF
+        // on 32-bit systems this should be 0x7FFFFFF
+        $max_int_32 = chr(0) . chr(0) . chr(0) . chr(0) . chr(127) . chr(255) . chr(255) . chr(255);
+
+        $min_int_64 = chr(128) . chr(0) . chr(0) . chr(0) . chr(0) . chr(0) . chr(0) . chr(0);
+
+        // this is the 64-bit version of min_int_32. tricksy because you have to remember about sign extension!
+        $min_int_32 = chr(255) . chr(255) . chr(255) . chr(255) . chr(128) . chr(0) . chr(0) . chr(0); 
+        
+        $large = chr(0) . chr(123) . chr(123) . chr(123) . chr(123) . chr(123) . chr(123) . chr(123);
+        
+        // 2s-complement of $large
+        $minus_large = chr(255) . chr(132) . chr(132) . chr(132) . chr(132) . chr(132) . chr(132) . chr(133);
+        
+        $this->assertSame(0, $this->u->unpacksint($zero));
+        $this->assertSame(1, $this->u->unpacksint($one));
+        $this->assertSame(-1, $this->u->unpacksint($minusone));
+
+        $this->assertSame(0x7FFFFFFF, $this->u->unpacksint($max_int_32));
+        
+        if(PHP_INT_SIZE == 8)
+        {
+            $this->assertSame(-0x80000000, $this->u->unpacksint($min_int_32));
+            $this->assertSame(0x7FFFFFFFFFFFFFFF, $this->u->unpacksint($max_int_64));
+            
+            // PHP is retarded and won't let you represent min_int directly. -0x8000000000000000 parses as a float.
+            $this->assertSame(-0x7FFFFFFFFFFFFFFF - 1, $this->u->unpacksint($min_int_64));
+            
+            $this->assertSame(0x7B7B7B7B7B7B7B, $this->u->unpacksint($large));
+            $this->assertSame(-0x7B7B7B7B7B7B7B, $this->u->unpacksint($minus_large));
+        }
+        else
+        {
+            // PHP is retarded and won't let you represent min_int directly. -0x80000000 parses as a float.
+            $this->assertSame(-0x7FFFFFFF - 1, $this->u->unpacksint($min_int_32));
+            $this->assertSame(0x7FFFFFFF, $this->u->unpacksint($max_int_64));
+            $this->assertSame(-0x7FFFFFFF - 1, $this->u->unpacksint($min_int_64));
+            $this->assertSame(0x7FFFFFFF, $this->u->unpacksint($large));
+            $this->assertSame(-0x7FFFFFFF - 1, $this->u->unpacksint($minus_large));
+        }
+    }
 }
 
 class UnpackerTestUnpacker extends Unpacker

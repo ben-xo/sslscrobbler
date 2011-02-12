@@ -138,7 +138,7 @@ abstract class Unpacker
         
         switch($intmax)
         {
-            case 0x7FFFFFFFF:
+            case 0x7FFFFFFF:
                 // 32-bit mode
                 switch($width)
                 {
@@ -155,8 +155,19 @@ abstract class Unpacker
                                 L::log(L::WARNING, __CLASS__, "Encountered signed 64-bit integer > PHP_INT_MAX on a 32-bit PHP. Throwing away upper bytes. Original value was 0x%08X%08X",
                                     array(dechex($vals['upper']), dechex($vals['lower'])));
                         }
-                        // 32-bit range -ve vals will already be in the right sign. All bets are already off for other vals. 
-                        $vals['val'] = $vals['lower'];
+                        // 32-bit range -ve vals will already be in the right sign. All bets are already off for other vals.
+                        if($vals['upper'] > 0) {
+                            $vals['val'] = PHP_INT_MAX;
+                        } elseif ($vals['upper'] < -1) {
+                            $vals['val'] = -PHP_INT_MAX - 1;
+                        } else {
+                            $vals['val'] = $vals['lower'];
+                            if($vals['upper'] < 0)
+                            {
+                                // -ve sign bit
+                                $vals['val'] |= 0x80000000;
+                            } 
+                        }
                         break;
                         
                     case 4:
@@ -194,7 +205,7 @@ abstract class Unpacker
                         // Seems that ScratchLive 2.0 uses 64-bit timestamps. oh shi--
                         $vals = unpack('Nupper/Nlower', $datum);
                         // this will be signed on a 64-bit machine.
-                        $vals['val'] = ($vals['upper'] << 32) + ($vals['lower']);
+                        $vals['val'] = ($vals['upper'] << 32) | ($vals['lower']);
                         break;
                         
                     case 4:
