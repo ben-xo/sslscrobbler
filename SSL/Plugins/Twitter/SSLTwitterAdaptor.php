@@ -70,7 +70,7 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
         foreach($this->message_filters as $mf)
         {
             /* @var $mf ITrackMessageFilter */
-            $message = $mf->apply($message, $track);
+            $message = $mf->apply($track, $message);
         }
         
         // Twitter max message length, minus the pre-processed message,
@@ -85,7 +85,7 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
             $title = mb_substr($title, 0, $this->max_title_length - 1) . '…';
         }
 
-        $status = sprintf($this->msg_format, $title);
+        $status = sprintf($message, $title);
 
         try
         {

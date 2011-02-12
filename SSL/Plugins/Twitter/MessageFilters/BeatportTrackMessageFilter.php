@@ -47,7 +47,7 @@ class BeatportTrackMessageFilter implements ITrackMessageFilter
             {
                 $url = $this->url_shortener->shorten($url);
             }
-            return preg_replace('/:beatport:/', $url, $message);
+            return preg_replace('/:beatport:/', " → " . $url, $message);
         }
         else 
         {
