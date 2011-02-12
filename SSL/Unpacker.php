@@ -86,11 +86,21 @@ abstract class Unpacker
                             L::log(L::WARNING, __CLASS__, "Encountered 64-bit integer > PHP_INT_MAX on a 32-bit PHP. Throwing away upper bytes. Original value was 0x%08X%08X",
                                 array(dechex($vals['upper']), dechex($vals['lower'])));
                     }
+                    
+                    if($vals['upper'] || $vals['lower'] < 0)
+                    {
+                        // clamp to PHP_INT_MAX (these are unsigned vals)
+                        return PHP_INT_MAX;
+                    }
                     return $vals['lower'];
                 }
                 else
                 {
                     // this will be unsigned on a 64-bit machine, but watch out for PHP's dastardly float() overflow with (very) large values.
+                    if($vals['upper'] > 0x7FFFFFFF)
+                    {
+                        return PHP_INT_MAX;
+                    }
                     return ($vals['upper'] * 0x100000000) + ($vals['lower']);
                 }
                 break;
