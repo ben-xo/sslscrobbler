@@ -128,6 +128,113 @@ class UnpackerTest extends PHPUnit_Framework_TestCase
             $this->assertSame(-0x7FFFFFFF - 1, $this->u->unpacksint($minus_large));
         }
     }
+    
+    public function test_unpack_unsigned_int_32()
+    {
+        $zero = chr(0) . chr(0) . chr(0) . chr(0);
+        $one = chr(0) . chr(0) . chr(0) . chr(1);
+        $max_int_32 = chr(127) . chr(255) . chr(255) . chr(255);
+        
+        $minusone = chr(255) . chr(255) . chr(255) . chr(255);
+        $minustwo = chr(255) . chr(255) . chr(255) . chr(254);
+        
+        $this->assertSame(0, $this->u->unpackuint($zero));
+        $this->assertSame(1, $this->u->unpackuint($one));
+        $this->assertSame(0x7FFFFFFF, $this->u->unpackuint($max_int_32));
+        
+        if(PHP_INT_SIZE == 8)
+        {
+            $this->assertSame(0xFFFFFFFF, $this->u->unpackuint($minusone));
+            $this->assertSame(0xFFFFFFFE, $this->u->unpackuint($minustwo));
+        }
+        else
+        {
+            // overflow
+            $this->assertSame(0x7FFFFFFF, $this->u->unpackuint($minusone));
+            $this->assertSame(0x7FFFFFFF, $this->u->unpackuint($minustwo));
+        }
+    }
+
+    public function test_unpack_signed_int_32()
+    {
+        $zero = chr(0) . chr(0) . chr(0) . chr(0);
+        $one = chr(0) . chr(0) . chr(0) . chr(1);
+        $max_int_32 = chr(127) . chr(255) . chr(255) . chr(255);
+        
+        $minusone = chr(255) . chr(255) . chr(255) . chr(255);
+        $minustwo = chr(255) . chr(255) . chr(255) . chr(254);
+        
+        $this->assertSame(0, $this->u->unpacksint($zero));
+        $this->assertSame(1, $this->u->unpacksint($one));
+        $this->assertSame(0x7FFFFFFF, $this->u->unpacksint($max_int_32));
+        
+        $this->assertSame(-1, $this->u->unpacksint($minusone));
+        $this->assertSame(-2, $this->u->unpacksint($minustwo));
+    }
+    
+    public function test_unpack_unsigned_int_16()
+    {
+        $zero = chr(0) . chr(0);
+        $one = chr(0) . chr(1);
+        $max_int_16 = chr(127) . chr(255);
+        
+        $minusone = chr(255) . chr(255);
+        $minustwo = chr(255) . chr(254);
+        
+        $this->assertSame(0, $this->u->unpackuint($zero));
+        $this->assertSame(1, $this->u->unpackuint($one));
+        $this->assertSame(0x7FFF, $this->u->unpackuint($max_int_16));
+        $this->assertSame(0xFFFF, $this->u->unpackuint($minusone));
+        $this->assertSame(0xFFFE, $this->u->unpackuint($minustwo));
+    }
+    
+    public function test_unpack_signed_int_16()
+    {
+        $zero = chr(0) . chr(0);
+        $one = chr(0) . chr(1);
+        $max_int_16 = chr(127) . chr(255);
+        
+        $minusone = chr(255) . chr(255);
+        $minustwo = chr(255) . chr(254);
+        
+        $this->assertSame(0, $this->u->unpacksint($zero));
+        $this->assertSame(1, $this->u->unpacksint($one));
+        $this->assertSame(0x7FFF, $this->u->unpacksint($max_int_16));
+        $this->assertSame(-1, $this->u->unpacksint($minusone));
+        $this->assertSame(-2, $this->u->unpacksint($minustwo));
+    }
+    
+    public function test_unpack_unsigned_int_8()
+    {
+        $zero = chr(0);
+        $one = chr(1);
+        $max_int_8 = chr(127);
+        
+        $minusone = chr(255);
+        $minustwo = chr(254);
+        
+        $this->assertSame(0, $this->u->unpackuint($zero));
+        $this->assertSame(1, $this->u->unpackuint($one));
+        $this->assertSame(0x7F, $this->u->unpackuint($max_int_8));
+        $this->assertSame(0xFF, $this->u->unpackuint($minusone));
+        $this->assertSame(0xFE, $this->u->unpackuint($minustwo));
+    }
+    
+    public function test_unpack_signed_int_8()
+    {
+        $zero = chr(0);
+        $one = chr(1);
+        $max_int_8 = chr(127);
+        
+        $minusone = chr(255);
+        $minustwo = chr(254);
+        
+        $this->assertSame(0, $this->u->unpacksint($zero));
+        $this->assertSame(1, $this->u->unpacksint($one));
+        $this->assertSame(0x7F, $this->u->unpacksint($max_int_8));
+        $this->assertSame(-1, $this->u->unpacksint($minusone));
+        $this->assertSame(-2, $this->u->unpacksint($minustwo));
+    }    
 }
 
 class UnpackerTestUnpacker extends Unpacker

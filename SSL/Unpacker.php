@@ -107,10 +107,10 @@ abstract class Unpacker
                 
             case 4:
                 $vals = unpack('Nval', $datum); // unsigned long (always 32 bit, big endian byte order)
-                if($vals['val'] & 0x80000000 && $intmax == 0x7FFFFFFF)
+                if($intmax == 0x7FFFFFFF && $vals['val'] < 0)
                 {
-                    // uh-oh - 32-bit overflow on 32-bit machine. Force PHP's (nasty) float coercion to re-unsign this number.
-                    $vals['val'] += 0x7FFFFFFFF;
+                    // uh-oh - 32-bit overflow on 32-bit machine. Clamp to PHP_MAX_INT
+                    $vals['val'] = PHP_INT_MAX;
                 }
                 break;
                 
@@ -119,7 +119,7 @@ abstract class Unpacker
                 break;
                 
             case 1:
-                $vals = unpack('cval', $datum); // char
+                $vals = unpack('Cval', $datum); // char
                 break;
                 
             default:
@@ -210,7 +210,7 @@ abstract class Unpacker
                         
                     case 4:
                         $vals = unpack('Nval', $datum); // unsigned long (always 32 bit, big endian byte order)
-                        if($vals['val'] & 0x8000000)
+                        if($vals['val'] & 0x80000000)
                         {
                             $vals['val'] |= 0xFFFFFFFF00000000; // extend sign
                         }
