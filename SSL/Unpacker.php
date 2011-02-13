@@ -43,8 +43,8 @@
  * SSL binary files appear to contain UTF-16 text, so string unpacking assumes
  * that you want to convert from UTF-16 to UTF-8.
  * 
- * unpackint():
- * This is a utility function for unpacking big endian unsigned binary integers
+ * unpacksint() / unpackuint():
+ * These are utility functions for unpacking big endian binary integers
  * into PHP integers, which is how SSL appears to store non-string values.
  * 
  * @author ben
