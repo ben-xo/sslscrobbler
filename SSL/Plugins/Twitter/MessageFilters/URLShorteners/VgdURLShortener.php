@@ -34,7 +34,7 @@ class VgdURLShortener implements IURLShortener
             L::log(L::INFO, __CLASS__, "Shortening %s", 
                 array($url));
         
-        $result = vgdShorten($url);
+        $result = vgdShorten($url, null, true); // log stats
         
         if($result['shortURL'])
         {

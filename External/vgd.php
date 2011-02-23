@@ -13,7 +13,7 @@
 	domain and may be used by anyone for any purpose.
 */
 
-	function vgdShorten($url,$shorturl = null)
+	function vgdShorten($url,$shorturl = null,$logstats = false)
 	{
 		//$url - The original URL you want shortened
 		//$shorturl - Your desired short URL (optional)
@@ -47,6 +47,9 @@
 			$path = $basepath."&shorturl=$shorturl&url=$url";
 		else
 			$path = $basepath."&url=$url";
+			
+		if($logstats)
+	    	$path .= "&logstats=1";
 
 		$response = @file_get_contents($path,false,$context);
 		
