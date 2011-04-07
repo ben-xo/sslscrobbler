@@ -1,0 +1,47 @@
+<?php
+
+$growlConfig = array(
+    'address' => 'localhost',
+    'password' => '',
+    'app_name' => 'SSLHistoryReader'
+);
+
+$lastfmConfig = array(
+    'api_key' => '9dc2c6ce26602ff23787a7ebd4066ad8',
+    'api_secret' => '9cc1995235704e14d9d9dcdb3a2ba693'
+);
+
+$twitterConfig = array(
+    'consumer_key' => 'muDxig9YR8URoKrv3GamA',
+    'consumer_secret' => 'UyOd1a9Gjicoc1Yt4dvZT3Ext8Z2paH40YSRYambc',
+    'message' => 'now playing: %s',
+    'filters' => array(
+        // filters from SSL/Plugins/Twitter/MessageFilters
+
+        // Disabled: add :beatport: into your message string above
+        // new BeatportTrackMessageFilter( new VgdURLShortener() )
+    )
+);
+
+$nowplayingloggerConfig = array(
+    'filename' => dirname(__FILE__) . '/SSL/Plugins/NowPlaying/nowplaying.txt'
+);
+
+$plugins = array(
+    new GrowlPlugin($growlConfig),
+    new LastfmPlugin($lastfmConfig),
+    new TwitterPlugin($twitterConfig),
+    new NowPlayingLoggerPlugin($nowplayingloggerConfig),
+
+	/* Disabled plugins */
+    // new JSONServerPOC(),
+    // new AnalyzerPlugin(array('db' => dirname(__FILE__) . '/analyze.db')),
+);
+
+// set max log levels for various internal components. (The default is unlimited.)
+$log_levels = array(
+//    'TickSource' => L::SILENT,
+//    'SSLHistoryFileMonitor' => L::DEBUG,
+//    'SSLRealtimeModel' => L::DEBUG,
+//    'NowPlayingModel' => L::DEBUG,
+);

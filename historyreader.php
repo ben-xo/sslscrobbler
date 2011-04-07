@@ -39,48 +39,9 @@ function __autoload($class)
     return $a->load($class);
 }
 
-$growlConfig = array(
-    'address' => 'localhost',
-    'password' => '',
-    'app_name' => 'SSLHistoryReader'
-);
-
-$lastfmConfig = array(
-    'api_key' => '9dc2c6ce26602ff23787a7ebd4066ad8',
-    'api_secret' => '9cc1995235704e14d9d9dcdb3a2ba693'
-);
-
-$twitterConfig = array(
-    'consumer_key' => 'muDxig9YR8URoKrv3GamA',
-    'consumer_secret' => 'UyOd1a9Gjicoc1Yt4dvZT3Ext8Z2paH40YSRYambc',
-    'message' => 'now playing: %s:beatport:',
-    'filters' => array(
-        // filters from SSL/Plugins/Twitter/MessageFilters
-        new BeatportTrackMessageFilter( new VgdURLShortener() )
-    )
-);
-
-$nowplayingloggerConfig = array(
-    'filename' => dirname(__FILE__) . '/SSL/Plugins/NowPlaying/nowplaying.txt'
-);
-
-// set max log levels for various internal components. (The default is unlimited.)
-$log_levels = array(
-//    'TickSource' => L::SILENT,
-//    'SSLHistoryFileMonitor' => L::DEBUG,
-//    'SSLRealtimeModel' => L::DEBUG,
-//    'NowPlayingModel' => L::DEBUG,
-);
+include_once('config.php');
 
 $h = new HistoryReader();
 $h->setVerbosityOverride($log_levels);
-$h->addPlugin(new GrowlPlugin($growlConfig));
-$h->addPlugin(new LastfmPlugin($lastfmConfig));
-$h->addPlugin(new TwitterPlugin($twitterConfig));
-$h->addPlugin(new NowPlayingLoggerPlugin($nowplayingloggerConfig));
-
-/* Disabled plugins */
-//$h->addPlugin(new JSONServerPOC());
-//$h->addPlugin(new AnalyzerPlugin(array('db' => dirname(__FILE__) . '/analyze.db')));
-
+foreach($plugins as $plugin) $h->addPlugin($plugin);
 $h->main($argc, $argv);
