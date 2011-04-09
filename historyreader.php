@@ -39,7 +39,15 @@ function __autoload($class)
     return $a->load($class);
 }
 
-include_once('config.php');
+if(file_exists('config.php'))
+{
+    include_once 'config.php';
+}
+else
+{
+    echo 'Using default config. Customise by creating config.php (based on config.php-default)' . "\n";
+    include_once 'config.php-default';
+}
 
 $h = new HistoryReader();
 $h->setVerbosityOverride($log_levels);
