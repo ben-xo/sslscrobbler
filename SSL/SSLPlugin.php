@@ -29,7 +29,7 @@ interface SSLPlugin
     /**
      * Help output.
      * 
-     * @return string of additional help text
+     * @return null
      */
     public function usage($appname, array $argv);
     
