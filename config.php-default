@@ -29,11 +29,22 @@ $nowplayingloggerConfig = array(
 
 $plugins = array(
     new GrowlPlugin($growlConfig),
+
     new LastfmPlugin($lastfmConfig),
+   
+    // uncomment further lines, like this, if you want to scrobble to several Last.fm accounts
+    // new LastfmPlugin($lastfmConfig),
+    // new LastfmPlugin($lastfmConfig),
+
     new TwitterPlugin($twitterConfig),
+
+    // uncomment further lines, like this, if you want to tweet to several Twitter accounts
+    // new TwitterPlugin($twitterConfig),
+    // new TwitterPlugin($twitterConfig),
+
     new NowPlayingLoggerPlugin($nowplayingloggerConfig),
 
-	/* Disabled plugins */
+    /* Disabled plugins */
     // new JSONServerPOC(),
     // new AnalyzerPlugin(array('db' => dirname(__FILE__) . '/analyze.db')),
 );
