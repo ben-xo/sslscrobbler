@@ -68,7 +68,10 @@ class LastfmPlugin implements SSLPlugin
     
     public function onSetup() 
     {
-        $this->loadOrAuthLastfmConfig();
+        if($this->configured)
+        {
+            $this->loadOrAuthLastfmConfig();
+        }
     }
     
     public function onInstall() {}

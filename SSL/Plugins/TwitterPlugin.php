@@ -59,6 +59,7 @@ class TwitterPlugin implements SSLPlugin
         if(!$this->configured && ($arg == '--twitter' || $arg == '-T'))
         {
             $this->sessionname = array_shift($argv);
+            $this->configured = true;
             return true;
         }
                 
@@ -67,7 +68,10 @@ class TwitterPlugin implements SSLPlugin
     
     public function onSetup() 
     {
-        $this->loadOrAuthTwitterConfig();
+        if($this->configured)
+        {
+            $this->loadOrAuthTwitterConfig();
+        }
     }
     
     public function onInstall() {}
