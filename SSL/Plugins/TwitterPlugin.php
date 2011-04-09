@@ -32,6 +32,8 @@ require_once 'External/twitter.php';
  */
 class TwitterPlugin implements SSLPlugin
 {
+    protected $configured = false;
+    
     protected $config;
     protected $sessionname;
 
@@ -47,9 +49,14 @@ class TwitterPlugin implements SSLPlugin
         echo "\n";
     }
     
+    /**
+     * It's possible to include more than one instance of LastfmPlugin
+     *  
+     * @see SSLPlugin::parseOption()
+     */
     public function parseOption($arg, array &$argv) 
     {
-        if($arg == '--twitter' || $arg == '-T')
+        if(!$this->configured && ($arg == '--twitter' || $arg == '-T'))
         {
             $this->sessionname = array_shift($argv);
             return true;

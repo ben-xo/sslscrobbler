@@ -32,6 +32,8 @@ require_once 'External/phplastfmapi-0.7.1-xo/lastfmapi/lastfmapi.php';
  */
 class LastfmPlugin implements SSLPlugin
 {
+    protected $configured = false;
+    
     protected $config;
     protected $username;
 
@@ -47,11 +49,17 @@ class LastfmPlugin implements SSLPlugin
         echo "\n";
     }
     
+    /**
+     * It's possible to include more than one instance of LastfmPlugin
+     *  
+     * @see SSLPlugin::parseOption()
+     */
     public function parseOption($arg, array &$argv) 
     {
-        if($arg == '--lastfm' || $arg == '-L')
+        if(!$this->configured && ($arg == '--lastfm' || $arg == '-L'))
         {
             $this->username = array_shift($argv);
+            $this->configured = true;
             return true;
         }
         
