@@ -102,7 +102,7 @@ class LastfmPlugin implements SSLPlugin
             $sk_file = 'lastfm-' . $this->username . '.txt';
             while(!file_exists($sk_file))
             {
-                echo "Last.fm username supplied, but no Session Key saved. Authorizing...\n";
+                echo "Last.fm: Authorizing for {$this->username}...\n";
                 $this->authLastfm();
             }
             

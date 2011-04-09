@@ -102,7 +102,7 @@ class TwitterPlugin implements SSLPlugin
             $sk_file = 'twitter-' . $this->sessionname . '.txt';
             while(!file_exists($sk_file))
             {
-                echo "Twitter save name supplied, but no Auth Token saved. Authorizing...\n";
+                echo "Twitter: Authorizing for {$this->sessionname}...\n";
                 $this->authTwitter($this->sessionname);
             }
             
