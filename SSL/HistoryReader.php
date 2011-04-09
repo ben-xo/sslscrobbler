@@ -44,6 +44,8 @@ class HistoryReader
     protected $appname;
     protected $filename;
     protected $historydir;
+    
+    protected $max_plugin_id = 0;
         
     /**
      * @var Logger
@@ -70,7 +72,18 @@ class HistoryReader
      */
     public function addPlugin(SSLPlugin $plugin)
     {
-        $this->plugins[] = $plugin;
+        $this->plugins[$this->max_plugin_id] = $plugin;
+        $this->max_plugin_id++;
+    }
+    
+    /**
+     * Disable a plugin.
+     * 
+     * @param int $id
+     */
+    public function removePlugin($id)
+    {
+        unset($this->plugins[$id]);
     }
     
     /**
@@ -284,7 +297,7 @@ class HistoryReader
                 $this->csv = true;
                 continue;
             }
-                        
+
             foreach($this->plugins as $plugin)
             {
                 if($plugin->parseOption($arg, $argv))
