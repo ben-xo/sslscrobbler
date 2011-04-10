@@ -63,7 +63,6 @@ class AnalyzerPlugin implements SSLPlugin, NowPlayingObserver
     {
     }
     
-    public function onInstall() {}
     public function onStart() 
     {
         $this->dbo = new SQLite3($this->config['db']);

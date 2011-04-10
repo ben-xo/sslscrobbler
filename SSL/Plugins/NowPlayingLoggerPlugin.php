@@ -40,32 +40,18 @@ class NowPlayingLoggerPlugin implements SSLPlugin, NowPlayingObserver
     
     public function usage($appname, array $argv)
     {
-        // echo " .... ";
     }
     
     public function parseOption($arg, array &$argv) 
     {
-//        if($arg == '--lastfm' || $arg == '-L')
-//        {
-//            $this->username = array_shift($argv);
-//            return true;
-//        }
-//        
-//        return false;
     }
     
     public function onSetup() 
     {
     }
     
-    public function onInstall() {}
     public function onStart() 
     {
-        $filename = $this->getFilename();
-        if(file_exists($filename))
-        {
-            unlink($filename);
-        }
     }
     
     public function getFilename()

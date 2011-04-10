@@ -74,7 +74,6 @@ class LastfmPlugin implements SSLPlugin
         }
     }
     
-    public function onInstall() {}
     public function onStart() {}
     public function onStop() {}
     

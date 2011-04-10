@@ -47,7 +47,6 @@ class GrowlPlugin implements SSLPlugin
     }
     
     public function onSetup() {}
-    public function onInstall() {}
     public function onStart() {}
     public function onStop() {}
     

@@ -44,10 +44,6 @@ class JSONServerPOC implements SSLPlugin, NowPlayingObserver, TickObserver, Para
     {
     }
     
-    public function onInstall() 
-    {
-    }
-    
     public function onStart() 
     {
         $this->socket = socket_create_listen(10080, SOMAXCONN);

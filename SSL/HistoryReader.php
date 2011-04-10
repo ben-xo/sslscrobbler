@@ -46,6 +46,12 @@ class HistoryReader
     protected $historydir;
     
     protected $max_plugin_id = 0;
+    
+    /**
+     * This is set to true just as we enter the main event loop, and then 
+     * unset after we leave the loop. 
+     */
+    protected $clock_is_ticking = false;
         
     /**
      * @var Logger
@@ -72,6 +78,9 @@ class HistoryReader
      */
     public function addPlugin(SSLPlugin $plugin)
     {
+        if($this->clock_is_ticking) 
+            $plugin->onStart();
+        
         $this->plugins[$this->max_plugin_id] = $plugin;
         $this->max_plugin_id++;
     }
@@ -83,6 +92,9 @@ class HistoryReader
      */
     public function removePlugin($id)
     {
+        if($this->clock_is_ticking) 
+            $this->plugins[$id]->onStop();
+            
         unset($this->plugins[$id]);
     }
     
@@ -392,7 +404,6 @@ class HistoryReader
         foreach($this->plugins as $plugin)
         {
             /* @var $plugin SSLPlugin */
-            $plugin->onInstall();
             $observers = $plugin->getObservers();
             $oc = 0;
             foreach($observers as $o)
@@ -422,10 +433,12 @@ class HistoryReader
         }
 
         // Tick tick tick. This only returns if a signal is caught
+        $this->clock_is_ticking = true;
         $ts->startClock($this->sleep, $sh/*, $ih*/);
-
+        $this->clock_is_ticking = false;
+        
         $rtm->shutdown();
-
+        
         foreach($this->plugins as $plugin)
         {
             $plugin->onStop();

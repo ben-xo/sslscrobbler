@@ -42,18 +42,11 @@ interface SSLPlugin
     
     /**
      * Called before the main app is initialised. This is the right
-     * place to configuration thins with the user, e.g. OAuth on 
+     * place to configuration things with the user, e.g. OAuth on 
      * Twitter, Last.fm app authorisation, etc.
      */
     public function onSetup();
-    
-    /**
-     * Called right before any of the modelling is set up. This is the
-     * right place to do complex setup before the plugin is hooked
-     * into the listeners.
-     */
-    public function onInstall();
-    
+        
     /**
      * Called right before the clock starts ticking.
      */
