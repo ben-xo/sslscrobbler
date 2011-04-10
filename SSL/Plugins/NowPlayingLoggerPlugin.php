@@ -37,15 +37,7 @@ class NowPlayingLoggerPlugin implements SSLPlugin, NowPlayingObserver
     {
         $this->config = $config;
     }
-    
-    public function usage($appname, array $argv)
-    {
-    }
-    
-    public function parseOption($arg, array &$argv) 
-    {
-    }
-    
+        
     public function onSetup() 
     {
     }

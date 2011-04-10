@@ -24,27 +24,25 @@
  *  THE SOFTWARE.
  */
 
-interface SSLPlugin
+/**
+ * An SSLCLIPlugin is a plugin that has command line options.
+ * 
+ * @author ben
+ *
+ */
+interface SSLCLIConfigurablePlugin extends SSLPlugin
 {
     /**
-     * Called before the main app is initialised. This is the right
-     * place to configuration things with the user, e.g. OAuth on 
-     * Twitter, Last.fm app authorisation, etc.
+     * Help output.
+     * 
+     * @return null
      */
-    public function onSetup();
-        
-    /**
-     * Called right before the clock starts ticking.
-     */
-    public function onStart();
+    public function usage($appname, array $argv);
     
     /**
-     * Called right before shutdown.
+     * Attempt to parse a CLI option.
+     * 
+     * @return true if the option was parsed by the plugin, false otherwise.
      */
-    public function onStop();
-    
-    /**
-     * @return array of Observer
-     */
-    public function getObservers();
+    public function parseOption($arg, array &$argv);    
 }

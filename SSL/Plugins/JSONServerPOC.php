@@ -31,15 +31,6 @@ class JSONServerPOC implements SSLPlugin, NowPlayingObserver, TickObserver, Para
     protected $most_recent_track;
     protected $most_recent_accepted_connection;
     
-    public function usage($appname, array $argv)
-    {
-    }
-    
-    public function parseOption($arg, array &$argv) 
-    {
-        return false;
-    }
-    
     public function onSetup() 
     {
     }

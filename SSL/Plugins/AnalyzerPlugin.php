@@ -42,23 +42,7 @@ class AnalyzerPlugin implements SSLPlugin, NowPlayingObserver
     {
         $this->config = $config;
     }
-    
-    public function usage($appname, array $argv)
-    {
-        // echo " .... ";
-    }
-    
-    public function parseOption($arg, array &$argv) 
-    {
-//        if($arg == '--lastfm' || $arg == '-L')
-//        {
-//            $this->username = array_shift($argv);
-//            return true;
-//        }
-//        
-//        return false;
-    }
-    
+        
     public function onSetup() 
     {
     }

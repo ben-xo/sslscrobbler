@@ -30,7 +30,7 @@ require_once 'External/twitter.php';
 /**
  * Sends your current Now Playing track to a Twitter account.
  */
-class TwitterPlugin implements SSLPlugin
+class TwitterPlugin implements SSLCLIConfigurablePlugin
 {
     protected $configured = false;
     

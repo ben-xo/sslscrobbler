@@ -30,7 +30,7 @@ require_once 'External/phplastfmapi-0.7.1-xo/lastfmapi/lastfmapi.php';
 /**
  * Scrobbles to Last.fm, and also updates the Now Playing status too. :)
  */
-class LastfmPlugin implements SSLPlugin
+class LastfmPlugin implements SSLCLIConfigurablePlugin
 {
     protected $configured = false;
     
