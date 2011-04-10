@@ -225,6 +225,8 @@ class HistoryReader
             if(isset($types_seen[get_class($plugin)]))
                 continue;
 
+            // TODO: this instanceof wouldn't be necessary if the usage() flow was done
+            //       in some kind of CLI Configurator, rather than always in the main flow. 
             if($plugin instanceof SSLCLIConfigurablePlugin)
                 $plugin->usage($appname, $argv);
 
