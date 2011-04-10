@@ -217,10 +217,20 @@ class HistoryReader
         echo "    -h or --help:              This message.\n";
         echo "    -i or --immediate:         Do not wait for the next history file to be created before monitoring. (Use if you started {$appname} mid way through a session)\n";
         echo "\n";
+
+        // only show usage once per plugin type
+        $types_seen = array();
         foreach($this->plugins as $plugin)
         {
-            $plugin->usage($appname, $argv);
+            if(isset($types_seen[get_class($plugin)]))
+                continue;
+
+            if($plugin instanceof SSLCLIConfigurablePlugin)
+                $plugin->usage($appname, $argv);
+
+            $types_seen[get_class($plugin)] = true;
         }
+
         echo "Debugging options:\n";
         echo "    -d or --dump:              Dump the file's complete structure and exit\n";
         echo "          --dump-type <x>:     Use a specific parser. Options are: sessionfile, sessionindex\n";
