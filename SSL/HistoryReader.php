@@ -324,7 +324,7 @@ class HistoryReader
 
             foreach($this->plugins as $plugin)
             {
-                if($plugin->parseOption($arg, $argv))
+                if($plugin instanceof SSLCLIConfigurablePlugin && $plugin->parseOption($arg, $argv))
                 {
                     continue 2;
                 }
