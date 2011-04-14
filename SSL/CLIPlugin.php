@@ -1,4 +1,3 @@
-#!/usr/bin/env php
 <?php
 
 /**
@@ -25,46 +24,32 @@
  *  THE SOFTWARE.
  */
 
-error_reporting(E_ALL | E_STRICT);
-
-require_once 'External/getID3/getid3.php';
-require_once 'SSL/Autoloader.php';
-
-//define('SCROBBLER_LOG', '/tmp/scrobbler.log');
-//define('SINGLE_THREADED', true);
-
-function __autoload($class)
+/**
+ * A CLIPlugin is a plugin that has command line options.
+ * 
+ * @see CLITwitterPlugin
+ * @see CLILastfmPlugin
+ */
+interface CLIPlugin
 {
-    $a = new Autoloader();
-    return $a->load($class);
+    /**
+     * Help output.
+     * 
+     * @return null
+     */
+    public function usage($appname, array $argv);
+    
+    /**
+     * Attempt to parse a CLI option.
+     * 
+     * @return true if the option was parsed by the plugin, false otherwise.
+     */
+    public function parseOption($arg, array &$argv);
+    
+    /**
+     * Yield some SSLPlugins and add them to an SSLPluggable object (Such as HistoryReader).
+     * 
+     * @param SSLPluggable $sslpluggable
+     */
+    public function addPluginsTo(SSLPluggable $sslpluggable);
 }
-
-if(file_exists('config.php'))
-{
-    include_once 'config.php';
-}
-else
-{
-    echo 'Using default config. Customise by creating config.php (based on config.php-default)' . "\n";
-    include_once 'config.php-default';
-}
-
-// Warnings about configuration vars which may have changed since an upgrade
-try {
-    if(!isset($log_levels))  throw new RuntimeException('$log_levels');
-    if(!isset($plugins))     throw new RuntimeException('$plugins');
-    if(!isset($cli_plugins)) throw new RuntimeException('$cli_plugins');
-} catch (RuntimeException $e) {
-    echo $e->getMessage() . "not set; please check config.php and update it from config.php-default if necessary. ";
-    echo "Did you just upgrade SSLScrobbler? :)\n";
-    exit(-1);
-}
-
-$h = new HistoryReader();
-$h->setVerbosityOverride($log_levels);
-foreach($plugins as $plugin) $h->addPlugin($plugin);
-foreach($cli_plugins as $plugin) $h->addCLIPlugin($plugin);
-unset($plugin);
-
-// GO!
-$h->main($argc, $argv);

@@ -24,7 +24,7 @@
  *  THE SOFTWARE.
  */
 
-class HistoryReader
+class HistoryReader implements SSLPluggable
 {
     // command line switches
     protected $dump_and_exit = false;
@@ -36,7 +36,20 @@ class HistoryReader
     protected $log_file = '';
     protected $verbosity = L::INFO;
     
+    /**
+     * Plugins that can return Observers.
+     * 
+     * @var array of SSLPlugin
+     */
     protected $plugins = array();
+    
+    /**
+     * Plugins that can return SSLPlugins, configured from the command line
+     * 
+     * @var array of SSLPlugin
+     */
+    protected $cli_plugins = array();
+    
     protected $override_verbosity = array();
     
     protected $sleep = 2;
@@ -82,6 +95,11 @@ class HistoryReader
             $plugin->onStart();
         
         $this->plugins[$this->max_plugin_id] = $plugin;
+        
+        L::level(L::DEBUG) && 
+            L::log(L::DEBUG, __CLASS__, "added %s plugin with id %d", 
+                array(get_class($plugin), $this->max_plugin_id));
+        
         $this->max_plugin_id++;
     }
     
@@ -96,6 +114,19 @@ class HistoryReader
             $this->plugins[$id]->onStop();
             
         unset($this->plugins[$id]);
+    }
+    
+    /**
+     * Enable a CLI plugin.
+     * 
+     * @param CLIPlugin $plugin
+     */
+    public function addCLIPlugin(CLIPlugin $plugin)
+    {
+        if($this->clock_is_ticking) 
+            throw new RuntimeException("There's no point adding a CLI Plugin while the app is running.");
+        
+        $this->cli_plugins[] = $plugin;
     }
     
     /**
@@ -124,6 +155,8 @@ class HistoryReader
         try
         {
             $this->parseOptions($argv);
+            
+            // do this as early as possible, but not before parsing options which may affect it.
             $this->setupLogging();
                         
             if($this->help)
@@ -132,8 +165,17 @@ class HistoryReader
                 return;
             }
             
+            // yield CLI configured plugins.
+            foreach($this->cli_plugins as $plugin)
+            {
+                /* @var $plugin CLIPlugin */
+                $plugin->addPluginsTo($this);
+            }
+            $this->cli_plugins = array();
+            
             foreach($this->plugins as $plugin)
             {
+                /* @var $plugin SSLPlugin */
                 $plugin->onSetup();
             }
             
@@ -218,19 +260,10 @@ class HistoryReader
         echo "    -i or --immediate:         Do not wait for the next history file to be created before monitoring. (Use if you started {$appname} mid way through a session)\n";
         echo "\n";
 
-        // only show usage once per plugin type
-        $types_seen = array();
-        foreach($this->plugins as $plugin)
+        foreach($this->cli_plugins as $plugin)
         {
-            if(isset($types_seen[get_class($plugin)]))
-                continue;
-
-            // TODO: this instanceof wouldn't be necessary if the usage() flow was done
-            //       in some kind of CLI Configurator, rather than always in the main flow. 
-            if($plugin instanceof SSLCLIConfigurablePlugin)
-                $plugin->usage($appname, $argv);
-
-            $types_seen[get_class($plugin)] = true;
+            /* @var $plugin CLIPlugin */
+            $plugin->usage($appname, $argv);
         }
 
         echo "Debugging options:\n";
@@ -322,9 +355,10 @@ class HistoryReader
                 continue;
             }
 
-            foreach($this->plugins as $plugin)
+            foreach($this->cli_plugins as $plugin)
             {
-                if($plugin instanceof SSLCLIConfigurablePlugin && $plugin->parseOption($arg, $argv))
+                /* @var $plugin CLIPlugin */
+                if($plugin->parseOption($arg, $argv))
                 {
                     continue 2;
                 }
@@ -413,7 +447,7 @@ class HistoryReader
         $rtm->addTrackChangeObserver($npm);
         $rtm->addTrackChangeObserver($sm);
 
-        foreach($this->plugins as $plugin)
+        foreach($this->plugins as $id => $plugin)
         {
             /* @var $plugin SSLPlugin */
             $observers = $plugin->getObservers();
@@ -428,8 +462,8 @@ class HistoryReader
             }
             
             L::level(L::INFO) && 
-                L::log(L::INFO, __CLASS__, "%s installed", 
-                    array(get_class($plugin)));
+                L::log(L::INFO, __CLASS__, "%d: %s installed", 
+                    array($id, get_class($plugin)));
                     
             L::level(L::DEBUG) && 
                 L::log(L::DEBUG, __CLASS__, "%s brought %d observers to the table", 

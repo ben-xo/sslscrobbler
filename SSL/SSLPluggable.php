@@ -24,25 +24,20 @@
  *  THE SOFTWARE.
  */
 
-/**
- * An SSLCLIPlugin is a plugin that has command line options.
- * 
- * @author ben
- *
- */
-interface SSLCLIConfigurablePlugin extends SSLPlugin
+interface SSLPluggable
 {
     /**
-     * Help output.
+     * Enable a plugin.
      * 
-     * @return null
+     * @param SSLPlugin $plugin
      */
-    public function usage($appname, array $argv);
+    public function addPlugin(SSLPlugin $plugin);
+    
     
     /**
-     * Attempt to parse a CLI option.
+     * Disable a plugin.
      * 
-     * @return true if the option was parsed by the plugin, false otherwise.
+     * @param int $id
      */
-    public function parseOption($arg, array &$argv);    
+    public function removePlugin($id);
 }

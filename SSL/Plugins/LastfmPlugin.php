@@ -29,49 +29,23 @@ require_once 'External/phplastfmapi-0.7.1-xo/lastfmapi/lastfmapi.php';
 
 /**
  * Scrobbles to Last.fm, and also updates the Now Playing status too. :)
+ * 
+ * For command line setup @see CLILastfmPlugin
  */
-class LastfmPlugin implements SSLCLIConfigurablePlugin
+class LastfmPlugin implements SSLPlugin
 {
-    protected $configured = false;
-    
     protected $config;
     protected $username;
 
-    public function __construct(array $config)
+    public function __construct(array $config, $username)
     {
         $this->setConfig($config);
+        $this->username = $username;
     }
-    
-    public function usage($appname, array $argv)
-    {
-        echo "Last.fm options:\n";
-        echo "    -L or --lastfm <username>: Scrobble / send 'Now Playing' to Last.fm for user <username>. (Will ask you to authorize if you have not already)\n";
-        echo "\n";
-    }
-    
-    /**
-     * It's possible to include more than one instance of LastfmPlugin
-     *  
-     * @see SSLPlugin::parseOption()
-     */
-    public function parseOption($arg, array &$argv) 
-    {
-        if(!$this->configured && ($arg == '--lastfm' || $arg == '-L'))
-        {
-            $this->username = array_shift($argv);
-            $this->configured = true;
-            return true;
-        }
         
-        return false;
-    }
-    
     public function onSetup() 
     {
-        if($this->configured)
-        {
-            $this->loadOrAuthLastfmConfig();
-        }
+        $this->loadOrAuthLastfmConfig();
     }
     
     public function onStart() {}
@@ -79,14 +53,9 @@ class LastfmPlugin implements SSLCLIConfigurablePlugin
     
     public function getObservers()
     {
-        if($this->username)
-        {
-            return array(
-                new SSLScrobblerAdaptor( $this->getScrobbler() )
-            );
-        }
-
-        return array();
+        return array(
+            new SSLScrobblerAdaptor( $this->getScrobbler() )
+        );
     }
 
     public function setConfig(array $config)
@@ -96,17 +65,14 @@ class LastfmPlugin implements SSLCLIConfigurablePlugin
 
     protected function loadOrAuthLastfmConfig()
     {
-        if(isset($this->username))
+        $sk_file = 'lastfm-' . $this->username . '.txt';
+        while(!file_exists($sk_file))
         {
-            $sk_file = 'lastfm-' . $this->username . '.txt';
-            while(!file_exists($sk_file))
-            {
-                echo "Last.fm: Authorizing for {$this->username}...\n";
-                $this->authLastfm();
-            }
-            
-            $this->config['api_sk'] = trim(file_get_contents($sk_file));
+            echo "Last.fm: Authorizing for {$this->username}...\n";
+            $this->authLastfm();
         }
+        
+        $this->config['api_sk'] = trim(file_get_contents($sk_file));
     }
         
     protected function authLastfm()

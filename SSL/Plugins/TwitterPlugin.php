@@ -29,41 +29,18 @@ require_once 'External/twitter.php';
 
 /**
  * Sends your current Now Playing track to a Twitter account.
+ * 
+ * For command line setup @see CLITwitterPlugin
  */
-class TwitterPlugin implements SSLCLIConfigurablePlugin
+class TwitterPlugin implements SSLPlugin
 {
-    protected $configured = false;
-    
     protected $config;
     protected $sessionname;
 
-    public function __construct(array $config)
+    public function __construct(array $config, $sessionname)
     {
         $this->setConfig($config);
-    }
-    
-    public function usage($appname, array $argv)
-    {
-        echo "Twitter options:\n";
-        echo "    -T or --twitter <session>: Post tracklists to Twitter. <session> is a 'save name' for the session. (Will ask you to authorize if you have not already)\n";
-        echo "\n";
-    }
-    
-    /**
-     * It's possible to include more than one instance of LastfmPlugin
-     *  
-     * @see SSLPlugin::parseOption()
-     */
-    public function parseOption($arg, array &$argv) 
-    {
-        if(!$this->configured && ($arg == '--twitter' || $arg == '-T'))
-        {
-            $this->sessionname = array_shift($argv);
-            $this->configured = true;
-            return true;
-        }
-                
-        return false;
+        $this->sessionname = $sessionname;
     }
     
     public function onSetup() 
@@ -79,14 +56,9 @@ class TwitterPlugin implements SSLCLIConfigurablePlugin
     
     public function getObservers()
     {
-        if($this->sessionname)
-        {
-            return array(
-                new SSLTwitterAdaptor( $this->getTwitter(), $this->config['message'], $this->config['filters'] )
-            );
-        }
-
-        return array();
+        return array(
+            new SSLTwitterAdaptor( $this->getTwitter(), $this->config['message'], $this->config['filters'] )
+        );
     }
 
     public function setConfig(array $config)
@@ -96,20 +68,17 @@ class TwitterPlugin implements SSLCLIConfigurablePlugin
 
     protected function loadOrAuthTwitterConfig()
     {
-        if(isset($this->sessionname))
+        $sk_file = 'twitter-' . $this->sessionname . '.txt';
+        while(!file_exists($sk_file))
         {
-            $sk_file = 'twitter-' . $this->sessionname . '.txt';
-            while(!file_exists($sk_file))
-            {
-                echo "Twitter: Authorizing for {$this->sessionname}...\n";
-                $this->authTwitter($this->sessionname);
-            }
-            
-            list(
-                $this->config['oauth_token'], 
-                $this->config['oauth_token_secret']
-            ) = explode("\n", trim(file_get_contents($sk_file)));
+            echo "Twitter: Authorizing for {$this->sessionname}...\n";
+            $this->authTwitter($this->sessionname);
         }
+        
+        list(
+            $this->config['oauth_token'], 
+            $this->config['oauth_token_secret']
+        ) = explode("\n", trim(file_get_contents($sk_file)));
     }
         
     protected function authTwitter($save_name)
