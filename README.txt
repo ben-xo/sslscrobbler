@@ -1,4 +1,4 @@
-SSLScrobbler v0.8
+SSLScrobbler v0.9
 =================
 
 SSLScrobbler is a Scrobbler for Serato ScratchLive! (http://www.serato.com/) 
@@ -162,6 +162,8 @@ Last.fm options:
   Last.fm account. The authorization information is stored in a file called 
   <username>-lastfm.txt
   
+  NOTE: you can include -L multiple times and scrobble to multiple accounts.
+  
 Twitter options:
  -T or --twitter <session>:
   Post tracklists to Twitter. It will tweet once for every 'Now Playing'. 
@@ -169,6 +171,9 @@ Twitter options:
   The first time you specify this option, it will ask you to authorize the app 
   to your Twitter account. The authorization information is stored in a file 
   called <session>-twitter.txt
+  
+  NOTE: you can include -T multiple times and tweet to multiple accounts.
+  
 
 2. HOW IT WORKS
 =================
@@ -190,7 +195,9 @@ position of the songs, so it has to guess this.
 3. ADVANCED USE
 =================
 
-* If you want to change the message sent to Twitter, edit historyreader.php.
+* If you want to enable or disable plugins, or change API keys, or other
+  advanced "configuration", copy config.php-default to config.php and edit.
+  You can also change e.g. the Twitter template here.
 
 * If you're interested in exploring the ScratchLive! binary file format, check 
   out the --dump option. You can even use this to dump non-history files (such 
