@@ -45,10 +45,7 @@ class TwitterPlugin implements SSLPlugin
     
     public function onSetup() 
     {
-        if($this->configured)
-        {
-            $this->loadOrAuthTwitterConfig();
-        }
+        $this->loadOrAuthTwitterConfig();
     }
     
     public function onStart() {}
