@@ -1,5 +1,5 @@
-SSLScrobbler v0.9
-=================
+SSLScrobbler v0.9.1
+===================
 
 SSLScrobbler is a Scrobbler for Serato ScratchLive! (http://www.serato.com/) 
 written in PHP. See http://www.last.fm/help/faq?category=99 for an explanation 
