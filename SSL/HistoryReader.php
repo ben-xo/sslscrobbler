@@ -190,18 +190,18 @@ class HistoryReader implements SSLPluggable
                 {
                     echo "Waiting for new session file...\n";
                     // find the most recent file, then wait for a new one to be created and use that.
-                    $first_filename = $this->getMostRecentFile($this->historydir, '.session');
+                    $first_filename = $this->getMostRecentFile($this->historydir, 'session');
                     $second_filename = $first_filename;
                     while($second_filename == $first_filename)
                     {
                         sleep($this->sleep);
-                        $second_filename = $this->getMostRecentFile($this->historydir, '.session');
+                        $second_filename = $this->getMostRecentFile($this->historydir, 'session');
                     }
                     $filename = $second_filename;
                 }
                 else
                 {
-                    $filename = $this->getMostRecentFile($this->historydir, '.session');                
+                    $filename = $this->getMostRecentFile($this->historydir, 'session');                
                 }
                 
                 echo "Using file $filename ...\n";
@@ -224,8 +224,8 @@ class HistoryReader implements SSLPluggable
                         return;
 
                     case 'sessionindex':
-                        $factory = Inject::the(new SSLRepo());
                         /* @var $factory SSLRepo */
+                        $factory = Inject::the(new SSLRepo());
                         $parser = $factory->newParser( $factory->newHistoryIndexDom() );
                         $tree = $parser->parse($filename);
                         $parser->close();
@@ -495,11 +495,13 @@ class HistoryReader implements SSLPluggable
     {
         $newest_mtime = 0;
         $fp = '';
-        
+        $dot_type = '.' . $type;
+        $type_length = strlen($dot_type);
+
         $di = new DirectoryIterator($from_dir);
         foreach($di as $f)
         {
-            if(!$f->isFile() || !substr($f->getFilename(), -4) == '.' . $type)
+            if(!$f->isFile() || substr($f->getFilename(), -$type_length) != $dot_type)
                 continue;
     
             $mtime = $f->getMTime();
