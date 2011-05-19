@@ -55,7 +55,7 @@ try {
     if(!isset($plugins))     throw new RuntimeException('$plugins');
     if(!isset($cli_plugins)) throw new RuntimeException('$cli_plugins');
 } catch (RuntimeException $e) {
-    echo $e->getMessage() . "not set; please check config.php and update it from config.php-default if necessary. ";
+    echo $e->getMessage() . " not set; please check config.php and update it from config.php-default if necessary.\n";
     echo "Did you just upgrade SSLScrobbler? :)\n";
     exit(-1);
 }
