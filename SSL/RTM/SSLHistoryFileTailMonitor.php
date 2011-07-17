@@ -30,9 +30,11 @@ class SSLHistoryFileTailMonitor extends SSLHistoryFileDiffMonitor
      * @var SSLParser
      */
     protected $tail_parser;
-    
+        
     public function notifyTick($seconds)
     {
+        $this->checkForNewFilename();
+        
         if(!isset($this->tail_parser))
         {
             $this->tail_parser = $this->newTailParser($this->filename);
@@ -49,7 +51,17 @@ class SSLHistoryFileTailMonitor extends SSLHistoryFileDiffMonitor
             $this->notifyDiffObservers($changed);
         }
     }
-    
+
+    protected function checkForNewFilename()
+    { 
+        $got_new_file = parent::checkForNewFilename();
+        if($got_new_file)
+        {
+            unset($this->tail_parser);
+        }
+        return $got_new_file;
+    }
+        
     protected function newTailParser($filename)
     {
         $parser = $this->factory->newParser( $this->factory->newHistoryDom() );

@@ -31,6 +31,13 @@ class SSLHistoryFileDiffMonitor implements SSLDiffObservable, TickObserver
      */
     protected $factory;
 
+    /**
+     * The filename source yields new filenames from time to time.
+     * 
+     * @var SSLFilenameSource
+     */
+    protected $fns;
+    
     protected $diff_observers = array();
     
     protected $filename;
@@ -47,9 +54,33 @@ class SSLHistoryFileDiffMonitor implements SSLDiffObservable, TickObserver
         $this->tree = $this->factory->newHistoryDom(); // start on empty
     }
     
+    public function setFilenameSource(SSLFilenameSource $fns)
+    {
+        $this->fns = $fns;
+    }
+    
     public function addDiffObserver(SSLDiffObserver $observer)
     {
         $this->diff_observers[] = $observer;
+    }
+    
+    protected function checkForNewFilename()
+    { 
+        if(isset($this->fns))
+        {
+            $old_filename = $this->filename;
+            $this->filename = $this->fns->getNewFilename();
+            $got_new_file = ($this->filename != $old_filename);
+            if($got_new_file)
+            {
+                L::level(L::INFO) && 
+                    L::log(L::INFO, __CLASS__, "Changed to new file %s", 
+                        array($this->filename));
+            }
+            
+            return $got_new_file;
+        }
+        return false;
     }
     
     protected function notifyDiffObservers(SSLHistoryDiffDom $changes)
@@ -83,6 +114,8 @@ class SSLHistoryFileDiffMonitor implements SSLDiffObservable, TickObserver
     
     public function notifyTick($seconds)
     {
+        $this->checkForNewFilename();
+        
         $new_tree = $this->read($this->filename);
         $changed = $new_tree->getNewOrUpdatedTracksSince($this->tree);
         if(count($changed->getTracks()) > 0 )

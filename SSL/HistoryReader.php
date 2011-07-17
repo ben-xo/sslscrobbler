@@ -24,7 +24,7 @@
  *  THE SOFTWARE.
  */
 
-class HistoryReader implements SSLPluggable
+class HistoryReader implements SSLPluggable, SSLFilenameSource
 {
     // command line switches
     protected $dump_and_exit = false;
@@ -275,6 +275,11 @@ class HistoryReader implements SSLPluggable
         echo "    -c or --csv:               Parse the session file as a CSV, not a binary file, for testing purposes. Best used with --replay\n"; 
     }
     
+    public function getNewFilename()
+    {
+        return $this->getMostRecentFile($this->historydir, 'session');
+    }
+    
     protected function getDefaultHistoryDir()
     {
         // OSX
@@ -428,9 +433,12 @@ class HistoryReader implements SSLPluggable
             // tick based on the clock
             $ts  = new TickSource();
             $hfm = new SSLHistoryFileTailMonitor($filename);
+            $hfm->setFilenameSource($this);
             //$hfm = new SSLHistoryFileDiffMonitor($filename);
         }
 
+        $pm = new PluginManager();
+        
         $sh = new SignalHandler();
         //$ih = new InputHandler();
 
@@ -439,16 +447,19 @@ class HistoryReader implements SSLPluggable
         $npm = new NowPlayingModel();
         $sm = new ScrobbleModel();
 
+        // the ordering here is relatively important
+        $ts->addTickObserver($pm);
         $ts->addTickObserver($hfm);
         $ts->addTickObserver($npm);
         $hfm->addDiffObserver($rtm);
         $rtm->addTrackChangeObserver($rtm_printer);
-        //$rtm->addTrackChangeObserver($growl_event_renderer);
         $rtm->addTrackChangeObserver($npm);
         $rtm->addTrackChangeObserver($sm);
 
         foreach($this->plugins as $id => $plugin)
         {
+            $pm->addPlugin($id, $plugin);
+            
             /* @var $plugin SSLPlugin */
             $observers = $plugin->getObservers();
             $oc = 0;
