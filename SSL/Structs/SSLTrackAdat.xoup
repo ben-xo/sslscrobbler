@@ -21,7 +21,6 @@
 #  THE SOFTWARE.
 
 main:
-
     field.        
         
 ascii:
@@ -41,41 +40,36 @@ float:
     
 timestamp:
     # r1l>i_ r_b>t_
-    r1l>i_ r_b>i_ # timestamps are actually more useful as integers, not date-strings
+    int. # timestamps are actually more useful as integers, not date-strings
     
 field: 
     # tail-recurses to gobble up all available fields. 
     # (last field exits program)
     r1l>i_ field_. field. 
     
+trap:
+    lEUNKNOWN>r! c>r! lCOLON>r! hex. c>r! lEOS>r!
+
 field1: int.     c>rrow
 
 field2: string.  c>rfullpath
 field3: string.  c>rlocation
 field4: string.  c>rfilename
 
-field5: hex.     c>rFIVExUNKNOWN
-
 field6: string.  c>rtitle
 field7: string.  c>rartist
 field8: string.  c>ralbum
 field9: string.  c>rgenre
 field10: string. c>rlength
-
-field11: hex.    c>rELEVENxUNKNOWN # seems to contain 4 bytes of data, but no idea what it means
-field12: string. c>rTWELVExUNKNOWN
+field11: string. c>rfilesize
 
 field13: string. c>rbitrate
 field14: string. c>rfrequency
 field15: int.    c>rbpm 
 
-field16: hex.    c>rSIXTEENxUNKNOWN # seems to contain 8 bytes of data, but no idea what it means
-
 field17: string. c>rcomments
 field18: ascii.  c>rlang
 field19: string. c>rgrouping
-
-field20: hex.    c>rTWENTYxUNKNOWN
 
 field21: string. c>rlabel
 field22: string. c>rcomposer
@@ -84,8 +78,6 @@ field28: timestamp. c>rstarttime
 field29: timestamp. c>rendtime
 field31: int. c>rdeck
 
-field33: int. c>rTHIRTYTHREExUNKNOWN # ??? always seems to be 0
-field39: int. c>rTHIRTYNINExUNKNOWN
 field45: int. c>rplaytime
 
 field48: int. c>rsessionId
@@ -97,3 +89,14 @@ field53: # usually last field
     timestamp. c>rupdatedAt
 
 field64: string. c>rcommentname
+
+# known unknowns
+field16: ascii.
+field33: ascii.
+
+# literal data
+.EOS ""
+.COLON ": "
+.EUNKNOWN "Unknown field "
+
+

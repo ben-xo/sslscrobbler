@@ -26,13 +26,17 @@
 
 class XoupParser
 {
+    protected $data = array();
+    
     public function parse($program)
     {
+        $data = array();
+        
         // strip comments
-        $program = preg_replace("/#[^\n]*\n/", ' ', $program);
+        $stripped_program = preg_replace("/#[^\n]*\n/", ' ', $program);
         
         // tokenize
-        $ops = preg_split("/\s+/", $program);
+        $ops = preg_split("/\s+/", $stripped_program);
         
         // trim
         $ops = array_map('trim', $ops);
@@ -53,6 +57,13 @@ class XoupParser
                 $subs[$matches[1]] = array();
                 $opdest = $matches[1];
             }
+            elseif(preg_match('/^\.[a-zA-Z0-9]+$/', $v, $matches))
+            {
+                // we found our first piece of DATA. finish program parsing 
+                // and move to DATA parsing
+                $data = $this->parseData($program);
+                break;
+            }
             else
             {
                 // it's an op
@@ -69,7 +80,29 @@ class XoupParser
         {
             throw new RuntimeException("Parse error: no 'main' sub found.");
         }
+
+        L::level(L::DEBUG) && 
+            L::log(L::DEBUG, __CLASS__, 'parsed %d subs and %d literals', 
+                array(count($subs), count($this->data)));
         
         return $subs;
     }
+    
+    public function getData()
+    {
+        return $this->data;
+    }
+    
+    protected function parseData($data_text)
+    {
+        $data = array();
+        preg_match_all('/\.([a-zA-Z0-9]+)\s+"(.*)"\s*$/m', $data_text, $matches, PREG_SET_ORDER);
+        foreach($matches as $match)
+        {
+            $data[$match[1]] = stripslashes($match[2]);
+        }
+        $this->data = $data;
+    }
 }
+
+

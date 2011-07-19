@@ -65,6 +65,10 @@ class XoupLoader
         {
             throw new RuntimeException("Could not load {$filename}");
         }
+
+        L::level(L::DEBUG) && 
+            L::log(L::DEBUG, __CLASS__, 'selecting XOUP interpreter for %s', 
+                array($filename));
         
         return $this->factory->newInterpreter($program);
     }

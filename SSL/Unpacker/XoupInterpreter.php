@@ -33,7 +33,8 @@
  * a XOUP programs is modelled with a consume-only binary input, and a key/value 
  * output. There is also a single read/write accumulator (called '_') that can be 
  * used as a read source, read destination, read-length and as a direct substitute 
- * in named sub-routine calls. 
+ * in named sub-routine calls. The key/value registers are write-only output and
+ * can be created on demand. There is a special register called ! explained below.
  * 
  * XOUP offers several conversions from binary strings into useful PHP types such 
  * as string and integer, and some convenience conversions such as hexdump and 
@@ -45,10 +46,15 @@
  * It's an error to have statements outside of a sub-routine. It's also an error to
  * have a program with no sub-routine called 'main'.
  * 
- * XOUP has 3 commands: 'read', 'copy', and 'call', explained below.
+ * XOUP has 4 commands: 'read', 'copy', 'call', 'out' and 'literal', explained below.
+ * 
+ * Read reads from the input and writes to the accumulator or registers.
+ * Copy reads from the accumulator and writes to the accumulator or registers.
+ * Literal reads from data in the source code and writes to the accumulator or registers.
  *  
  * Read takes the form "r[length][read-type]>[write-type][dest]" e.g. r1l>i_ or r_b>s_
- * Copy takes the form "c>[write-type][dest]"                    e.g. c>field
+ * Copy takes the form "c>[write-type][dest]"                    e.g. c>rfield
+ * Literal looks like  "l[literal-id]>r[dest]"                    e.g. l1>r_ or l_>r_
  * Where,
  * * [length] is an integer (or '_' to use the integer in the accumulator)
  * * [read-type] is one of 'b', 'w' or 'l' (for byte, word or longword). 
@@ -60,12 +66,21 @@
  *   'u' unpacks a binary string into an (unsigned) PHP integer.
  *   'h' converts the binary string to a formatted hexdump using Hexdumper
  *   't' unpacks into a PHP integer (like 'i') and then formats it as a timestamp string.
- * * [dest] is either '_' for the accumulator, or the name of a key in the output.
+ * * [dest] is either '_' for the accumulator, or the name of a register / key in the output.
  * 
- * Call take the form "[label]." where [label] is any valid sub-routine name. Also, if
+ * Data for Literal is written into the XOUP file in the form .[literal-id] "[literal data]".
+ * All literal data must appear at the end of the XOUP file. Note that it begins and ends
+ * with a dot.
+ * 
+ * The ! register is a buffer which can be flushed to the log by writing an empty string to it.
+ * 
+ * Call takes the form "[label]." where [label] is any valid sub-routine name. Also, if
  * [label] contains a '_', the value from the accumulator will be substituted into the 
  * name. (e.g. "field_." could call sub-routine field10 if the accumulator contained 
- * integer 10). 
+ * integer 10).
+ * 
+ * If there is a subroutine called "trap", unknown subroutine names (such as computed names
+ * that don't exist) will jump to this.
  * 
  * @author ben
  */
@@ -77,6 +92,8 @@ class XoupInterpreter extends Unpacker
     protected $factory;
     
     protected $subs = array();
+    protected $data = array();
+    protected $out_buffer = '';
     
     public function __construct($program)
     {
@@ -87,7 +104,9 @@ class XoupInterpreter extends Unpacker
     public function parse($program)
     {
         $parser = $this->factory->newParser();
-        return $parser->parse($program);
+        $program = $parser->parse($program);
+        $this->data = $parser->getData();
+        return $program;
     }
     
     public function unpack($bin)
@@ -104,6 +123,10 @@ class XoupInterpreter extends Unpacker
     {
         if(!isset($this->subs[$sub])) 
         {
+            if(isset($this->subs['trap']))
+            {
+                return $this->sub('trap', $bin, $context, $acc, $ptr);
+            }
             throw new RuntimeException("No such subroutine $sub");
         }
             
@@ -114,10 +137,26 @@ class XoupInterpreter extends Unpacker
             
             foreach($this->subs[$sub] as $opindex => $op)
             {                
-                if(!preg_match('/^(?:([a-zA-Z0-9_]+)\.|(c|(r)(\d+|_|\*)(b|w|l))(>)(s|i|u|h|t|r|f)(_|([a-zA-Z][a-zA-Z0-9]*)))/', $op, $matches))
+                if(!preg_match(
+                    '/^ 
+                        (?P<callsub> [a-zA-Z0-9_]+)\. |
+                        (?P<copy>
+                            c | 
+                            (?P<read> r)(?P<readlength> \d+|_|\*)(?P<readwidth> b|w|l) | 
+                            (?P<lit>  l)(?P<litid>  [a-zA-Z0-9]+) 
+                        )
+                        (?P<write> >)
+                        (?P<writetype> s|i|u|h|t|r|f)
+                        (?P<writedest> 
+                        	_ | 
+                        	! | 
+                        	[a-zA-Z][a-zA-Z0-9]* 
+                      	)
+                     /x',
+                     $op, $matches))
                     throw new RuntimeException("Could not parse Unpacker op '$op' in sub '$sub'");
                                 
-                $callsub = $matches[1];
+                $callsub = $matches['callsub'];
                 if($callsub)
                 {
                     $callsub = str_replace('_', $acc, $callsub);
@@ -149,30 +188,37 @@ class XoupInterpreter extends Unpacker
                     continue;
                 }
                 
-                $copy_action = $matches[2];
+                $copy_action = $matches['copy'];
                 if($copy_action == 'c')
                 {
                     $read_action = $copy_action;
                 }
                 else
                 {
-                    $read_action = $matches[3];
-                    $read_length = $matches[4];
-                    $read_width = $matches[5];
-                    
-                    if('_' == $read_length)
+                    $read_action = $matches['read'];
+                    $read_length = $matches['readlength'];
+                    $read_width = $matches['readwidth'];
+                    if($read_action == 'r')
                     {
-                        $read_length = $acc;
+                        if('_' == $read_length)
+                        {
+                            $read_length = $acc;
+                        }
+                        elseif('*' == $read_length)
+                        {
+                            $read_length = strlen($bin) - $ptr;
+                        }
                     }
-                    elseif('*' == $read_length)
+                    else
                     {
-                        $read_length = strlen($bin) - $ptr;
+                        $read_action = $matches['lit'];
+                        $lit_id = $matches['litid'];
                     }
                 } 
         
-                $write_action = $matches[6];
-                $type = $matches[7];
-                $dest = $matches[8];
+                $write_action = $matches['write'];
+                $type = $matches['writetype'];
+                $dest = $matches['writedest'];
                                             
                 try
                 {
@@ -185,12 +231,16 @@ class XoupInterpreter extends Unpacker
                         case 'r':
                             if($ptr >= strlen($bin))
                             {
-                                // a read beyong the end of the binary is an exit condition
+                                // a read beyond the end of the binary is an exit condition
                                 return false;
                             }
                             $datum = $this->read($bin, $ptr, $read_length, $read_width);
                             break;
-                                                    
+                            
+                        case 'l':
+                            $datum = $this->data[$lit_id];
+                            break;
+
                         default:
                             throw new RuntimeException("Unknown read action '$read_action'. Expected 'r' or 'c'");                    
                     }
@@ -251,10 +301,17 @@ class XoupInterpreter extends Unpacker
     
     protected function write($datum, array &$context, &$acc, $type, $dest)
     {
+        $output_mode = false;
         if($dest == '_')
         {
             $to = ' -> ACC';
             $dest =& $acc;
+        }
+        elseif($dest == '!')
+        {
+            $to = ' -> OUT';
+            $dest = '';
+            $output_mode = true;
         }
         else
         {
@@ -298,8 +355,28 @@ class XoupInterpreter extends Unpacker
                 throw new RuntimeException("Unknown type '{$type}'.");                
         }
         
+        if($output_mode)
+        {
+            if($dest === '')
+            {
+                $this->flushBuffer();
+            }
+            else
+            {
+                $this->out_buffer .= $dest;
+            }
+        }
+        
         // echo "$dest $to\n";
     }
     
+    protected function flushBuffer()
+    {
+        L::level(L::INFO) &&
+            L::log(L::INFO, __CLASS__, $this->out_buffer,
+                array());
+                
+        $this->out_buffer = '';    
+    }
 
 }
