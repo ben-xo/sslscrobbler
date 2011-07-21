@@ -91,8 +91,8 @@ field53: # usually last field
 field64: string. c>rcommentname
 
 # known unknowns
-field16: ascii.
-field33: ascii.
+field16: ascii. # consume the field
+field33: ascii. # consume the field
 
 # literal data
 .EOS ""

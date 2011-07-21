@@ -25,7 +25,7 @@
  */
 
 /**
- * Holds the output of SSLHistoryDom::getNewTracksSince().
+ * Holds the output of SSLHistoryDom::getNewOrUpdatedTracksSince().
  *  
  * @author ben
  */

@@ -222,6 +222,9 @@ class SSLRealtimeModelDeck
         $my_tracks = array();
         foreach($diff->getTracks() as $track)
         {
+            // ignore track deletes; they don't affect playback modelling
+            if(!$track instanceof SSLTrack) continue;
+            
             /* @var $track SSLTrack */
             if( $track->getDeck() == $this->deck_number && 
                 $track->getRow()  >= $this->max_row )
