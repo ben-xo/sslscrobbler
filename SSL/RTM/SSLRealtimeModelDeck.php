@@ -270,8 +270,13 @@ class SSLRealtimeModelDeck
         {
             // There is now no track where there was one.
             
-            // make sure we're using the newest track object from the file
-            $this->track_stopped = $my_tracks[$starting_track->getRow()];
+            // Make sure we're using the newest track object from the file.
+            // If we've changed file since the last playing track (i.e. End Session or
+            // Serato restart) then this won't exist.
+            if(isset($my_tracks[$starting_track->getRow()]))
+            {
+                $this->track_stopped = $my_tracks[$starting_track->getRow()];
+            }
         }
         
         if(  $this->track && 
