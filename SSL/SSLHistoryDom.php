@@ -38,28 +38,42 @@ class SSLHistoryDom extends SSLDom
     }
     
     /**
-     * @return array of SSLAdatChunk
+     * @return array of SSLTrack
      */
     public function getTracks()
-    {        
+    {
+        $data = $this->getData();
         $tracks = array();
-        $deletes = array();
+        foreach($data as $datum)
+        {
+            if ($datum instanceof SSLTrack) 
+                $tracks[] = $datum;
+        }
+        return $tracks;
+    }
+    
+    /**
+     * @return array of SSLAdatChunk
+     */
+    public function getData()
+    {        
+        $data = array();
         foreach($this as $chunk)
         {
             if($chunk instanceof SSLOentChunk)
             {
-                $tracks[] = $chunk->getDataInto($this->track_factory->newTrack());
+                $data[] = $chunk->getDataInto($this->track_factory->newTrack());
             }
             
             elseif($chunk instanceof SSLOrenChunk)
             {
-                $tracks[] = $chunk->getDataInto(new SSLTrackDelete());
+                $data[] = $chunk->getDataInto(new SSLTrackDelete());
             }
         }
         
-        $tracks = $this->mergeRows($tracks); // this will re-key everything by row number
+        $data = $this->mergeRows($data); // this will re-key everything by row number
         
-        return $tracks;
+        return $data;
     }
     
     /** 
