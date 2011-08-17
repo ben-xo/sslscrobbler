@@ -27,28 +27,69 @@
 /**
  * During the main loop, the PluginManager receives tick events and fiddles with 
  * plugin settings (if they have been changed externally).
+ * 
+ * PluginManager is, itself, a plugin, as it is implemented by yielding a bunch of plugins
+ * that are actually just wrappers under the tight control of the PluginManager that are
+ * able to programmatically allow or inhibit events to various real plugins.
+ * 
  */
-class PluginManager implements TickObserver
+class PluginManager implements SSLPlugin, TickObserver
 {
     /**
-     * An array of references to all plugins that the HistoryReader is using
+     * This object implements all of the various SSLPlugin interfaces
+     * and is yielded to each of the observers. It acts as a thin layer
+     * that passes events directly through to the real plugins, with
+     * the added capability that it also acts as a switchbox that can
+     * enable and disable plugins.
      * 
-     * @var Array of SSLPlugin
+     * The main reason that PluginWrapper and PluginManager are separate classes
+     * is because PluginManager acts as a TickObserver in order to control
+     * plugins, but some of those plugins themselves may be TickObservers and
+     * may be wrapped by the PluginWrapper.
+     *  
+     * @var PluginWrapper
      */
-    protected $plugins = array();
+    protected $plugin_wrapper;
+    
+    public function __construct()
+    {
+        $this->plugin_wrapper = new PluginWrapper();
+    }
     
     public function addPlugin($id, SSLPlugin $plugin)
     {
-        $this->plugins[$id] = $plugin;
+        $this->plugin_wrapper->addPlugin($id, $plugin);
     }
     
     public function notifyTick($seconds)
     {
-        // we can use this space 
+        // TODO: enable or disable plugins using the PluginManagerWrapper
+        //       as a switchbox.
     }
     
     public function changeLogLevel($newlevel)
     {
         L::setLevel($newlevel);
+    }
+    
+    public function onSetup()
+    {
+        $this->plugin_wrapper->onSetup();
+    }
+    
+    public function onStart()
+    {
+        $this->plugin_wrapper->onStart();
+    }
+    
+    public function onStop()
+    {
+        $this->plugin_wrapper->onStop();
+    }
+    
+    public function getObservers()
+    {
+        // PluginWrapper is all of the observers.
+        return array($this->plugin_wrapper);
     }
 }

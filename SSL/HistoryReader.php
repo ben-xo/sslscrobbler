@@ -271,12 +271,13 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         echo "          --dump-type <x>:     Use a specific parser. Options are: sessionfile, sessionindex\n";
         echo "    -v or --verbosity <0-9>:   How much logging to output. (default: 0 (none))\n";
         echo "    -l or --log-file <file>:   Where to send logging output. (If this option is omitted, output goes to stdout)\n";
-        echo "    -r or --replay:            Replay the session file, one batch per tick. (Tick by pressing enter at the console)\n"; 
-        echo "    -c or --csv:               Parse the session file as a CSV, not a binary file, for testing purposes. Best used with --replay\n"; 
+        echo "          --replay:            Replay the session file, one batch per tick. (Tick by pressing enter at the console)\n"; 
+        echo "          --csv:               Parse the session file as a CSV, not a binary file, for testing purposes. Best used with --replay\n"; 
     }
     
     public function getNewFilename()
     {
+        if(isset($this->filename)) return $this->filename;
         return $this->getMostRecentFile($this->historydir, 'session');
     }
     
@@ -348,13 +349,13 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
                 continue;
             }
             
-            if($arg == '--replay' || $arg == '-r')
+            if($arg == '--replay')
             {
                 $this->replay = true;
                 continue;
             }
             
-            if($arg == '--csv' || $arg == '-c')
+            if($arg == '--csv')
             {
                 $this->csv = true;
                 continue;
@@ -412,7 +413,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
     {
         // Use the caching version via Dependency Injection. This means that all 
         // new SSLTracks created using a SSLTrackFactory will get a RuntimeCachingSSLTrack
-        // that nows how to ask the cache about expensive lookups (such as getID3 stuff). 
+        // that knows how to ask the cache about expensive lookups (such as getID3 stuff). 
         Inject::map('SSLTrackFactory', new SSLTrackCache());
         
         if($this->replay) 
@@ -447,7 +448,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         $npm = new NowPlayingModel();
         $sm = new ScrobbleModel();
 
-        // the ordering here is relatively important
+        // the ordering here is important. See the README.txt for a collaboration diagram.
         $ts->addTickObserver($pm);
         $ts->addTickObserver($hfm);
         $ts->addTickObserver($npm);
@@ -456,38 +457,26 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         $rtm->addTrackChangeObserver($npm);
         $rtm->addTrackChangeObserver($sm);
 
+        // add all pre-configured plugins to the PluginManager.
         foreach($this->plugins as $id => $plugin)
         {
+            /** @var SSLPlugin $plugin */
             $pm->addPlugin($id, $plugin);
-            
-            /* @var $plugin SSLPlugin */
-            $observers = $plugin->getObservers();
-            $oc = 0;
-            foreach($observers as $o)
-            {
-                if($o instanceof TickObserver)        { $ts->addTickObserver($o); $oc++; }
-                if($o instanceof SSLDiffObserver)     { $hfm->addDiffObserver($o); $oc++; }
-                if($o instanceof TrackChangeObserver) { $rtm->addTrackChangeObserver($o); $oc++; }
-                if($o instanceof NowPlayingObserver)  { $npm->addNowPlayingObserver($o); $oc++; }
-                if($o instanceof ScrobbleObserver)    { $sm->addScrobbleObserver($o); $oc++; }
-            }
-            
-            L::level(L::INFO) && 
-                L::log(L::INFO, __CLASS__, "%d: %s installed", 
-                    array($id, get_class($plugin)));
-                    
-            L::level(L::DEBUG) && 
-                L::log(L::DEBUG, __CLASS__, "%s brought %d observers to the table", 
-                    array(get_class($plugin), $oc));            
         }
+
+        $pw = $pm->getObservers();
+        
+        // add all of the PluginWrappers to the various places.
+        $ts->addTickObserver($pw[0]);
+        $hfm->addDiffObserver($pw[0]);
+        $rtm->addTrackChangeObserver($pw[0]);
+        $npm->addNowPlayingObserver($pw[0]);
+        $sm->addScrobbleObserver($pw[0]);
         
         $sh->install();
         //$ih->install();
 
-        foreach($this->plugins as $plugin)
-        {
-            $plugin->onStart();
-        }
+        $pm->onStart();
 
         // Tick tick tick. This only returns if a signal is caught
         $this->clock_is_ticking = true;
@@ -496,10 +485,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         
         $rtm->shutdown();
         
-        foreach($this->plugins as $plugin)
-        {
-            $plugin->onStop();
-        }
+        $pm->onStop();
     }
     
     protected function getMostRecentFile($from_dir, $type)
