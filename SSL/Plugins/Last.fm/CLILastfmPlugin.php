@@ -27,7 +27,7 @@
 class CLILastfmPlugin implements CLIPlugin
 {
     /**
-     * @var array of TwitterPlugin
+     * @var array of LastfmPlugin
      */
     protected $plugins = array();
 
