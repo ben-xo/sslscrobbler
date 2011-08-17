@@ -66,14 +66,18 @@ class XoupCompiler
         $output .= "class $class extends Unpacker\n{\n\n";
         $output .= "    private \$out_buffer = '';\n";
         $output .= "    private \$context = array();\n";
-        $output .= "    private \$data = array(\n";
-        foreach($this->data as $k => $v)
+        if(!empty($this->data))
         {
-            $k = addslashes($k);
-            $v = addslashes($v);
-            $output .= "        \"{$k}\" => \"{$v}\",\n";
+            $output .= "    private \$data = array(\n";
+            foreach($this->data as $k => $v)
+            {
+                $k = addslashes($k);
+                $v = addslashes($v);
+                $output .= "        \"{$k}\" => \"{$v}\",\n";
+            }
+            $output .= "    );\n";
         }
-        $output .= "    );\n\n";
+        $outpit .= "\n";
         $output .= "    public function unpack(\$bin)\n";
         $output .= "    {\n";
         $output .= "        \$binlen = strlen(\$bin);\n";
