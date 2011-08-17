@@ -337,6 +337,8 @@ in serial, in the order they are numbered.
 
 Thanks:
 * Jesse Ward (jw76), for beta testing and bug reports
+* Dan Etherington (baseonmars), Zac Stevens (zts) and Attila Gyorffy (djliquiduk)
+  for beta testing, feedback and moral support
 
 Shouts:
 * Last.fm for letting me use the back room of the office to broadcast loud radio
