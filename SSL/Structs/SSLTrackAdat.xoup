@@ -93,6 +93,7 @@ field64: string. c>rcommentname
 # known unknowns
 field16: ascii. # consume the field
 field33: ascii. # consume the field
+field39: int.   # consume the field
 
 # literal data
 .EOS ""
