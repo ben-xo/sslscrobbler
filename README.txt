@@ -278,7 +278,7 @@ in serial, in the order they are numbered.
       | A timer event (roughly every 2 seconds)
       |
       |-----------------------+-----------------------------------------+
-      v 1                     v 20                                      |
+      v 2                     v 1                                       |
 +-----------------------+ +---------------+                             |
 | SSLHistoryFileMonitor | | PluginManager |                             |
 +-----+-----------------+ +---------------+                             |
@@ -286,13 +286,13 @@ in serial, in the order they are numbered.
       | Diff event (when history file changes) as an                    |
       | <SSLHistoryDiffDom> object (which contains <SSLTrack>s)         |
       |                                                                 |
-      v 2                                                               |
-+------------------+  5. <TrackChangeEventList> from deck models sent   |
+      v 3                                                               |
++------------------+  6. <TrackChangeEventList> from deck models sent   |
 | SSLRealtimeModel +----------------------------------------------+     |
 +------------------+                                              |     |
       ^                                                           |     |
-      | 3. Sent: Diff event (delegated to correct deck model)     |     |
-      | 4. Received: <TrackChangeEvent>s (start, stop, update)    |     |
+      | 4. Sent: Diff event (delegated to correct deck model)     |     |
+      | 5. Received: <TrackChangeEvent>s (start, stop, update)    |     |
       |                                                           |     |
       |---------------+------------ . . . --------------+         |     |
       v               v    decks created as necessary   v         |     |
@@ -304,7 +304,7 @@ in serial, in the order they are numbered.
    +----+--------------------------+-------------------------+----+     |
    |    | Print track changes      | Decide if a stopped     |       +--+
    |    | to console               | track should scrobble   |       |
-   |    v 6                        v 11                      v 7     v 16
+   |    v 7                        v 12                      v 8     v 17
    |  +----------------------+   +---------------+    +-----------------+ 
    |  | RealtimeModelPrinter |   | ScrobbleModel |    | NowPlayingModel |
    |  +----------------------+   +-+-------------+    +--------------+--+
@@ -317,18 +317,18 @@ in serial, in the order they are numbered.
    |                               .                                    .
    |                               |                                    |
    |                               |                                    |
-   |                               | 14  +---------------------+  10,19 |
+   |                               | 15  +---------------------+  11,20 |
    |                               +---->| SSLScrobblerAdaptor |<-------+ 
    |                               |     +---------------------+        |
    |                               |                                    |
-   |                               | 13  +---------------------+   9,18 |
+   |                               | 14  +---------------------+  10,19 |
    |                               +---->| SSLTwitterAdaptor   |<-------+
    |                               |     +---------------------+        |
    |                               |                                    |
-   |                               | 12  +---------------------+   8,17 |
+   |                               | 13  +---------------------+   9,18 |
    |                               +---->| SSLGrowlRenderer    |<-------+
    |                                     +---------------------+
-   | Print track changes via Growl         ^ 15
+   | Print track changes via Growl         ^ 16
    +---------------------------------------+
    
 
