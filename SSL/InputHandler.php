@@ -24,6 +24,16 @@
  *  THE SOFTWARE.
  */
 
+/**
+ * Handler designed to accept keyboard commands to allow SSL to be quit
+ * gracefully from the console, for example when Ctrl-C isn't graceful
+ * because your PHP doesn't have the PCNTL extension present.
+ * 
+ * NOTE: this is NOT cross platform because PHP on Windows sucks. So,
+ * this is not active by default.
+ * 
+ * @author ben
+ */
 class InputHandler
 {
     protected $should_exit = false;
