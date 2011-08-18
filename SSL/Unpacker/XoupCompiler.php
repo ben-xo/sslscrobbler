@@ -77,7 +77,7 @@ class XoupCompiler
             }
             $output .= "    );\n";
         }
-        $outpit .= "\n";
+        $output .= "\n";
         $output .= "    public function unpack(\$bin)\n";
         $output .= "    {\n";
         $output .= "        \$binlen = strlen(\$bin);\n";
