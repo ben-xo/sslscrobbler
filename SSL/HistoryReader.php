@@ -195,7 +195,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
                         return;
                         
                     default:
-                        throw new RuntimeException('Unknown dump type');
+                        throw new RuntimeException('Unknown dump type. Try sessionfile, sessionindex');
                 }
             }
 

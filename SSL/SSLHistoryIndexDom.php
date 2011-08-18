@@ -27,24 +27,39 @@
 class SSLHistoryIndexDom extends SSLDom
 {
     /**
-     * @return array of SSLAdatChunk
+     * @return array of SSLSession
      */
     public function getSessions()
     {
+        $data = $this->getData();
         $sessions = array();
+        foreach($data as $datum)
+        {
+            if ($datum instanceof SSLSession) 
+                $sessions[] = $datum;
+        }
+        return $sessions;
+    }
+    
+    /**
+     * @return array of SSLAdatChunk
+     */
+    public function getData()
+    {        
+        $data = array();
         foreach($this as $chunk)
         {
             if($chunk instanceof SSLOcolChunk)
             {
-//                $chunk->getDataInto($this->track_factory->newTrack());
+               // TODO
             }
             
             elseif($chunk instanceof SSLOsesChunk)
             {
-                $sessions[] = $chunk->getDataInto(new SSLSession());
+                $data[] = $chunk->getDataInto(new SSLSession());
             }
         }
         
-        return $sessions;
-    }    
+        return $data;
+    }
 }
