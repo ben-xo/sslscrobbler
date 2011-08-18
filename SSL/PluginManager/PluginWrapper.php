@@ -57,64 +57,7 @@ class PluginWrapper implements TickObservable, TickObserver,
     
     public function addPlugin($id, SSLPlugin $plugin)
     {
-        $this->plugins[$id] = $plugin;
-        $observers = $plugin->getObservers();
-        $oc = 0; // observer count
-        foreach($observers as $o)
-        {
-            // we wrap every observer in a 'WithId' version
-            // of the same observer which we can later use
-            // to selectively pull matching observers back
-            // out of the list.
-            
-            if($o instanceof TickObserver)        
-            {
-                $this->addTickObserver(
-                    new TickObserverWithId($o, $id)
-                );
-                $oc++;
-            }
-            
-            if($o instanceof SSLDiffObserver)     
-            {
-                $this->addDiffObserver(
-                    new SSLDiffObserverWithId($o, $id)
-                );
-                $oc++;
-            }
-            
-            if($o instanceof TrackChangeObserver) 
-            {
-                $this->addTrackChangeObserver(
-                    new TrackChangeObserverWithId($o, $id)
-                );
-                $oc++;
-            }
-            
-            if($o instanceof NowPlayingObserver)  
-            {
-                $this->addNowPlayingObserver(
-                    new NowPlayingObserverWithId($o, $id)
-                );
-                $oc++;
-            }
-            
-            if($o instanceof ScrobbleObserver)
-            {
-                $this->addScrobbleObserver(
-                    new ScrobbleObserverWithId($o, $id)
-                );
-                $oc++;
-            }
-        }
-        
-        L::level(L::INFO) && 
-            L::log(L::INFO, __CLASS__, "%d: %s installed", 
-                array($id, get_class($plugin)));
-                
-        L::level(L::DEBUG) && 
-            L::log(L::DEBUG, __CLASS__, "%s brought %d observers to the table", 
-                array(get_class($plugin), $oc));            
+        $this->plugins[$id] = $plugin;        
     }
     
     public function onSetup()
@@ -127,6 +70,8 @@ class PluginWrapper implements TickObservable, TickObserver,
     
     public function onStart()
     {
+        $this->addAllObserversFromPlugins();
+        
         foreach($this->plugins as $plugin)
         {
             $plugin->onStart();
@@ -240,5 +185,69 @@ class PluginWrapper implements TickObservable, TickObserver,
         {
             $t->notifyScrobble($track);
         }
+    }
+    
+    protected function addAllObserversFromPlugins()
+    {
+        foreach($this->plugins as $id => $plugin)
+        {
+            $observers = $plugin->getObservers();
+            $oc = 0; // observer count
+            foreach($observers as $o)
+            {
+                // we wrap every observer in a 'WithId' version
+                // of the same observer which we can later use
+                // to selectively pull matching observers back
+                // out of the list.
+                
+                if($o instanceof TickObserver)        
+                {
+                    $this->addTickObserver(
+                        new TickObserverWithId($o, $id)
+                    );
+                    $oc++;
+                }
+                
+                if($o instanceof SSLDiffObserver)     
+                {
+                    $this->addDiffObserver(
+                        new SSLDiffObserverWithId($o, $id)
+                    );
+                    $oc++;
+                }
+                
+                if($o instanceof TrackChangeObserver) 
+                {
+                    $this->addTrackChangeObserver(
+                        new TrackChangeObserverWithId($o, $id)
+                    );
+                    $oc++;
+                }
+                
+                if($o instanceof NowPlayingObserver)  
+                {
+                    $this->addNowPlayingObserver(
+                        new NowPlayingObserverWithId($o, $id)
+                    );
+                    $oc++;
+                }
+                
+                if($o instanceof ScrobbleObserver)
+                {
+                    $this->addScrobbleObserver(
+                        new ScrobbleObserverWithId($o, $id)
+                    );
+                    $oc++;
+                }
+            }
+            
+            L::level(L::INFO) && 
+                L::log(L::INFO, __CLASS__, "%d: %s installed", 
+                    array($id, get_class($plugin)));
+                    
+            L::level(L::DEBUG) && 
+                L::log(L::DEBUG, __CLASS__, "%s brought %d observers to the table", 
+                    array(get_class($plugin), $oc));
+        }         
     }
 }

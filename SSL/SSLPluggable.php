@@ -31,13 +31,5 @@ interface SSLPluggable
      * 
      * @param SSLPlugin $plugin
      */
-    public function addPlugin(SSLPlugin $plugin);
-    
-    
-    /**
-     * Disable a plugin.
-     * 
-     * @param int $id
-     */
-    public function removePlugin($id);
+    public function addPlugin(SSLPlugin $plugin);    
 }

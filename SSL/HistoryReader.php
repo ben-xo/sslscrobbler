@@ -35,20 +35,18 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
     protected $csv = false;
     protected $log_file = '';
     protected $verbosity = L::INFO;
-    
-    /**
-     * Plugins that can return Observers.
-     * 
-     * @var array of SSLPlugin
-     */
-    protected $plugins = array();
-    
+        
     /**
      * Plugins that can return SSLPlugins, configured from the command line
      * 
      * @var array of SSLPlugin
      */
     protected $cli_plugins = array();
+    
+    /**
+     * @var PluginManager
+     */
+    protected $plugin_manager;
     
     protected $override_verbosity = array();
     
@@ -57,15 +55,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
     protected $appname;
     protected $filename;
     protected $historydir;
-    
-    protected $max_plugin_id = 0;
-    
-    /**
-     * This is set to true just as we enter the main event loop, and then 
-     * unset after we leave the loop. 
-     */
-    protected $clock_is_ticking = false;
-        
+                
     /**
      * @var Logger
      */
@@ -85,48 +75,23 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
     }
 
     /**
-     * Enable a plugin.
-     * 
-     * @param SSLPlugin $plugin
-     */
-    public function addPlugin(SSLPlugin $plugin)
-    {
-        if($this->clock_is_ticking) 
-            $plugin->onStart();
-        
-        $this->plugins[$this->max_plugin_id] = $plugin;
-        
-        L::level(L::DEBUG) && 
-            L::log(L::DEBUG, __CLASS__, "added %s plugin with id %d", 
-                array(get_class($plugin), $this->max_plugin_id));
-        
-        $this->max_plugin_id++;
-    }
-    
-    /**
-     * Disable a plugin.
-     * 
-     * @param int $id
-     */
-    public function removePlugin($id)
-    {
-        if($this->clock_is_ticking) 
-            $this->plugins[$id]->onStop();
-            
-        unset($this->plugins[$id]);
-    }
-    
-    /**
      * Enable a CLI plugin.
      * 
      * @param CLIPlugin $plugin
      */
     public function addCLIPlugin(CLIPlugin $plugin)
     {
-        if($this->clock_is_ticking) 
-            throw new RuntimeException("There's no point adding a CLI Plugin while the app is running.");
-        
         $this->cli_plugins[] = $plugin;
+    }
+
+    public function addPlugin(SSLPlugin $plugin)
+    {
+        $this->plugin_manager->addPlugin($plugin);
+    }
+    
+    public function __construct()
+    {
+        $this->plugin_manager = new PluginManager();
     }
     
     /**
@@ -169,15 +134,11 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             foreach($this->cli_plugins as $plugin)
             {
                 /* @var $plugin CLIPlugin */
-                $plugin->addPluginsTo($this);
+                $plugin->addPluginsTo($this->plugin_manager);
             }
             $this->cli_plugins = array();
             
-            foreach($this->plugins as $plugin)
-            {
-                /* @var $plugin SSLPlugin */
-                $plugin->onSetup();
-            }
+            $this->plugin_manager->onSetup();
             
             $filename = $this->filename;
             
@@ -438,15 +399,6 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             //$hfm = new SSLHistoryFileDiffMonitor($filename);
         }
 
-        $pm = new PluginManager();
-        
-        // add all pre-configured plugins to the PluginManager.
-        foreach($this->plugins as $id => $plugin)
-        {
-            /** @var SSLPlugin $plugin */
-            $pm->addPlugin($id, $plugin);
-        }
-        
         $sh = new SignalHandler();
         //$ih = new InputHandler();
 
@@ -456,7 +408,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         $sm = new ScrobbleModel();
 
         // the ordering here is important. See the README.txt for a collaboration diagram.
-        $ts->addTickObserver($pm);
+        $ts->addTickObserver($this->plugin_manager);
         $ts->addTickObserver($hfm);
         $ts->addTickObserver($npm);
         $hfm->addDiffObserver($rtm);
@@ -465,7 +417,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         $rtm->addTrackChangeObserver($sm);
 
         // get the PluginWrapper that wraps all other plugins.
-        $pw = $pm->getObservers();
+        $pw = $this->plugin_manager->getObservers();
         
         // add all of the PluginWrappers to the various places.
         $ts->addTickObserver($pw[0]);
@@ -477,16 +429,14 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         $sh->install();
         //$ih->install();
 
-        $pm->onStart();
+        $this->plugin_manager->onStart();
 
         // Tick tick tick. This only returns if a signal is caught
-        $this->clock_is_ticking = true;
         $ts->startClock($this->sleep, $sh/*, $ih*/);
-        $this->clock_is_ticking = false;
         
         $rtm->shutdown();
         
-        $pm->onStop();
+        $this->plugin_manager->onStop();
     }
     
     protected function getMostRecentFile($from_dir, $type)

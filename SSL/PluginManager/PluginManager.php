@@ -33,7 +33,7 @@
  * able to programmatically allow or inhibit events to various real plugins.
  * 
  */
-class PluginManager implements SSLPlugin, TickObserver
+class PluginManager implements SSLPluggable, SSLPlugin, TickObserver
 {
     /**
      * This object implements all of the various SSLPlugin interfaces
@@ -51,16 +51,43 @@ class PluginManager implements SSLPlugin, TickObserver
      */
     protected $plugin_wrapper;
     
+    protected $max_plugin_id = 0;
+    
+    protected $clock_is_ticking = false;
+    protected $setup_done = false;
+    
     public function __construct()
     {
         $this->plugin_wrapper = new PluginWrapper();
     }
     
-    public function addPlugin($id, SSLPlugin $plugin)
+    /**
+     * Enable a plugin.
+     * 
+     * HistoryReader calls this indirectly when it asks CLIPlugins to add their
+     * SSLPlugins to the plugin chain.
+     * 
+     * @param SSLPlugin $plugin
+     */
+    public function addPlugin(SSLPlugin $plugin)
     {
-        $this->plugin_wrapper->addPlugin($id, $plugin);
+        // onSetup for late added plugins
+        if($this->setup_done)
+            $plugin->onSetup();
+
+        // onStart for late added plugins
+        if($this->clock_is_ticking) 
+            $plugin->onStart();
+
+        $this->plugin_wrapper->addPlugin($this->max_plugin_id, $plugin);
+
+        L::level(L::DEBUG) && 
+            L::log(L::DEBUG, __CLASS__, "added %s plugin with id %d", 
+                array(get_class($plugin), $this->max_plugin_id));
+
+        $this->max_plugin_id++;
     }
-    
+            
     public function notifyTick($seconds)
     {
         // TODO: enable or disable plugins using the PluginManagerWrapper
@@ -75,15 +102,18 @@ class PluginManager implements SSLPlugin, TickObserver
     public function onSetup()
     {
         $this->plugin_wrapper->onSetup();
+        $this->setup_done = true;
     }
     
     public function onStart()
     {
         $this->plugin_wrapper->onStart();
+        $this->clock_is_ticking = true;
     }
     
     public function onStop()
     {
+        $this->clock_is_ticking = false;
         $this->plugin_wrapper->onStop();
     }
     
