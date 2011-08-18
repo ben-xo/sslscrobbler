@@ -35,7 +35,10 @@
  * is because PluginManager acts as a TickObserver in order to control
  * plugins, but some of those plugins themselves may be TickObservers and
  * may be wrapped by the PluginWrapper.
- * 
+ *
+ * PluginWrapper instances are not intended to be created by anything other
+ * than PluginManager.
+ *
  * @author ben
  */
 class PluginWrapper implements TickObservable, TickObserver,
@@ -59,11 +62,50 @@ class PluginWrapper implements TickObservable, TickObserver,
         $oc = 0; // observer count
         foreach($observers as $o)
         {
-            if($o instanceof TickObserver)        { $this->addTickObserver($o); $oc++; }
-            if($o instanceof SSLDiffObserver)     { $this->addDiffObserver($o); $oc++; }
-            if($o instanceof TrackChangeObserver) { $this->addTrackChangeObserver($o); $oc++; }
-            if($o instanceof NowPlayingObserver)  { $this->addNowPlayingObserver($o); $oc++; }
-            if($o instanceof ScrobbleObserver)    { $this->addScrobbleObserver($o); $oc++; }
+            // we wrap every observer in a 'WithId' version
+            // of the same observer which we can later use
+            // to selectively pull matching observers back
+            // out of the list.
+            
+            if($o instanceof TickObserver)        
+            {
+                $this->addTickObserver(
+                    new TickObserverWithId($o, $id)
+                );
+                $oc++;
+            }
+            
+            if($o instanceof SSLDiffObserver)     
+            {
+                $this->addDiffObserver(
+                    new SSLDiffObserverWithId($o, $id)
+                );
+                $oc++;
+            }
+            
+            if($o instanceof TrackChangeObserver) 
+            {
+                $this->addTrackChangeObserver(
+                    new TrackChangeObserverWithId($o, $id)
+                );
+                $oc++;
+            }
+            
+            if($o instanceof NowPlayingObserver)  
+            {
+                $this->addNowPlayingObserver(
+                    new NowPlayingObserverWithId($o, $id)
+                );
+                $oc++;
+            }
+            
+            if($o instanceof ScrobbleObserver)
+            {
+                $this->addScrobbleObserver(
+                    new ScrobbleObserverWithId($o, $id)
+                );
+                $oc++;
+            }
         }
         
         L::level(L::INFO) && 
@@ -106,28 +148,56 @@ class PluginWrapper implements TickObservable, TickObserver,
     protected $so = array(); // ScrobbleObservers
 
     /* The observable part */
+    
+    /*
+     * In order to conform to the interfaces, any of the standard observers
+     * can be added. However, typically observers are only added here from
+     * $this->addPlugin(), which will wrap all Observers in their WithId
+     * equivalent so that we can later extract them again.
+     * 
+     * Adding observers directly from the outside is not recommended.
+     * Better to add most observers directly to the respective original 
+     * event source.
+     * 
+     */
+    
     public function addTickObserver(TickObserver $o)
     {
+        if(!$o instanceof PluginWithId)
+            throw new RuntimeException("PluginManager observers must all be instances of PluginWithId");
+            
         $this->to[] = $o;
     }
     
     public function addDiffObserver(SSLDiffObserver $o)
     {
+        if(!$o instanceof PluginWithId)
+            throw new RuntimeException("PluginManager observers must all be instances of PluginWithId");
+            
         $this->do[] = $o;
     }
     
     public function addTrackChangeObserver(TrackChangeObserver $o)
     {
+        if(!$o instanceof PluginWithId)
+            throw new RuntimeException("PluginManager observers must all be instances of PluginWithId");
+            
         $this->tco[] = $o;
     }
     
     public function addNowPlayingObserver(NowPlayingObserver $o)
     {
+        if(!$o instanceof PluginWithId)
+            throw new RuntimeException("PluginManager observers must all be instances of PluginWithId");
+            
         $this->npo[] = $o;
     }
     
     public function addScrobbleObserver(ScrobbleObserver $o)
     {
+        if(!$o instanceof PluginWithId)
+            throw new RuntimeException("PluginManager observers must all be instances of PluginWithId");
+            
         $this->so[] = $o;
     }
     
