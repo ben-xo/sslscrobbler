@@ -240,14 +240,8 @@ position of the songs, so it has to guess this.
  
 5. FOR DEVELOPERS
 ===================
-
-5.1 Unit Tests
------------------
-
-Run with phpunit:
- * phpunit --bootstrap Tests/bootstrap.php Tests
  
-5.2 Plugins
+5.1 Plugins
 -----------------
 
 It's quite easy to write plugins for SSLScrobbler. Examine the examples in the 
@@ -264,12 +258,51 @@ The following observer types are currently provided:
 * NowPlayingObserver - triggered when a track becomes the 'Now Playing' track
 * ScrobbleObserver - triggered when a track is definitively scrobble-able. 
 
+5.2 Unit Tests
+-----------------
+
+Run with phpunit:
+ * phpunit --bootstrap Tests/bootstrap.php Tests
+
 5.3 Architecture
 -----------------
 
-While running, the SSLScrobbler engine is event driven. Here are the main 
-object collaborations and the ways they communicate. The interactions happen
-in serial, in the order they are numbered.
+5.3.1 Runtime Model
+....................
+
+While running, the SSLScrobbler engine is event driven (see 5.1 for the list
+of events). Here are the main object collaborations and the ways they 
+communicate. The interactions happen in serial, in the order they are numbered.
+
+The following diagram shows how the running app is strung together. 
+HistoryReader sets these objects up in its monitor() method, then asks
+the TickSource to start ticking. Every tick, the following happens:
+
+1. The TickSource sends ticks (every 2 seconds or so) to 
+   SSLHistoryFileMonitor, which attempts to read from the current
+   history file. 
+2. If there is new info available in the file, the SSLHistoryFileMonitor
+   sends a diff event (in the form of an SSLHistoryDiffDom, which in turn
+   contains SSLTracks) to the SSLRealtimeModel.
+3. The SSLRealtimeModel models what Serato is doing - i.e. which tracks
+   are currently on each deck. It inspects the SSLHistoryDiffDoms that it
+   receives to work out if a new track has been started, or a track has been
+   stopped.
+4. If a track has changed (started or stopped), the SSLRealtimeModel then
+   notifies the NowPlayingModel, ScrobbleModel and RealtimeModelPrinter.
+5. The RealtimeModelPrinter prints this info to the console.
+6. The NowPlayingModel takes info on track changes to work out which track
+   has been on the deck long enough to be considered "Now Playing".
+7. The ScrobbleModel takes info on track changes to work out which tracks
+   can be scrobbled.
+8. Whenever the "Now Playing" track changes (or track play stops entirely),
+   the NowPlayingModel sends events - mostly to plugins such as the 
+   Twitter plugin, Scrobbler, and Growl notifier.
+9. Likewise, when a track becomes Scrobbleable, the ScrobbleModel sends 
+   events to the Twitter, Scrobble and Growl plugins, etc.
+10. The various plugins then do their bits such as posting to Twitter.
+
+Here's the diagram:
 
 +------------+
 | TickSource |  
@@ -304,7 +337,7 @@ in serial, in the order they are numbered.
    +----+--------------------------+-------------------------+----+     |
    |    | Print track changes      | Decide if a stopped     |       +--+
    |    | to console               | track should scrobble   |       |
-   |    v 7                        v 12                      v 8     v 17
+   |    v 7                        v 12                      v 8     v 16
    |  +----------------------+   +---------------+    +-----------------+ 
    |  | RealtimeModelPrinter |   | ScrobbleModel |    | NowPlayingModel |
    |  +----------------------+   +-+-------------+    +--------------+--+
@@ -317,20 +350,154 @@ in serial, in the order they are numbered.
    |                               .                                    .
    |                               |                                    |
    |                               |                                    |
-   |                               | 15  +---------------------+  11,20 |
+   |                               | 14  +---------------------+  11,19 |
    |                               +---->| SSLScrobblerAdaptor |<-------+ 
    |                               |     +---------------------+        |
    |                               |                                    |
-   |                               | 14  +---------------------+  10,19 |
-   |                               +---->| SSLTwitterAdaptor   |<-------+
+   |                               |     +---------------------+  10,18 |
+   |                               |     | SSLTwitterAdaptor   |<-------+
    |                               |     +---------------------+        |
    |                               |                                    |
-   |                               | 13  +---------------------+   9,18 |
+   |                               | 13  +---------------------+   9,17 |
    |                               +---->| SSLGrowlRenderer    |<-------+
    |                                     +---------------------+
-   | Print track changes via Growl         ^ 16
+   | Print track changes via Growl         ^ 15
    +---------------------------------------+
    
+   
+Various things have been omitted from this diagram, in particular the 
+details of how the PluginManager works. The PluginManager is capable of
+activating, deactivating and reconfiguring plugins in the event chain
+at run time, and is used for configuration on-the-fly. It does this
+by inserting a layer between each of the observers which keeps track of the
+various evebt observers.
+
+5.3.2 ScratchLive File Format Model
+....................................
+
+ScratchLive stores most of its data in a chunked format, where a chunk header 
+is 8-bytes (4-byte identifier and a 4-byte length) followed by <length> bytes. 
+Chunks themselves can contain other chunks. Within these sub-chunks are 
+fields, starting with a 4-byte field ID. The meaning of the fields depends on
+the chunk type. Some fields contain fixed-length data, others contain a 4-byte
+length and then that many bytes of variable-length data.
+
+Whilst exploring the file format, I invented an unpacking language called
+XOUP (short for "XO's UnPacker"). XOUP is interpretted with XoupInterpreter or
+compiled into Unpacker classes with XoupCompiler (all this happens 
+automatically).
+
+ScratchLiveScrobbler, so far, recognises 7 chunk types. Some of these are 
+"compound chunks" (that is, they contain other chunks), and others contain data 
+("struct chunks"):
+
+Compound Chunks:
+* OENT - Session files have these, each containing a single ADAT for a track
+* OREN - Session files have these, each containing a single UENT for a deletion
+* OSES - The session index has these, each with a single ADAT for a session
+* OCOL - The session index file has these each with UCOK and UCOW sub-chunks.
+
+Struct Chunks:
+* VRSN
+  - Header chunk, contains a file format string. Occurs in all files
+  - Parsed by SSLVrsnChunk into an SSLVersion object using SSLVersionVrsn.xoup
+  
+* ADAT - two of these, OENT ADAT and OSES ADAT
+  - Data chunk, contains fields. Fields meaning file format dependent
+  1 OENT version, parsed by SSLAdatChunk into an SSLTrack object 
+    using SSLTrackAdat.xoup
+  2 OSES version, parsed by SSLAdatChunk into an SSLSession object 
+    using SSLSessionAdat.xoup
+    
+* UENT
+  - Event chunk, seems to contain just an identifier referring to an OENT ADAT.
+  - Parsed by SSLUentChunk into an SSLTrackDelete object 
+    using SSLTrackDeleteUent.xoup
+  - These occur transiently in session files when an entry is deleted from the
+    playlist. ScratchLive seems to resolve these and rewrite the history file
+    at shut-down time.
+    
+* UCOK and UCOW
+  - I believe these represent column ordering and column width in the 
+    ScratchLive history pane.
+  - I have not written parsers for these yet.
+
+Unknown chunk types are safely ignored (modelled by SSLUnknownChunk - in
+--dump mode, these will provide a pretty hexdump to aid with implementation). 
+
+The ScratchLive crate file ('database v2') is also in this format, but I have 
+not modelled any of it. Have fun exploring these files using --dump :)
+
+5.3.2.1 Example content
+........................
+
+Here's an example of what --dump might output on a history file:
+
+CHUNK<vrsn>: 
+	>>> 1.0/Serato Scratch LIVE Review
+
+CHUNK<oent>: 
+		CHUNK<adat>: 
+			row => 3137
+			fullpath => /Users/ben/04 - )E!3( - Bad Company - Grunge 2.mp3
+			location => /Users/ben
+			filename => 04 - )E!3( - Bad Company - Grunge 2.mp3
+			title => Grunge 2
+			artist => )E|3( - Bad Company
+			album => Book Of The Bad (CD2)
+			genre => Drum & Bass
+			length => 06:25.31
+			bitrate => 320.0kbps
+			comments => Track 4
+			lang => eng
+			year => 2001
+			starttime => 1272398586
+			endtime => 1272398677
+			deck => 2
+			playtime => 91
+			sessionId => 3135
+			played => 0
+			added => 0
+			updatedAt => 1272398677
+
+The same data, without the XOUP parser, would have printed this:
+
+CHUNK<oent>: 
+		CHUNK<adat>: 
+			0000 0001 0000 0004 0000 0c41 0000 0002 0000 00dc 002f 0055 0073 0065 0072 0073 ...1...4..CA...2...!./.U.s.e.r.s
+			002f 0062 0065 006e 002f 0044 006f 0077 006e 006c 006f 0061 0064 0073 002f 0042 ./.b.e.n./.D.o.w.n.l.o.a.d.s./.B
+			0043 0020 0052 0065 0063 006f 0072 0064 0069 006e 0067 0073 002f 0042 0043 0052 .C. .R.e.c.o.r.d.i.n.g.s./.B.C.R
+			0055 004b 0045 0050 0043 0044 0030 0030 0031 0020 002d 0020 0042 006f 006f 006b .U.K.E.P.C.D.0.0.1. .-. .B.o.o.k
+			0020 006f 0066 0020 0054 0068 0065 0020 0042 0061 0064 002f 0043 0044 0032 002f . .o.f. .T.h.e. .B.a.d./.C.D.2./
+			0030 0034 0020 002d 0020 0029 0045 0021 0033 0028 0020 002d 0020 0042 0061 0064 .0.4. .-. .).E.!.3.(. .-. .B.a.d
+			0020 0043 006f 006d 0070 0061 006e 0079 0020 002d 0020 0047 0072 0075 006e 0067 . .C.o.m.p.a.n.y. .-. .G.r.u.n.g
+			0065 0020 0032 002e 006d 0070 0033 0000 0000 0003 0000 008c 002f 0055 0073 0065 .e. .2...m.p.3.....3...!./.U.s.e
+			0072 0073 002f 0062 0065 006e 002f 0044 006f 0077 006e 006c 006f 0061 0064 0073 .r.s./.b.e.n./.D.o.w.n.l.o.a.d.s
+			002f 0042 0043 0020 0052 0065 0063 006f 0072 0064 0069 006e 0067 0073 002f 0042 ./.B.C. .R.e.c.o.r.d.i.n.g.s./.B
+			0043 0052 0055 004b 0045 0050 0043 0044 0030 0030 0031 0020 002d 0020 0042 006f .C.R.U.K.E.P.C.D.0.0.1. .-. .B.o
+			006f 006b 0020 006f 0066 0020 0054 0068 0065 0020 0042 0061 0064 002f 0043 0044 .o.k. .o.f. .T.h.e. .B.a.d./.C.D
+			0032 0000 0000 0004 0000 0050 0030 0034 0020 002d 0020 0029 0045 0021 0033 0028 .2.....4...P.0.4. .-. .).E.!.3.(
+			0020 002d 0020 0042 0061 0064 0020 0043 006f 006d 0070 0061 006e 0079 0020 002d . .-. .B.a.d. .C.o.m.p.a.n.y. .-
+			0020 0047 0072 0075 006e 0067 0065 0020 0032 002e 006d 0070 0033 0000 0000 0006 . .G.r.u.n.g.e. .2...m.p.3.....6
+			0000 0012 0047 0072 0075 006e 0067 0065 0020 0032 0000 0000 0007 0000 0028 0029 ...I.G.r.u.n.g.e. .2.....7...(.)
+			0045 007c 0033 0028 0020 002d 0020 0042 0061 0064 0020 0043 006f 006d 0070 0061 .E.|.3.(. .-. .B.a.d. .C.o.m.p.a
+			006e 0079 0000 0000 0008 0000 002c 0042 006f 006f 006b 0020 004f 0066 0020 0054 .n.y.....8...,.B.o.o.k. .O.f. .T
+			0068 0065 0020 0042 0061 0064 0020 0028 0043 0044 0032 0029 0000 0000 0009 0000 .h.e. .B.a.d. .(.C.D.2.).....9..
+			0018 0044 0072 0075 006d 0020 0026 0020 0042 0061 0073 0073 0000 0000 000a 0000 .O.D.r.u.m. .&. .B.a.s.s.....A..
+			0012 0030 0036 003a 0032 0035 002e 0033 0031 0000 0000 000d 0000 0014 0033 0032 .I.0.6.:.2.5...3.1.....D...K.3.2
+			0030 002e 0030 006b 0062 0070 0073 0000 0000 0011 0000 0010 0054 0072 0061 0063 .0...0.k.b.p.s.....H...G.T.r.a.c
+			006b 0020 0034 0000 0000 0012 0000 0004 656e 6700 0000 0017 0000 000a 0032 0030 .k. .4.....I...4eng....N...A.2.0
+			0030 0031 0000 0000 001c 0000 0004 4bd7 42fa 0000 001d 0000 0004 4bd7 4355 0000 .0.1.....S...4K!B!...T...4K!CU..
+			001f 0000 0004 0000 0002 0000 0021 0000 0001 0000 0000 2d00 0000 0400 0000 5b00 .V...4...2...!...1....-...4...[.
+			0000 3000 0000 0400 000c 3f00 0000 3200 0000 0100 0000 0034 0000 0001 0000 0000 ..0...4..C?...2...1....4...1....
+			3500 0000 044b d743 55                                                          5...4K!CU
+
+(All of the field names in the properly parsed output were worked out with 
+educated guess-work).
+
+Here's how the software side of it is strung together: (TODO)
+
+
 
 6. THANKS & SHOUTS
 ====================

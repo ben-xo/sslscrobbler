@@ -186,6 +186,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
 
                     case 'sessionindex':
                         /* @var $factory SSLRepo */
+                        /* @var $tree SSLHistoryIndexDom */
                         $factory = Inject::the(new SSLRepo());
                         $parser = $factory->newParser( $factory->newHistoryIndexDom() );
                         $tree = $parser->parse($filename);
