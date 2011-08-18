@@ -440,6 +440,13 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
 
         $pm = new PluginManager();
         
+        // add all pre-configured plugins to the PluginManager.
+        foreach($this->plugins as $id => $plugin)
+        {
+            /** @var SSLPlugin $plugin */
+            $pm->addPlugin($id, $plugin);
+        }
+        
         $sh = new SignalHandler();
         //$ih = new InputHandler();
 
@@ -457,13 +464,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         $rtm->addTrackChangeObserver($npm);
         $rtm->addTrackChangeObserver($sm);
 
-        // add all pre-configured plugins to the PluginManager.
-        foreach($this->plugins as $id => $plugin)
-        {
-            /** @var SSLPlugin $plugin */
-            $pm->addPlugin($id, $plugin);
-        }
-
+        // get the PluginWrapper that wraps all other plugins.
         $pw = $pm->getObservers();
         
         // add all of the PluginWrappers to the various places.
