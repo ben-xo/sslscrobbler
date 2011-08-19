@@ -25,7 +25,7 @@
  */
 
 /**
- * Prints binary stings as formatted hexdumps. Used as the default output on
+ * Prints binary strings as formatted hexdumps. Used as the default output on
  * Chunks where no other decoding is known. 
  *  
  * @author ben
