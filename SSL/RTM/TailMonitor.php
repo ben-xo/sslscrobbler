@@ -24,7 +24,13 @@
  *  THE SOFTWARE.
  */
 
-class SSLHistoryFileTailMonitor extends SSLHistoryFileDiffMonitor
+/**
+ * Version of the diff monitor which keeps the file open and 
+ * keeps reading from the end, rather than diffing the entire file each time.
+ * 
+ * @author ben
+ */
+class TailMonitor extends DiffMonitor
 {
     /**
      * @var SSLParser
@@ -40,15 +46,12 @@ class SSLHistoryFileTailMonitor extends SSLHistoryFileDiffMonitor
             $this->tail_parser = $this->newTailParser($this->filename);
         }
         
-        // $dom is what was passed into the constructor of SSLParser 
-        // in $this->newTailParser
-        /* @var $dom SSLHistoryDom */
         $dom = $this->tail_parser->readChunks();
-        $changed = $dom->getNewOrUpdatedTracksSince(new SSLHistoryDom());
+        $changed = $dom->getNewOrUpdatedTracksSince( $this->newDom() );
         
         if(count($changed->getTracks()) > 0)
         {
-            $this->notifyDiffObservers($changed);
+            $this->onDiff($changed);
         }
     }
 
@@ -64,7 +67,7 @@ class SSLHistoryFileTailMonitor extends SSLHistoryFileDiffMonitor
         
     protected function newTailParser($filename)
     {
-        $parser = $this->factory->newParser( $this->factory->newHistoryDom() );
+        $parser = $this->factory->newParser( $this->newDom() );
         $parser->open($filename);
         return $parser;
     }

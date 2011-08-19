@@ -177,27 +177,23 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
                 
             if($this->dump_and_exit)
             {
+                $monitor = new DiffMonitor();
                 switch($this->dump_type)
                 {
                     case 'sessionfile':
-                        $monitor = new SSLHistoryFileDiffMonitor($filename);
-                        $monitor->dump();
-                        return;
+                        $hfm = new SSLHistoryFileMonitor($filename, $monitor);
+                        break;
 
                     case 'sessionindex':
-                        /* @var $factory SSLRepo */
-                        /* @var $tree SSLHistoryIndexDom */
-                        $factory = Inject::the(new SSLRepo());
-                        $parser = $factory->newParser( $factory->newHistoryIndexDom() );
-                        $tree = $parser->parse($filename);
-                        $parser->close();
-                        $tree->getSessions();
-                        echo $tree;
-                        return;
+                        $hfm = new SSLHistoryIndexFileMonitor($filename, $monitor);
+                        break;
                         
                     default:
                         throw new RuntimeException('Unknown dump type. Try sessionfile, sessionindex');
                 }
+                
+                $monitor->dump();
+                return;
             }
 
             // start monitoring.
@@ -382,22 +378,25 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         {
             // tick when the user presses enter
             $ts = new CrankHandle();
+            
+            // $mon is TickObservable
+            // $hfm is DiffObservable
             if($this->csv)
             {
-                $hfm = new SSLHistoryFileCSVInjector($filename);
+                $mon = $hfm = new SSLHistoryFileCSVInjector($filename);
             }
             else
             {
-                $hfm = new SSLHistoryFileReplayer($filename);
+                $mon = $hfm = new SSLHistoryFileReplayer($filename);
             }
         }
         else
         {
             // tick based on the clock
             $ts  = new TickSource();
-            $hfm = new SSLHistoryFileTailMonitor($filename);
-            $hfm->setFilenameSource($this);
-            //$hfm = new SSLHistoryFileDiffMonitor($filename);
+            $mon = new TailMonitor();
+            $mon->setFilenameSource($this);
+            $hfm = new SSLHistoryFileMonitor($filename, $mon);
         }
 
         $sh = new SignalHandler();
@@ -410,7 +409,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
 
         // the ordering here is important. See the README.txt for a collaboration diagram.
         $ts->addTickObserver($this->plugin_manager);
-        $ts->addTickObserver($hfm);
+        $ts->addTickObserver($mon);
         $ts->addTickObserver($npm);
         $hfm->addDiffObserver($rtm);
         $rtm->addTrackChangeObserver($rtm_printer);

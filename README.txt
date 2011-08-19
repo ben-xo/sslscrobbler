@@ -434,7 +434,7 @@ not modelled any of it. Have fun exploring these files using --dump :)
 Here's an example of what --dump might output on a history file:
 
 CHUNK<vrsn>: 
-	>>> 1.0/Serato Scratch LIVE Review
+	version => 1.0/Serato Scratch LIVE Review
 
 CHUNK<oent>: 
 		CHUNK<adat>: 

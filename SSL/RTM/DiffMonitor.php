@@ -24,13 +24,29 @@
  *  THE SOFTWARE.
  */
 
-class SSLHistoryFileDiffMonitor implements SSLDiffObservable, TickObserver
+class DiffMonitor extends SSLFileReader implements TickObserver
 {
-    /**
-     * @var SSLRepo
-     */
-    protected $factory;
 
+    /**
+     * @var SSLDom
+     */
+    protected $dom_prototype;
+    
+    public function setPrototype(SSLDom $prototype)
+    {
+        $this->dom_prototype = $prototype;
+    }
+    
+    /**
+     * @var SSLDiffDelegate
+     */
+    protected $diff_delegate;
+    
+    public function setDiffDelegate(SSLDiffDelegate $delegate)
+    {
+        $this->diff_delegate = $delegate;
+    }
+    
     /**
      * The filename source yields new filenames from time to time.
      * 
@@ -38,30 +54,9 @@ class SSLHistoryFileDiffMonitor implements SSLDiffObservable, TickObserver
      */
     protected $fns;
     
-    protected $diff_observers = array();
-    
-    protected $filename;
-    
-    /**
-     * @var SSLHistoryDiffDom
-     */
-    protected $tree;
-
-    public function __construct($filename)
-    {
-        $this->factory = Inject::the(new SSLRepo());
-        $this->filename = $filename;
-        $this->tree = $this->factory->newHistoryDom(); // start on empty
-    }
-    
     public function setFilenameSource(SSLFilenameSource $fns)
     {
         $this->fns = $fns;
-    }
-    
-    public function addDiffObserver(SSLDiffObserver $observer)
-    {
-        $this->diff_observers[] = $observer;
     }
     
     protected function checkForNewFilename()
@@ -83,35 +78,6 @@ class SSLHistoryFileDiffMonitor implements SSLDiffObservable, TickObserver
         return false;
     }
     
-    protected function notifyDiffObservers(SSLHistoryDiffDom $changes)
-    {
-        foreach($this->diff_observers as $observer)
-        {
-            $observer->notifyDiff($changes);
-        }
-    }
-    
-    public function dump()
-    {
-        $tree = $this->read($this->filename);
-        
-        // Sets up all the right parsing.
-        //
-        // There's no particular reason to assume that e.g. all Adat chunks 
-        // encountered are going to be tracks, so the assumption-of-trackiness
-        // is only made in the SSLHistoryDom and a Track Parser passed in to the
-        // Adat chunk during the getTracks() call on the SSLHistoryDom.
-        //
-        // Basically, what I'm saying, is that without this line you'll just get
-        // hexdumps, which is not very exciting.
-        $tree->getTracks(); 
-        
-        // After the parsing has occurred, we get much more exciting debug output.
-        echo $tree;
-        
-        echo "Memory usage: " . number_format(memory_get_peak_usage()) . " bytes\n";
-    }
-    
     public function notifyTick($seconds)
     {
         $this->checkForNewFilename();
@@ -120,19 +86,24 @@ class SSLHistoryFileDiffMonitor implements SSLDiffObservable, TickObserver
         $changed = $new_tree->getNewOrUpdatedTracksSince($this->tree);
         if(count($changed->getTracks()) > 0 )
         {
-            $this->notifyDiffObservers($changed);
+            $this->onDiff($changed);
             $this->tree = $new_tree;
         }
     }
-
-    /**
-     * @return SSLHistoryDom
-     */
-    protected function read($filename)
+    
+    protected function newDom()
     {
-        $parser = $this->factory->newParser( $this->factory->newHistoryDom() );
-        $tree = $parser->parse($filename);
-        $parser->close();
-        return $tree;
+        if(!isset($this->dom_prototype))
+            throw new RuntimeException('no prototype set for diffing');
+        
+        return clone $this->dom_prototype;
+    }
+    
+    protected function onDiff(SSLDom $changed)
+    {
+        if(!isset($this->diff_delegate))
+            throw new RuntimeException('no delegate set for diffs');
+        
+        $this->diff_delegate->onDiff($changed);
     }
 }
