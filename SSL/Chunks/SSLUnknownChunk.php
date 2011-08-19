@@ -31,8 +31,13 @@ class SSLUnknownChunk extends SSLChunk
         return array();
     }
 
+    public function getDataInto(SSLStruct $struct) 
+    {
+       
+    }
+    
     protected function chunkDebugBody($indent=0)
     {
         return str_repeat("\t", $indent) . "UNKNOWN:\n" . $this->hexdump($indent);
-    }
+    }    
 }

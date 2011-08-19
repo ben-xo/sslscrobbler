@@ -69,6 +69,11 @@ class SSLHistoryDom extends SSLDom
             {
                 $data[] = $chunk->getDataInto(new SSLTrackDelete());
             }
+
+            elseif($chunk instanceof SSLVrsnChunk)
+            {
+                $data[] = $chunk->getDataInto(new SSLVersion());
+            }
         }
         
         $data = $this->mergeRows($data); // this will re-key everything by row number

@@ -35,7 +35,12 @@ abstract class SSLChunk
         $this->data = $data;
     }
     
-    abstract public function getData();    
+    abstract public function getData();
+
+    /**
+     * @return SSLStruct $struct
+     */
+    abstract public function getDataInto(SSLStruct $struct);
     
     public function __toString()
     {

@@ -44,6 +44,10 @@ class SSLChunkFactory implements Factory
                 return new SSLOcolChunk($bin);
             case 'oses':
                 return new SSLOsesChunk($bin);
+            case 'ucok':
+                return new SSLUcokChunk($bin);
+            case 'ucow':
+                return new SSLUcowChunk($bin);
             default:
                 return new SSLUnknownChunk($type, $bin);
         }

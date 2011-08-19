@@ -142,8 +142,6 @@ class SSLCompoundChunk extends SSLChunk implements ArrayAccess, Iterator
     {
         if(isset($this->chunks[$this->selected_index]))
         {
-            $parser = $struct->getUnpacker();
-            $this->chunks[$this->selected_index]->unpackWith( $parser );
             return $this->chunks[$this->selected_index]->getDataInto($struct);
         }
         

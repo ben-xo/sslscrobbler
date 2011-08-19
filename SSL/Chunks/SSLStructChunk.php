@@ -34,7 +34,9 @@ abstract class SSLStructChunk extends SSLChunk
     }
     
     public function getDataInto(SSLStruct $s)
-    {        
+    {   
+        $up = $s->getUnpacker();
+        $this->unpackWith($up);     
         $s->populateFrom($this->fields);
         return $s;
     }

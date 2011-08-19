@@ -24,22 +24,10 @@
  *  THE SOFTWARE.
  */
 
-class SSLVrsnChunk extends SSLChunk
+class SSLVrsnChunk extends SSLStructChunk
 {
-    protected $version;
-    
     public function __construct($data)
     {
         parent::__construct('vrsn', $data);
-    }
-    
-    public function chunkDebugBody($indent=0)
-    {
-        return str_repeat("\t", $indent) . '>>> ' . $this->data . "\n";
-    }
-    
-    public function getData()
-    {
-        return array('version' => $this->version);
     }
 }

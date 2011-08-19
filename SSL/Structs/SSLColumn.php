@@ -26,7 +26,7 @@
 
 class SSLColumn extends SSLStruct
 {
-    protected $type, $width;
+    protected $key, $width;
 
     protected $types = array();
     
@@ -40,24 +40,39 @@ class SSLColumn extends SSLStruct
         return 'Unknown (' . $this->type . ')';
     }
     
-    public function getUnpacker()
+    public function setKey(SSLColumnKey $k)
     {
-        return $this->getUnpackerForFile( dirname(__FILE__) . '/SSLColumnOcol.xoup' );
-    }
-        
-    public function populateFrom(array $fields)
-    {
-        isset($fields['type']) && $this->type = $fields['type'];
-        isset($fields['width']) && $this->width = $fields['width'];
+        $this->key = $key;
     }
     
-    public function getRow()
+    public function setWidth(SSLColumnWidth $w)
     {
-        return $this->row;
+        $this->width = $w;
     }
-       
+    
+    public function getKey()
+    {
+        return $this->key->getKey();
+    }
+    
+    public function getWidth()
+    {
+        return $this->width->getWidth();
+    }
+    
     public function __toString()
     {
         return sprintf("%s (%dpx)", $this->getColName(), $this->width);
+    }
+    
+    public function getUnpacker()
+    {
+        throw new RuntimeException('You can\'t unpack a column directly; width and key are separate');
+    }
+    
+    public function populateFrom(array $fields)
+    {
+        isset($fields['key']) && $this->key = $fields['key'];
+        isset($fields['width']) && $this->width = $fields['width'];
     }
 }

@@ -51,12 +51,32 @@ class SSLHistoryIndexDom extends SSLDom
         {
             if($chunk instanceof SSLOcolChunk)
             {
-               // TODO
+               $fields = array();
+               foreach($chunk as $sub)
+               {
+                   if($sub instanceof SSLUcokChunk)
+                   {
+                        $fields['key'] = $sub->getDataInto(new SSLColumnKey());
+                   }
+                   
+                   elseif($sub instanceof SSLUcowChunk)
+                   {
+                        $fields['width'] = $sub->getDataInto(new SSLColumnWidth());
+                   }
+               }
+               $datum = new SSLColumn();
+               $datum->populateFrom($fields);
+               $data[] = $datum;
             }
             
             elseif($chunk instanceof SSLOsesChunk)
             {
                 $data[] = $chunk->getDataInto(new SSLSession());
+            }
+
+            elseif($chunk instanceof SSLVrsnChunk)
+            {
+                $data[] = $chunk->getDataInto(new SSLVersion());
             }
         }
         
