@@ -385,7 +385,7 @@ length and then that many bytes of variable-length data.
 Whilst exploring the file format, I invented an unpacking language called
 XOUP (short for "XO's UnPacker"). XOUP is interpretted with XoupInterpreter or
 compiled into Unpacker classes with XoupCompiler (all this happens 
-automatically).
+automatically). See the comments in XoupInterpreter for info on XOUP.
 
 ScratchLiveScrobbler, so far, recognises 7 chunk types. Some of these are 
 "compound chunks" (that is, they contain other chunks), and others contain data 
@@ -492,12 +492,76 @@ CHUNK<oent>:
 			0000 3000 0000 0400 000c 3f00 0000 3200 0000 0100 0000 0034 0000 0001 0000 0000 ..0...4..C?...2...1....4...1....
 			3500 0000 044b d743 55                                                          5...4K!CU
 
-(All of the field names in the properly parsed output were worked out with 
-educated guess-work).
+All of the field names in the properly parsed output were worked out with 
+educated guess-work. (The list of fields shown for the track in the example is
+representative, but not all possible fields are saved with each row in the
+history file. Other possible fields include bpm, album artist, etc). 
 
-Here's how the software side of it is strung together: (TODO)
+Here's how the software side of it is strung together.
 
+The SSLHistoryFileDiffMonitor is responsible for monitoring the file by continually
+reading it to see what's been appended. Once it sees new data, it will parse the data
+into chunks and give those raw chunks to an SSLHistoryDom to look after. This first
+phase looks like this:
 
+SSLHistoryFileDiffMonitor (keeps reading a History file to look for more chunks)
+  | read()
+  v
+  SSLParser <new SSLHistoryDom $tree> (a parser that reads the file into the chosen DOM)
+    | parse(<filename>)
+    | readChunks()
+    v
+    SSLChunkReader (reads all chunks from a file and parses them)
+      | $dom->addChunks( getChunks() ) 
+      v
+      SSLChunkParser (reads a specific chunk from the file and constructs concrete chunks)
+        | readChunk() // loop
+        | ->parseFromFile()
+        v
+        SSLChunkFactory (creates concrete chunk instances from the chunk headers)
+          | newChunk()
+          v
+          SSLChunk <SSLVrsnChunk / SSLOentChunk / SSLAdatChunk / ... etc>
+          |  | __construct()
+          |  v
+          |  SSLCompoundChunk (such as OENT, breaks down into more chunks)
+          |   | <the entire SSLChunkParser stack recursively from SSLChunkParser down>
+          |   
+          v
+          SSLStructChunk (such as ADAT. contains actual data).
+          
+At this point, the $tree object contains all of the raw data separated into 
+chunks which know what they are and how to extract data from themselves.
+
+The full data is not actually parsed and extracted from the $tree object until someone 
+calls $tree->getTracks(). However, as the SSLHistoryFileDiffMonitor generates diffs,
+the next thing it does is to get the tracks from this DOM and the previous DOM and
+diff them. The data extraction part looks like this:
+
+SSLHistoryFileDiffMonitor
+ | getNewOrUpdatedTracksSince()
+ v 
+ SSLHistoryDom
+   | getTracks() // gets all data but filters it just to SSLTracks
+   | ->getData() 
+   v 
+   SSLChunk <any of the various chunk types, e.g. OENT>
+     | getDataInto(new SSLStruct) // the HistoryDom knows the appropriate struct type
+     |                            // e.g. it knows that an OENT ADAT needs <SSLTrack>s
+     v
+     SSLStruct
+      | getUnpacker() // the struct knows its own unpacker (a XOUP file)
+      v
+      XoupLoader
+        |
+        v
+        XoupCompiler
+          |
+          v
+          Unpacker (a compiled subclass of Unpacker such as XOUPSSLTrackAdatUnpacker)
+          
+At this point, we have concrete SSLTrack objects.
+     
 
 6. THANKS & SHOUTS
 ====================
