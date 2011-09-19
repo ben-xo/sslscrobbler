@@ -1,0 +1,103 @@
+#  @author      Ben XO (me@ben-xo.com)
+#  @copyright   Copyright (c) 2010 Ben XO
+#  @license     MIT License (http://www.opensource.org/licenses/mit-license.html)
+#  
+#  Permission is hereby granted, free of charge, to any person obtaining a copy
+#  of this software and associated documentation files (the "Software"), to deal
+#  in the Software without restriction, including without limitation the rights
+#  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#  copies of the Software, and to permit persons to whom the Software is
+#  furnished to do so, subject to the following conditions:
+#  
+#  The above copyright notice and this permission notice shall be included in
+#  all copies or substantial portions of the Software.
+#  
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+#  THE SOFTWARE.
+
+main:
+    chunk.
+        
+ascii:
+    r1l>i_ r_b>r_
+    
+string:
+    r1l>i_ r_b>s_
+    
+int:
+    r1l>i_ r_b>i_
+    
+hex:
+    r1l>i_ r_b>h_
+    
+float:
+    r1l>i_ r_b>f_
+    
+timestamp:
+    r1l>i_ r_b>t_
+    #int. # timestamps are actually more useful as integers, not date-strings
+    
+chunk:
+    # tail-recurses to gobble up all available fields. 
+    # (last field exits program)
+    r4b>r_ chunk_. chunk. 
+    
+trap:
+    lEUNKNOWN>r! c>r! lCOLON>r! hex. c>r! lEOS>r!
+
+
+# these all appear to be strings
+chunkttyp: string. c>rtype
+chunkpfil: string. c>rfile
+chunktsng: string. c>rtitle
+chunktart: string. c>rartist
+chunktalb: string. c>ralbum
+chunktgen: string. c>rgenre
+chunktlen: string. c>rlength
+chunktsiz: string. c>rfilesize
+chunktbit: string. c>rbitrate
+chunktsmp: string. c>rsamplerate
+chunktbpm: string. c>rbpm
+chunktlbl: string. c>rlabel
+chunktadd: string. c>radded
+chunktiid: string. c>ruid
+chunktcom: string. c>rcomment
+chunktcor: string. c>rcorrupt
+chunkttyr: string. c>ryear
+chunktkey: string. c>rkey
+chunktcmp: string. c>rcomposer
+
+chunkuadd: timestamp. c>radded_ts
+chunkutme: timestamp. c>rutme
+
+# these all appear to be unsigned ints
+chunkutkn: int. c>rutkn
+chunkulbl: int. c>rulbl
+chunkufsb: int. c>rufsb
+chunkudsc: int. c>rudsc
+chunksbav: int. c>rsbav
+
+# these all appear to be binary flags
+chunkbhrt: int. c>rbhrt
+chunkbmis: int. c>rbmis
+chunkbply: int. c>rbply
+chunkblop: int. c>rblop
+chunkbitu: int. c>rbitu
+chunkbovc: int. c>rbovc
+chunkbcrt: int. c>rbcrt
+chunkbiro: int. c>rbiro
+chunkbwlb: int. c>rbwlb
+chunkbwll: int. c>rbwll
+chunkbuns: int. c>rbins
+
+# literal data
+.EOS ""
+.COLON ": "
+.EUNKNOWN "Unknown chunk "
+
+
