@@ -193,7 +193,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
                         break;
                         
                     default:
-                        throw new RuntimeException('Unknown dump type. Try sessionfile, sessionindex');
+                        throw new RuntimeException('Unknown dump type. Try sessionfile, sessionindex, library');
                 }
                 
                 $monitor->dump();
