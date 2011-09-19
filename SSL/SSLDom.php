@@ -45,4 +45,13 @@ class SSLDom extends ArrayObject
         }
         return $string;
     }
+    
+    public function display()
+    {
+        foreach($this as $chunk)
+        {
+            /* @var $chunk SSLChunk */
+            echo $chunk->toString() . "\n";
+        }
+    }
 }
