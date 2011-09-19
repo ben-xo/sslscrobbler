@@ -211,6 +211,6 @@ class MixcloudSuggestor implements SSLPlugin, TrackChangeObserver
             ) $next = true;
         }
         
-        throw new Exception("Next track not found in mix!");
+        throw new Exception("Next track not found in mix $cloudcast_key!");
     }
 }

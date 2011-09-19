@@ -188,6 +188,10 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
                         $hfm = new SSLHistoryIndexFileMonitor($filename, $monitor);
                         break;
                         
+                    case 'library':
+                        $hfm = new SSLLibraryFileMonitor($filename, $monitor);
+                        break;
+                        
                     default:
                         throw new RuntimeException('Unknown dump type. Try sessionfile, sessionindex');
                 }

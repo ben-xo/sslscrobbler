@@ -241,7 +241,8 @@ abstract class Unpacker
             default:
                 throw new RuntimeException('Unsupported architecture (neither 32-bit or 64-bit)');
         }
-    }    
+    }
+    
     protected function unpackfloat($datum)
     {
         $width = strlen($datum);

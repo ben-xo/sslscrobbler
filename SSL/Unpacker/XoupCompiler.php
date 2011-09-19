@@ -373,7 +373,7 @@ class XoupCompiler
         
         if($output_mode)
         {
-            $body .= "        if(\$datum == '') \$this->flushBuffer();\n";
+            $body .= "        if(\$datum === '') \$this->flushBuffer();\n";
             $body .= "        else \$this->out_buffer .= \$datum;\n";
         }
         return $body;
