@@ -85,7 +85,7 @@ class MixcloudSuggestor implements SSLPlugin, TrackChangeObserver
             echo "Popular next tracks on mixcloud:\n";
             $longest_username = 0;
             foreach($nexttracks as $track) {
-                $longest_username = max($longest_username, strlen($track['cloudcast']['user']['name']));
+                $longest_username = max($longest_username, mb_strlen($track['cloudcast']['user']['name']));
             }
             
             foreach($nexttracks as $track) {
@@ -106,20 +106,15 @@ class MixcloudSuggestor implements SSLPlugin, TrackChangeObserver
     
     protected function getBestTrack(SSLTrack $track)
     {
-        $search_uri = sprintf(
-            'http://api.mixcloud.com/search/?q=%s+%s&type=track', 
-            urlencode($track->getArtist()),
-            urlencode($track->getTitle())
+        $search = $this->doMixcloudCall(
+        	'best track', 
+        	'http://api.mixcloud.com/search/?q=%s+%s&type=track', 
+            array(
+                urlencode($track->getArtist()),
+                urlencode($track->getTitle())
+            )
         );
-        
-        $search = json_decode(
-            file_get_contents(
-                $search_uri
-            ),
-            true /* assoc */
-        );
-        
-        if(!$search) throw new Exception('No data from best track search');
+
         if(isset($search['error'])) throw new Exception('Error from Mixcloud: ' . $search['error']['message']);
         
         $potential_tracks = array();
@@ -149,25 +144,20 @@ class MixcloudSuggestor implements SSLPlugin, TrackChangeObserver
             return $best_track;
         }
 
-        throw new Exception('no track match for ' . $search_uri);
+        throw new Exception('no track match for ' . $track->getFullTitle());
     }
     
     protected function getMixesForTrack($key)
     {
-        $search_uri = sprintf(
-            'http://api.mixcloud.com%spopular/?limit=%d',
-            $key,
-            20 /* limit */
-        );
-        
-        $search = json_decode(
-            file_get_contents(
-                $search_uri
-            ),
-            true /* assoc */
+        $search = $this->doMixcloudCall(
+        	'mixes', 
+        	'http://api.mixcloud.com%spopular/?limit=%d', 
+            array(
+                $key, 
+                20 /* limit */
+            )
         );
 
-        if(!$search) throw new Exception('No data from mixes search');
         if(isset($search['error'])) throw new Exception('Error from Mixcloud: ' . $search['error']['message']);
         
         $cloudcasts = array();
@@ -185,19 +175,14 @@ class MixcloudSuggestor implements SSLPlugin, TrackChangeObserver
     
     protected function getNextTrackFor($track_key, $cloudcast_key)
     {
-        $search_uri = sprintf(
-        	'http://api.mixcloud.com%s',
-            $cloudcast_key
+        $search = $this->doMixcloudCall(
+        	'mix', 
+       		'http://api.mixcloud.com%s', 
+            array(
+                $cloudcast_key
+            )
         );
         
-        $search = json_decode(
-            file_get_contents(
-               $search_uri
-            ),
-            true /* assoc */
-        );
-        
-        if(!$search) throw new Exception('No data from mix request');
         if(isset($search['error'])) throw new Exception('Error from Mixcloud: ' . $search['error']['message']);
         if(!isset($search['sections'])) throw new Exception('Error from Mixcloud: no sections element in response');
         
@@ -212,5 +197,13 @@ class MixcloudSuggestor implements SSLPlugin, TrackChangeObserver
         }
         
         throw new Exception("Next track not found in mix $cloudcast_key!");
+    }
+    
+    protected function doMixcloudCall($request_name, $uri, array $replacement_vars)
+    {
+        $full_api_uri = vsprintf($uri, $replacement_vars);
+        $json_data = json_decode(file_get_contents($full_api_uri), true /* assoc */);
+        if(!$json_data) throw new Exception('No data from ' . $request_name . ' request');
+        return $json_data;
     }
 }
