@@ -414,8 +414,9 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             else
             {
                 $mon = $hfm = new SSLHistoryFileReplayer($filename);
-                $hfm->addExitObserver($ts);
             }
+            
+            $hfm->addExitObserver($ts);
         }
         else
         {

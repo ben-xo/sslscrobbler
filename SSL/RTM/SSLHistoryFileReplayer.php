@@ -104,6 +104,7 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObs
         }
         else
         {
+            // exit app on EOF.
             $this->notifyExitObservers();
         }
     }
