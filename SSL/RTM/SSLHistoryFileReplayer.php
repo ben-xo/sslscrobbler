@@ -31,9 +31,10 @@
  * 
  * See the --replay option in HistoryReader for usage.
  */
-class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver
+class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObservable
 {
     protected $diff_observers = array();
+    protected $exit_observers = array();
     
     protected $filename;
     
@@ -66,7 +67,22 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver
     {
         foreach($this->diff_observers as $observer)
         {
+            /* @var $observer SSLDiffObserver */
             $observer->notifyDiff($changes);
+        }
+    }
+    
+    public function addExitObserver(ExitObserver $observer)
+    {
+        $this->exit_observers[] = $observer;
+    }
+    
+    protected function notifyExitObservers()
+    {
+        foreach($this->exit_observers as $observer)
+        {
+            /* @var $observer ExitObserver */
+            $observer->notifyExit();
         }
     }
     
@@ -85,7 +101,11 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver
                     
             $this->notifyDiffObservers($this->payloads[$this->pointer]);
             $this->pointer++;
-        }        
+        }
+        else
+        {
+            $this->notifyExitObservers();
+        }
     }
 
     /**

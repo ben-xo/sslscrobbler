@@ -24,8 +24,9 @@
  *  THE SOFTWARE.
  */
 
-class TickSource implements TickObservable
+class TickSource implements TickObservable, ExitObserver
 {
+    protected $exit_notified = false;
     protected $tick_observers = array();
     
     public function addTickObserver(TickObserver $o)
@@ -42,7 +43,7 @@ class TickSource implements TickObservable
     }
     
     public function startClock($interval, SignalHandler $sh = null, InputHandler $ih = null)
-    {
+    {        
         L::level(L::DEBUG) && 
             L::log(L::DEBUG, __CLASS__, "Clock Started, interval %s", 
                 array($interval));
@@ -88,12 +89,23 @@ class TickSource implements TickObservable
             {
                 $ih->process();
                 $continue = ($continue && !$ih->shouldExit());  
-            } 
+            }
+            
+            $continue = $continue && !$this->exit_notified;
         }
     }
     
     protected function sleep($seconds)
     {
         return usleep($seconds * 1000000);   
+    }
+    
+    public function notifyExit()
+    {
+        L::level(L::DEBUG) && 
+            L::log(L::DEBUG, __CLASS__, "Exit caught.", 
+                array());
+
+        $this->exit_notified = true;
     }
 }

@@ -28,10 +28,11 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
 {
     // command line switches
     protected $dump_and_exit = false;
+    protected $post_process = false;
     protected $dump_type = 'sessionfile';
     protected $wait_for_file = true;
     protected $help = false;
-    protected $replay = false;
+    protected $manual_tick = false;
     protected $csv = false;
     protected $log_file = '';
     protected $verbosity = L::INFO;
@@ -50,7 +51,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
     
     protected $override_verbosity = array();
     
-    protected $sleep = 2;
+    protected $sleep = 1;
     
     protected $appname;
     protected $filename;
@@ -220,6 +221,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         echo "Session file is optional. If omitted, the most recent history file from {$this->historydir} will be used automatically\n";
         echo "    -h or --help:              This message.\n";
         echo "    -i or --immediate:         Do not wait for the next history file to be created before monitoring. (Use if you started {$appname} mid way through a session)\n";
+        echo "    -p or --post-process:      Loop through the file and send events to plugins after the fact. Use for scrobbling an offline session.\n";
         echo "\n";
 
         foreach($this->cli_plugins as $plugin)
@@ -233,8 +235,8 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         echo "          --dump-type <x>:     Use a specific parser. Options are: sessionfile, sessionindex\n";
         echo "    -v or --verbosity <0-9>:   How much logging to output. (default: 0 (none))\n";
         echo "    -l or --log-file <file>:   Where to send logging output. (If this option is omitted, output goes to stdout)\n";
-        echo "          --replay:            Replay the session file, one batch per tick. (Tick by pressing enter at the console)\n"; 
-        echo "          --csv:               Parse the session file as a CSV, not a binary file, for testing purposes. Best used with --replay\n"; 
+        echo "          --manual:            Replay the session file, one batch per tick. (Tick by pressing enter at the console)\n"; 
+        echo "          --csv:               Parse the session file as a CSV, not a binary file, for testing purposes. Best used with --manual\n"; 
     }
     
     public function getNewFilename()
@@ -299,6 +301,12 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
                 continue;
             }
 
+            if($arg == '--post-process' || $arg == '-p')
+            {
+                $this->post_process = true;
+                continue;
+            }
+
             if($arg == '--log-file' || $arg == '-l')
             {
                 $this->log_file = array_shift($argv);
@@ -311,9 +319,9 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
                 continue;
             }
             
-            if($arg == '--replay')
+            if($arg == '--manual')
             {
-                $this->replay = true;
+                $this->manual_tick = true;
                 continue;
             }
             
@@ -367,8 +375,10 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
      *  safer to shutdown ScratchLive! first if you want everything scrobbled
      *  correctly.
      *  
-     * --replay can be used to replay a file with ticks on user input (for debugging).
-     * --replay --csv can be used to replay from a CSV fake-file.
+     * --post-process can be used to replay a file. 
+     * --manual to ticks on user input (for debugging. Overrides --post-process for ticks).
+     * --csv can be used to replay from a CSV fake-file.
+     * These options can be combined.
      * 
      */
     protected function monitor($filename)
@@ -378,11 +388,23 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         // that knows how to ask the cache about expensive lookups (such as getID3 stuff). 
         Inject::map('SSLTrackFactory', new SSLTrackCache());
         
-        if($this->replay) 
+        if($this->manual_tick) 
         {
             // tick when the user presses enter
             $ts = new CrankHandle();
-            
+        }
+        elseif($this->post_process)
+        {
+            $ts = new InstantTickSource();
+        }
+        else
+        {
+            // tick based on the clock
+            $ts = new TickSource();
+        }
+        
+        if($this->post_process)
+        {
             // $mon is TickObservable
             // $hfm is DiffObservable
             if($this->csv)
@@ -392,12 +414,11 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             else
             {
                 $mon = $hfm = new SSLHistoryFileReplayer($filename);
+                $hfm->addExitObserver($ts);
             }
         }
         else
         {
-            // tick based on the clock
-            $ts  = new TickSource();
             $mon = new TailMonitor();
             $mon->setFilenameSource($this);
             $hfm = new SSLHistoryFileMonitor($filename, $mon);
