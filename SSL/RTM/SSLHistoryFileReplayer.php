@@ -29,12 +29,17 @@
  * with the CrankHandle (which ticks on input, rather than on a timer) for
  * testing transitions in a problem history file one at a time.
  * 
- * See the --replay option in HistoryReader for usage.
+ * See the --post-process option in HistoryReader for usage.
+ * 
+ * Note that this is both TickObserver and TickObservable. It's designed to observe
+ * either a manual or instant tick, and to emit a tick that replays what was logged
+ * in the history file.
  */
-class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObservable
+class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObservable, TickObservable
 {
     protected $diff_observers = array();
     protected $exit_observers = array();
+    protected $tick_observers = array();
     
     protected $filename;
     
@@ -86,23 +91,57 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObs
         }
     }
     
+    public function addTickObserver(TickObserver $observer)
+    {
+        $this->tick_observers[] = $observer;
+    }
+    
+    protected function notifyTickObservers($seconds)
+    {
+        L::level(L::DEBUG) &&
+            L::log(L::DEBUG, __CLASS__, 'Pseudo tick %d seconds', 
+                array($seconds));
+                
+        foreach($this->tick_observers as $observer)
+        {
+            /* @var $observer TickObserver */
+            $observer->notifyTick($seconds);
+        }
+    }    
+    
+    public function startClock($interval, SignalHandler $sh = null, InputHandler $ih = null)
+    {
+        // doesn't do anything on the file replayer
+        $this->notifyTickObservers(0);        
+    }
+    
     public function notifyTick($seconds)
     {
         if(!$this->initialized) $this->initialize();
         
-        if(isset($this->payloads[$this->pointer]))
+        $last_timestamp = 0;
+        $last_payload = count($this->payloads) - 1;
+        $pointer = 0;
+        
+        foreach($this->payloads as $payload)
         {
+            $payload_timestamp = $payload->getFirstTimestamp();
             L::level(L::DEBUG) &&
                 L::log(L::DEBUG, __CLASS__, 'Yielding payload for timestamp %s (%s)', 
                     array( 
-                        $this->payloads[$this->pointer]->getFirstTimestamp(), 
-                        date("Y-m-d H:i:s", $this->payloads[$this->pointer]->getFirstTimestamp()) 
+                        $payload_timestamp, 
+                        date("Y-m-d H:i:s", $payload_timestamp) 
                         ));
-                    
-            $this->notifyDiffObservers($this->payloads[$this->pointer]);
-            $this->pointer++;
+            
+            $this->notifyTickObservers($payload_timestamp - $last_timestamp);
+            $this->notifyDiffObservers($payload);
+            $last_timestamp = $payload_timestamp;
+            $pointer++;
         }
-        else
+        
+        $this->notifyTickObservers(300);
+        
+        if($pointer >= $last_payload)
         {
             // exit app on EOF.
             $this->notifyExitObservers();
@@ -139,6 +178,8 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObs
         L::level(L::DEBUG) &&
             L::log(L::DEBUG, __CLASS__, 'Found %d tracks in file', 
                 array(count($tracks)));
+
+        //usort($tracks, array($this, 'timestampSort'));
                 
         foreach($tracks as $track)
         {
@@ -147,22 +188,40 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObs
             {
                 if(!empty($group)) 
                 {
+                    L::level(L::DEBUG) &&
+                        L::log(L::DEBUG, __CLASS__, 'Entries found at %s', 
+                            array(date('Y-m-d H:i:s', $last_updated_at)));
+                        
                     $this->payloads[] = new SSLHistoryDiffDom($group);
                 }
                 $last_updated_at = $track->getUpdatedAt();
                 $group = array();   
             }
-            
+                            
             $group[] = $track;
         }
-        
+                
         if(!empty($group)) 
         {
-            $this->payloads[] = new SSLHistoryDiffDom($group);
+            L::level(L::DEBUG) &&
+                L::log(L::DEBUG, __CLASS__, 'Entries found at %s', 
+                    array(date('Y-m-d H:i:s', $last_updated_at)));
+
+            $this->payloads[$last_updated_at] = new SSLHistoryDiffDom($group);
         }
         
         L::level(L::DEBUG) &&
             L::log(L::DEBUG, __CLASS__, 'Divided tracks in %d groups', 
                 array(count($this->payloads)));        
+    }
+    
+    private function timestampSort(SSLTrack $a, SSLTrack $b)
+    {
+        $a_ts = $a->getUpdatedAt();
+        $b_ts = $b->getUpdatedAt();
+        
+        if($a_ts > $b_ts) return 1;
+        if($a_ts == $b_ts) return 0;
+        return -1;
     }
 }

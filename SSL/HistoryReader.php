@@ -200,9 +200,16 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
                 $monitor->dump();
                 return;
             }
-
-            // start monitoring.
-            $this->monitor($filename);            
+            
+            if($this->post_process)
+            {
+                $this->post_process($filename);
+            }
+            else
+            {
+                // start monitoring.
+                $this->monitor($filename);
+            }            
         }
         catch(Exception $e)
         {   
@@ -391,16 +398,16 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         if($this->manual_tick) 
         {
             // tick when the user presses enter
-            $ts = new CrankHandle();
+            $pseudo_ts = $real_ts = new CrankHandle();
         }
         elseif($this->post_process)
         {
-            $ts = new InstantTickSource();
+            $pseudo_ts = $real_ts = new InstantTickSource();
         }
         else
         {
             // tick based on the clock
-            $ts = new TickSource();
+            $pseudo_ts = $real_ts = new TickSource();
         }
         
         if($this->post_process)
@@ -416,7 +423,8 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
                 $mon = $hfm = new SSLHistoryFileReplayer($filename);
             }
             
-            $hfm->addExitObserver($ts);
+            $pseudo_ts = $mon;
+            $hfm->addExitObserver($real_ts);
         }
         else
         {
@@ -434,9 +442,9 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         $sm = new ScrobbleModel();
 
         // the ordering here is important. See the README.txt for a collaboration diagram.
-        $ts->addTickObserver($this->plugin_manager);
-        $ts->addTickObserver($mon);
-        $ts->addTickObserver($npm);
+        $pseudo_ts->addTickObserver($this->plugin_manager);
+        $real_ts->addTickObserver($mon);
+        $pseudo_ts->addTickObserver($npm);
         $hfm->addDiffObserver($rtm);
         $rtm->addTrackChangeObserver($rtm_printer);
         $rtm->addTrackChangeObserver($npm);
@@ -446,7 +454,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         $pw = $this->plugin_manager->getObservers();
         
         // add all of the PluginWrappers to the various places.
-        $ts->addTickObserver($pw[0]);
+        $pseudo_ts->addTickObserver($pw[0]);
         $hfm->addDiffObserver($pw[0]);
         $rtm->addTrackChangeObserver($pw[0]);
         $npm->addNowPlayingObserver($pw[0]);
@@ -458,12 +466,46 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         $this->plugin_manager->onStart();
 
         // Tick tick tick. This only returns if a signal is caught
-        $ts->startClock($this->sleep, $sh/*, $ih*/);
+        $real_ts->startClock($this->sleep, $sh/*, $ih*/);
         
         $rtm->shutdown();
         
         $this->plugin_manager->onStop();
     }
+    
+    protected function post_process($filename)
+    {
+        echo "post processing {$filename}...\n";
+        
+        // Use the caching version via Dependency Injection. This means that all 
+        // new SSLTracks created using a SSLTrackFactory will get a RuntimeCachingSSLTrack
+        // that knows how to ask the cache about expensive lookups (such as getID3 stuff). 
+        Inject::map('SSLTrackFactory', new SSLTrackCache());
+        
+        $ts = new InstantTickSource();
+        $hfm = new SSLHistoryFileReplayer($filename);
+        $ism = new ImmediateScrobbleModel(); // deal with PLAYED tracks one by one
+
+        $ts->addTickObserver($hfm);
+        $hfm->addExitObserver($ts);
+
+        $hfm->addDiffObserver($ism);
+
+        // get the PluginWrapper that wraps all other plugins.
+        $pw = $this->plugin_manager->getObservers();
+        
+        // add all of the PluginWrappers to the various places.
+        $ts->addTickObserver($pw[0]);
+        $hfm->addDiffObserver($pw[0]);
+        $ism->addScrobbleObserver($pw[0]);
+        
+        $this->plugin_manager->onStart();
+
+        // Tick tick tick. This only returns if a signal is caught
+        $ts->startClock($this->sleep);
+        
+        $this->plugin_manager->onStop();
+    }    
     
     protected function getMostRecentFile($from_dir, $type)
     {

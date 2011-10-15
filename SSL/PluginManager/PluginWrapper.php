@@ -187,6 +187,14 @@ class PluginWrapper implements TickObservable, TickObserver,
         }
     }
     
+    public function startClock($interval, SignalHandler $sh = null, InputHandler $ih = null)
+    {
+        foreach($this->to as $t) // target
+        {
+            $t->startClock($interval, $sh, $ih);
+        }
+    }
+    
     protected function addAllObserversFromPlugins()
     {
         foreach($this->plugins as $id => $plugin)
