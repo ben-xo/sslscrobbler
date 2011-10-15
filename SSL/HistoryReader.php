@@ -228,7 +228,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         echo "Session file is optional. If omitted, the most recent history file from {$this->historydir} will be used automatically\n";
         echo "    -h or --help:              This message.\n";
         echo "    -i or --immediate:         Do not wait for the next history file to be created before monitoring. (Use if you started {$appname} mid way through a session)\n";
-        echo "    -p or --post-process:      Loop through the file and send events to plugins after the fact. Use for scrobbling an offline session.\n";
+        echo "    -p or --post-process:      Loop through the file and send events to plugins after the fact. Use for scrobbling an offline session. Implies --immediate\n";
         echo "\n";
 
         foreach($this->cli_plugins as $plugin)
@@ -311,6 +311,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             if($arg == '--post-process' || $arg == '-p')
             {
                 $this->post_process = true;
+                $this->wait_for_file = false;
                 continue;
             }
 
