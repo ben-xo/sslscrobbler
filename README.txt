@@ -1,4 +1,4 @@
-SSLScrobbler v0.10
+SSLScrobbler v0.11
 ==================
 
 SSLScrobbler is a Scrobbler for Serato ScratchLive! (http://www.serato.com/) 
@@ -81,19 +81,10 @@ section 4, TROUBLESHOOTING, for more information.
 1.2 Getting Started
 ----------------------
 
-SSLScrobbler is currently designed to be run from the command line. For 
-convenience only, there are shortcuts provided to double-click for Mac and 
-Windows. But best results can be obtained by running from Terminal (Mac) or a 
-DOS box (Win).
+SSLScrobbler is currently designed to be run from the command line. 
 
-Very very quick start:
 
- * OSX (Mac): double click "historyreader-mac"
- * Windows:   double click "historyreader-win"
- 
- To quit SSL Scrobbler, click on its window and press Ctrl-C. 
- 
-Better start, from Terminal:
+TO START:
 
  OSX (Mac):
  
@@ -106,8 +97,6 @@ Better start, from Terminal:
  * For help and information on options, type --help before hitting enter. e.g: 
 
    $ ./historyreader.php --help
-
-   To quit SSL Scrobbler, click on its window and press Ctrl-C.
     
  Windows:
  
@@ -122,9 +111,36 @@ Better start, from Terminal:
  
    C:\> php "C:\Documents and Settings\ben\Desktop\historyreader.php" --help
  
-   To quit SSL Scrobbler, click on its window and press Ctrl-C.
-    
+
+TO QUIT:
+
+To quit SSL Scrobbler, click on its window and press Ctrl-C.
+
+
+1.3 Quick HOWTO
+------------------
+
+TO SCROBBLE AS YOU PLAY:
+
+php historyreader.php -L lastfmusername
+
+
+TO SCROBBLE THE PREVIOUS SET (e.g. from your gig last night):
+
+php historyreader.php -L lastfmusername --post-process
+
+
+TO SCROBBLE SEVERAL PEOPLE IN THE ROOM:
+
+php historyreader.php -L lastfmusername -L lastfmusername2 -L lastfmusername3
+
+
+TO TWEET AS YOU PLAY
+
+php historyreader.php -T twitterusername
  
+
+
 1.3 Options
 --------------
 
@@ -153,6 +169,10 @@ Add the following options to the command when running from Terminal / DOS:
  -l or --log-file <file>:   
   Write the output to a file. (If this option is omitted, output goes to the 
   screen)
+  
+ -p or --post-process
+  Immediately processes everything in the last history file. Ideal for
+  scrobbling that set you played last night.
  
 Last.fm options:
  -L or --lastfm <username>: 
