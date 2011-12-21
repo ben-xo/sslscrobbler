@@ -27,6 +27,8 @@
 
 error_reporting(E_ALL | E_STRICT);
 
+chdir(dirname(__FILE__));
+
 require_once 'External/getID3/getid3.php';
 require_once 'SSL/Autoloader.php';
 
