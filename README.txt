@@ -58,14 +58,26 @@ section 4, TROUBLESHOOTING, for more information.
   
   SSLScrobbler is best started from the Terminal.
   
+* Windows 7 or Vista:
+  
+  Which PHP you install depends if you are on 32-bit or 64-bit Windows. If 
+  you're on 32-bit Windows, follow the instructions below for Windows XP.
+  If you're on 64-bit Windows, download the 64-bit version of PHP from
+  http://www.anindya.com/
+    
+  
 * Windows:
 
   You should install PHP 5.3 and Growl. You must reboot after installing these, 
   even if it doesn't ask!
   
-  You can download and install PHP 5.3 from http://windows.php.net/download/
+  If you're on Windows XP, 32-bit Vista or 32-bit Windows 7, you can download 
+  and install PHP 5.3 from http://windows.php.net/download/
   (You probably want the 'Installer' nearest the top of the page, unless you
   know better.)
+  
+  If you're on 64-bit Windows Vista or 64-bit Windows 7, you can download
+  the 64-bit version of PHP 5.3 from http://www.anindya.com/ .
   
   I strongly suggest you make the following change to your php.ini file (which 
   can usually be found in C:\Program Files\PHP). Open the file in Notepad, and 
