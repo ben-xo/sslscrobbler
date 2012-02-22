@@ -1,4 +1,4 @@
-SSLScrobbler v0.11
+SSLScrobbler v0.12
 ==================
 
 SSLScrobbler is a Scrobbler for Serato ScratchLive! (http://www.serato.com/) 
@@ -205,6 +205,13 @@ Twitter options:
   called <session>-twitter.txt
   
   NOTE: you can include -T multiple times and tweet to multiple accounts.
+  
+DB options:
+ -D or --db <key>:
+  Put the now playing track into a database row. It will issue one SQL 
+  statement for every 'Now Playing'.
+  
+  Exactly what SQL is run, and where it is sent, is configued in config.php.
   
 
 2. HOW IT WORKS
@@ -602,6 +609,7 @@ Thanks:
 * Jesse Ward (jw76), for beta testing and bug reports
 * Dan Etherington (baseonmars), Zac Stevens (zts) and Attila Gyorffy (djliquiduk)
   for beta testing, feedback and moral support
+* Pierre-Olivier Pitre (djnightlife) for support his support of the project!
 
 Shouts:
 * Last.fm for letting me use the back room of the office to broadcast loud radio

@@ -23,6 +23,15 @@ $twitterConfig = array(
     )
 );
 
+$dbConfig = array(
+	'dsn' => 'mysql:host=localhost;dbname=test',
+	'user' => 'username',
+	'pass' => 'password',
+	'options' => array(),
+	'sql' => "UPDATE table SET field=:track WHERE user=:key",
+	'empty_string' => '<no track is currently playing>',
+);
+
 $nowplayingloggerConfig = array(
     'filename' => dirname(__FILE__) . '/SSL/Plugins/NowPlaying/nowplaying.txt'
 );
@@ -39,6 +48,7 @@ $plugins = array(
 $cli_plugins = array(
     new CLILastfmPlugin($lastfmConfig),
     new CLITwitterPlugin($twitterConfig),
+    new CLIDBPlugin($dbConfig),
 );
 
 // set max log levels for various internal components. (The default is unlimited.)
