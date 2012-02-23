@@ -54,7 +54,7 @@ class CLIDBPlugin implements CLIPlugin
     }
     
     /**
-     * It's possible to include more than one instance of TwitterPlugin
+     * It's possible to include more than one instance of DBPlugin
      *  
      * @see CLIPlugin::parseOption()
      */
