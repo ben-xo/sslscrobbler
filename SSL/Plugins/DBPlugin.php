@@ -35,11 +35,11 @@ class DBPlugin implements SSLPlugin, NowPlayingObserver
     protected $key;
     
     /**
-     * Map of tokens actually used in the SQL statement
+     * Map of placeholders actually used in the SQL statement
      * 
      * @var array
      */
-    protected $token_map = array(
+    protected $placeholder_map = array(
         ':album' => false,
         ':artist' => false,
         ':track' => false,
@@ -73,7 +73,7 @@ class DBPlugin implements SSLPlugin, NowPlayingObserver
         $this->dbh = new PDO($config['dsn'], $config['user'], $config['pass'], $config['options']);
         $this->dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $this->dbh->exec('SET CHARACTER SET utf8');
-        $this->setTokenMapFromSQL($config['sql']);
+        $this->setPlaceholderMapFromSQL($config['sql']);
         $this->sth = $this->dbh->prepare($config['sql']);
     }
     
@@ -97,44 +97,44 @@ class DBPlugin implements SSLPlugin, NowPlayingObserver
     {
         if($track) 
         {
-            $tokens = $this->getTokensFromTrack($track, $this->token_map);
+            $placeholders = $this->getPlaceholdersFromTrack($track, $this->placeholder_map);
         }
         else
         {
-            $tokens = $this->getTokensForNoTrack($this->token_map);
+            $placeholders = $this->getPlaceholdersForNoTrack($this->placeholder_map);
         }
-        $this->sth->execute( $tokens );
+        $this->sth->execute( $placeholders );
     }
     
-    protected function getTokensFromTrack(SSLTrack $track, array $token_map)
+    protected function getPlaceholdersFromTrack(SSLTrack $track, array $placeholder_map)
     {
-        $tokens = array();
-        if($token_map[':track'])  $tokens[':track']  = $track->getFullTitle();
-        if($token_map[':artist']) $tokens[':artist'] = $track->getArtist();
-        if($token_map[':title'])  $tokens[':title']  = $track->getTitle();
-        if($token_map[':album'])  $tokens[':album']  = $track->getAlbum();
-        if($token_map[':key'])    $tokens[':key']    = $this->key;
-        return $tokens;        
+        $placeholders = array();
+        if($placeholder_map[':track'])  $placeholders[':track']  = $track->getFullTitle();
+        if($placeholder_map[':artist']) $placeholders[':artist'] = $track->getArtist();
+        if($placeholder_map[':title'])  $placeholders[':title']  = $track->getTitle();
+        if($placeholder_map[':album'])  $placeholders[':album']  = $track->getAlbum();
+        if($placeholder_map[':key'])    $placeholders[':key']    = $this->key;
+        return $placeholders;
     }
     
-    protected function getTokensForNoTrack(array $token_map)
+    protected function getPlaceholdersForNoTrack(array $placeholder_map)
     {
-        $tokens = array();
-        if($token_map[':track'])  $tokens[':track']  = $this->config['empty_string'];
-        if($token_map[':artist']) $tokens[':artist'] = '';
-        if($token_map[':title'])  $tokens[':title']  = '';
-        if($token_map[':album'])  $tokens[':album']  = '';
-        if($token_map[':key'])    $tokens[':key']    = $this->key;
-        return $tokens;        
+        $placeholders = array();
+        if($placeholder_map[':track'])  $placeholders[':track']  = $this->config['empty_string'];
+        if($placeholder_map[':artist']) $placeholders[':artist'] = '';
+        if($placeholder_map[':title'])  $placeholders[':title']  = '';
+        if($placeholder_map[':album'])  $placeholders[':album']  = '';
+        if($placeholder_map[':key'])    $placeholders[':key']    = $this->key;
+        return $placeholders;
     }
     
-    protected function setTokenMapFromSQL($sql)
+    protected function setPlaceholdersMapFromSQL($sql)
     {
         if(preg_match_all('/:[a-z]+/', $sql, $matches)) 
         {
-            foreach($matches[0] as $token)
+            foreach($matches[0] as $placeholder)
             {
-                $this->token_map[$token] = true;
+                $this->placeholder_map[$placeholder] = true;
             }
         }
     }
