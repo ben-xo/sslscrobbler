@@ -93,6 +93,9 @@ class DBPlugin implements SSLPlugin, NowPlayingObserver
         $this->sth->execute(
             array(
                 ':track' => $fulltitle,
+                ':artist' => $track->getArtist(),
+                ':title' => $track->getTitle(),
+                ':album' => $track->getAlbum(),
                 ':key' => $this->key
             )
         );

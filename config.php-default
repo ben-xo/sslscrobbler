@@ -28,7 +28,7 @@ $dbConfig = array(
 	'user' => 'username',
 	'pass' => 'password',
 	'options' => array(),
-	'sql' => "UPDATE table SET field=:track WHERE user=:key",
+	'sql' => "UPDATE table SET field=:track, artist=:artist, title=:title, album=:album WHERE user=:key",
 	'empty_string' => '<no track is currently playing>',
 );
 
