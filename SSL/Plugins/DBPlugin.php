@@ -90,6 +90,10 @@ class DBPlugin implements SSLPlugin, NowPlayingObserver
         $this->config = $config;
     }
 
+    
+    /**
+     * Executes a prepared statement based on the now playing track.
+     */
     public function notifyNowPlaying(SSLTrack $track=null)
     {
         if($track) 
@@ -109,6 +113,14 @@ class DBPlugin implements SSLPlugin, NowPlayingObserver
        
     }
     
+    /**
+     * Find all :placeholders in the supplied SQL.
+     * 
+     * This is not fool-proof; if your SQL contains bare strings with :colonwords
+     * then it may fail.
+     * 
+     * @param string $sql
+     */
     protected function setPlaceholderMapFromSQL($sql)
     {
         if(preg_match_all('/:[a-z]+/', $sql, $matches))
@@ -119,7 +131,12 @@ class DBPlugin implements SSLPlugin, NowPlayingObserver
             }
         }
     }
-         
+    
+    /**
+     * It's an SQL error to provide the wrong number variable bindings to a prepared
+     * statement, so we must trim down the number we pass based on which actually
+     * appeared in the SQL statement.
+     */
     protected function getPlaceholdersFromTrack(SSLTrack $track, array $placeholder_map)
     {
         $placeholders = array();
@@ -131,6 +148,11 @@ class DBPlugin implements SSLPlugin, NowPlayingObserver
         return $placeholders;
     }
     
+    /**
+     * It's an SQL error to provide the wrong number variable bindings to a prepared
+     * statement, so we must trim down the number we pass based on which actually
+     * appeared in the SQL statement.
+     */
     protected function getPlaceholdersForNoTrack(array $placeholder_map)
     {
         $placeholders = array();
@@ -142,6 +164,12 @@ class DBPlugin implements SSLPlugin, NowPlayingObserver
         return $placeholders;
     }
 
+    /**
+     * Connects to the DB, and sets the character set of the connection to UTF-8,
+     * and then prepares the prepared statement.
+     * 
+     * TODO: make that SET CHARACTER SET command work with non-MySQL DSNs.
+     */
     protected function connect()
     {
         $config = $this->config;
