@@ -33,6 +33,7 @@ class DBPlugin implements SSLPlugin, NowPlayingObserver
 {
     protected $config;
     protected $key;
+    const RETRY_LIMIT = 2;
     
     /**
      * Map of placeholders actually used in the SQL statement
@@ -70,11 +71,7 @@ class DBPlugin implements SSLPlugin, NowPlayingObserver
     public function onStart()
     {
         $config = $this->config;
-        $this->dbh = new PDO($config['dsn'], $config['user'], $config['pass'], $config['options']);
-        $this->dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $this->dbh->exec('SET CHARACTER SET utf8');
         $this->setPlaceholderMapFromSQL($config['sql']);
-        $this->sth = $this->dbh->prepare($config['sql']);
     }
     
     public function onStop()
@@ -103,9 +100,26 @@ class DBPlugin implements SSLPlugin, NowPlayingObserver
         {
             $placeholders = $this->getPlaceholdersForNoTrack($this->placeholder_map);
         }
-        $this->sth->execute( $placeholders );
+        
+        L::level(L::INFO) &&
+            L::log(L::INFO, __CLASS__, 'Sending %s to DB',
+                array($track ? $track->getFullTitle() : $this->config['empty_string']));
+        
+        $this->executeWithRetries( $placeholders );
+       
     }
     
+    protected function setPlaceholderMapFromSQL($sql)
+    {
+        if(preg_match_all('/:[a-z]+/', $sql, $matches))
+        {
+            foreach($matches[0] as $placeholder)
+            {
+                $this->placeholder_map[$placeholder] = true;
+            }
+        }
+    }
+         
     protected function getPlaceholdersFromTrack(SSLTrack $track, array $placeholder_map)
     {
         $placeholders = array();
@@ -127,15 +141,54 @@ class DBPlugin implements SSLPlugin, NowPlayingObserver
         if($placeholder_map[':key'])    $placeholders[':key']    = $this->key;
         return $placeholders;
     }
-    
-    protected function setPlaceholdersMapFromSQL($sql)
+
+    protected function connect()
     {
-        if(preg_match_all('/:[a-z]+/', $sql, $matches)) 
+        $config = $this->config;
+        $this->dbh = new PDO($config['dsn'], $config['user'], $config['pass'], $config['options']);
+        $this->dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->dbh->exec('SET CHARACTER SET utf8');
+        $this->sth = $this->dbh->prepare($config['sql']);
+    }
+    
+    protected function close()
+    {
+        $this->dbh = null;
+    }
+    
+    protected function executeWithRetries( array $placeholders, $retry_count=0 )
+    {
+        if($retry_count > self::RETRY_LIMIT)
         {
-            foreach($matches[0] as $placeholder)
-            {
-                $this->placeholder_map[$placeholder] = true;
-            }
+            L::level(L::ERROR) &&
+                L::log(L::ERROR, __CLASS__, 'Failed to execute database statement; tried %d times',
+                    array(self::RETRY_LIMIT + 1));
+            
+            return; // fail
+        }
+        
+        if($retry_count > 0)
+        {
+            L::level(L::INFO) &&
+                L::log(L::INFO, __CLASS__, 'Retrying database statement. Attempt number %d',
+                    array($retry_count + 1));
+        }
+        
+        try 
+        {
+            if(!isset($this->dbh)) $this->connect();
+            $this->sth->execute( $placeholders );
+        } 
+        catch(Exception $e) 
+        {
+            $this->close();
+            
+            L::level(L::WARNING) &&
+                L::log(L::WARNING, __CLASS__, 'Statement failed: %s',
+                    array($e->getMessage()));
+            
+            // retry
+            $this->executeWithRetries($placeholders, $retry_count + 1);
         }
     }
 }
