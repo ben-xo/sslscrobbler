@@ -609,7 +609,7 @@ Thanks:
 * Jesse Ward (jw76), for beta testing and bug reports
 * Dan Etherington (baseonmars), Zac Stevens (zts) and Attila Gyorffy (djliquiduk)
   for beta testing, feedback and moral support
-* Pierre-Olivier Pitre (djnightlife) for support his support of the project!
+* DJ NightLife for his support of the project!
 
 Shouts:
 * Last.fm for letting me use the back room of the office to broadcast loud radio
