@@ -71,6 +71,7 @@ field17: string. c>rcomments
 field18: ascii.  c>rlang
 field19: string. c>rgrouping
 
+field20: string. c>rremixer
 field21: string. c>rlabel
 field22: string. c>rcomposer
 field23: string. c>ryear
