@@ -1,3 +1,9 @@
 #!/bin/sh
 cd "`dirname $0`"
-php historyreader.php
+echo ""
+echo "See README.txt for things you should type here, but to get started try one of these:"
+echo ""
+echo "php historyreader.php -L <lastfm-name>"
+echo "php historyreader.php -T <twitter-name>"
+echo ""
+bash
