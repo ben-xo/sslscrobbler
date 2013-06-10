@@ -1,4 +1,4 @@
-SSLScrobbler v0.13
+SSLScrobbler v0.14
 ==================
 
 SSLScrobbler is a Scrobbler for Serato ScratchLive! (http://www.serato.com/) 
@@ -607,6 +607,7 @@ At this point, we have concrete SSLTrack objects.
 
 Thanks:
 * Jesse Ward (jw76), for beta testing and bug reports
+* Jason Salaz (VxJasonxV) for the Nicecast plugin
 * Dan Etherington (baseonmars), Zac Stevens (zts) and Attila Gyorffy (djliquiduk)
   for beta testing, feedback and moral support
 * DJ NightLife for his support of the project!
