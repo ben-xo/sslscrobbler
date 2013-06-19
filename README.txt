@@ -639,8 +639,8 @@ SSLScrobbler includes the following external libraries:
 * Twitter OAuth (http://github.com/abraham/twitteroauth/)
   originally by Abraham Williams, licensed under the MIT license.
   
-* PHP-Twitter (http://code.google.com/p/php-twitter/)
-  originally by Tijs Verkoyen, licensed under the BSD license.
+* Twitter-PHP (https://github.com/dg/twitter-php)
+  originally by David Grudl, licensed under the New BSD license.
   
 * getID3 (http://getid3.sourceforge.net/)
   originally by James Heinrich, licensed under the GPL license.
