@@ -25,7 +25,7 @@
  */
 
 require_once 'External/twitteroauth-0.2.0-beta3.0/twitteroauth/twitteroauth.php';
-require_once 'External/twitter.php';
+require_once 'External/twitter-php/src/twitter.class.php';
 
 /**
  * Sends your current Now Playing track to a Twitter account.
@@ -124,9 +124,12 @@ class TwitterPlugin implements SSLPlugin
     protected function getTwitter()
     {
         $config = $this->config;
-        $twitter = new Twitter($config['consumer_key'], $config['consumer_secret']);
-        $twitter->setOAuthToken($config['oauth_token']);
-        $twitter->setOAuthTokenSecret($config['oauth_token_secret']);
+        $twitter = new Twitter(
+            $config['consumer_key'], 
+            $config['consumer_secret'], 
+            $config['oauth_token'], 
+            $config['oauth_token_secret']
+        );
         return $twitter;
     }
 }

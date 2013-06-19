@@ -93,7 +93,7 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
                 L::log(L::DEBUG, __CLASS__, 'Sending Now Playing to Twitter',
                     array( ));
 
-            $this->twitter->statusesUpdate($status);
+            $this->twitter->send($status);
         }
         catch(Exception $e)
         {
