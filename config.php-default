@@ -23,6 +23,16 @@ $twitterConfig = array(
     )
 );
 
+$irccatConfig = array(
+    'message' => 'now playing: %s',
+    'filters' => array(
+        // filters from SSL/Plugins/Twitter/MessageFilters
+
+        // Disabled: add :beatport: into your message string above
+        // new BeatportTrackMessageFilter( new VgdURLShortener() )
+    )
+);    
+
 $dbConfig = array(
 	'dsn' => 'mysql:host=localhost;dbname=test',
 	'user' => 'username',
@@ -49,6 +59,7 @@ $cli_plugins = array(
     new CLILastfmPlugin($lastfmConfig),
     new CLITwitterPlugin($twitterConfig),
     new CLIDBPlugin($dbConfig),
+    new CLIIrcCatPlugin($irccatConfig),
 );
 
 // set max log levels for various internal components. (The default is unlimited.)

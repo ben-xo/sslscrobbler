@@ -1,4 +1,4 @@
-SSLScrobbler v0.14
+SSLScrobbler v0.15
 ==================
 
 SSLScrobbler is a Scrobbler for Serato ScratchLive! (http://www.serato.com/) 
@@ -212,6 +212,11 @@ DB options:
   statement for every 'Now Playing'.
   
   Exactly what SQL is run, and where it is sent, is configued in config.php.
+  
+IRCCat options:
+ -I or --irccat host:port#channel
+  Put the now playing track into an IRC channel using IRCCat. (IRCCat sold
+  separately - https://github.com/RJ/irccat).   
   
 
 2. HOW IT WORKS
