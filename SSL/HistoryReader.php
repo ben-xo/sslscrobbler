@@ -31,6 +31,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
     protected $post_process = false;
     protected $dump_type = 'sessionfile';
     protected $wait_for_file = true;
+    protected $dir_provided = false;
     protected $help = false;
     protected $manual_tick = false;
     protected $csv = false;
@@ -145,8 +146,10 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             
             if(empty($filename))
             {
-                // guess history file (always go for the most recently modified)
-                $this->historydir = $this->getDefaultHistoryDir();
+                if (!$this->dir_provided) {
+                    // guess history file (always go for the most recently modified)
+                    $this->historydir = $this->getDefaultHistoryDir();
+                }
                 
                 if($this->wait_for_file)
                 {
@@ -229,6 +232,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         echo "    -h or --help:              This message.\n";
         echo "    -i or --immediate:         Do not wait for the next history file to be created before monitoring. (Use if you started {$appname} mid way through a session)\n";
         echo "    -p or --post-process:      Loop through the file and send events to plugins after the fact. Use for scrobbling an offline session. Implies --immediate\n";
+        echo "          --dir:               Use the most recent history file from this directory.\n";
         echo "\n";
 
         foreach($this->cli_plugins as $plugin)
@@ -305,6 +309,13 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             if($arg == '--immediate' || $arg == '-i')
             {
                 $this->wait_for_file = false;
+                continue;
+            }
+
+            if($arg == '--dir')
+            {
+                $this->dir_provided = true;
+                $this->historydir = array_shift($argv);
                 continue;
             }
 
