@@ -56,9 +56,13 @@ class SSLChunkParser
     {
         $string = $this->data;
         
-        $header_bin = substr($string, $this->ptr, 8);
+        do
+        {
+            $header_bin = substr($string, $this->ptr, 8);
+            $length_read = strlen($header_bin);
+        }
+        while($length_read > 0 && str_pad($header_bin, 8, "\0") == "\0\0\0\0\0\0\0\0");
         
-        $length_read = strlen($header_bin);
         if($length_read < 8)
             throw new RuntimeException("Could not parse string ($length_read bytes is too short to contain a header)"); 
 
@@ -79,9 +83,16 @@ class SSLChunkParser
     
     public function parseFromFile($fp)
     {
-        $header_bin = fread($fp, 8);
+        // It looks like newer Serato sometimes allocates large chunks of free space in the file at the end.
+        // This doesn't count as data, so we skip it, using str_pad() to make sure we also skip any run of 
+        // nulls that is shorter than 8 bytes.
+        do
+        {
+            $header_bin = fread($fp, 8);
+            $length_read = strlen($header_bin);
+        }
+        while($length_read > 0 && str_pad($header_bin, 8, "\0") == "\0\0\0\0\0\0\0\0");
                 
-        $length_read = strlen($header_bin);
         if($length_read == 0)
         {
             L::level(L::DEBUG) &&
@@ -105,15 +116,25 @@ class SSLChunkParser
             $chunk_size = number_format($chunk_size / 1024 / 1024, 2);
             throw new RuntimeException("Found chunk claiming to be enormous ({$chunk_size} MiB); are you reading the right file?");
         }
-        
-        $body_bin = fread($fp, $chunk_size);
-        
-        $chunk = $this->chunk_factory->newChunk($chunk_type, $body_bin);
-        
-        L::level(L::DEBUG) &&
-            L::log(L::DEBUG, __CLASS__, "Read %s chunk from file", 
-                array($chunk_type));
-        
+
+        if($chunk_size > 0)
+        {
+            $body_bin = fread($fp, $chunk_size);
+            $chunk = $this->chunk_factory->newChunk($chunk_type, $body_bin);
+
+            L::level(L::DEBUG) &&
+                L::log(L::DEBUG, __CLASS__, "Read %s chunk from file",
+                    array($chunk_type));
+        }
+        else
+        {
+            $chunk = '';
+
+            L::level(L::WARNING) &&
+                L::log(L::WARNING, __CLASS__, "Read 0-byte %s chunk from file. This is unusual.",
+                    array($chunk_type));
+        }
+
         return $chunk;
     }
     
