@@ -1,9 +1,16 @@
 
+# API keys
 twitter-*
 lastfm-*
-config.php
-SSL/Plugins/NowPlaying/nowplaying.txt
 
+# Usually copy this file from config.php-default
+config.php
+
+# Demo files
+SSL/Plugins/NowPlaying/nowplaying.txt
+SSL/Plugins/NowPlaying/SevenDigital.key
+
+# Local crap
 .DS_Store
 .buildpath
 .project
