@@ -46,15 +46,15 @@
  * It's an error to have statements outside of a sub-routine. It's also an error to
  * have a program with no sub-routine called 'main'.
  * 
- * XOUP has 4 commands: 'read', 'copy', 'call', 'out' and 'literal', explained below.
+ * XOUP has 4 commands: 'read', 'copy', 'call', and 'literal', explained below.
  * 
  * Read reads from the input and writes to the accumulator or registers.
  * Copy reads from the accumulator and writes to the accumulator or registers.
  * Literal reads from data in the source code and writes to the accumulator or registers.
  *  
  * Read takes the form "r[length][read-type]>[write-type][dest]" e.g. r1l>i_ or r_b>s_
- * Copy takes the form "c>[write-type][dest]"                    e.g. c>rfield
- * Literal looks like  "l[literal-id]>r[dest]"                    e.g. l1>r_ or l_>r_
+ * Copy takes the form "c[from]>[write-type][dest]"              e.g. c>rfield
+ * Literal looks like  "l[literal-id]>r[dest]"                   e.g. l1>r_ or l_>r_
  * Where,
  * * [length] is an integer (or '_' to use the integer in the accumulator)
  * * [read-type] is one of 'b', 'w' or 'l' (for byte, word or longword). 
@@ -141,7 +141,7 @@ class XoupInterpreter extends Unpacker
                     '/^ 
                         (?P<callsub> [a-zA-Z0-9_]+)\. |
                         (?P<copy>
-                            c | 
+                            c(?P<copysource> _|[a-zA-Z][a-zA-Z0-9]*)? | 
                             (?P<read> r)(?P<readlength> \d+|_|\*)(?P<readwidth> b|w|l) | 
                             (?P<lit>  l)(?P<litid>  [a-zA-Z0-9]+) 
                         )
@@ -225,7 +225,20 @@ class XoupInterpreter extends Unpacker
                     switch($read_action)
                     {
                         case 'c':
-                            $datum = $acc;
+                            if($matches['copysource'] == '')
+                            {
+                                $matches['copysource'] = '_';
+                            }
+                            
+                            if($matches['copysource'] == '_')
+                            {
+                                $datum = $acc;
+                            }
+                            else 
+                            {
+                                $datum = $context[$matches['copysource']];    
+                            }
+                            
                             break;
                             
                         case 'r':

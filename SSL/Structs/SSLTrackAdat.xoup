@@ -49,6 +49,7 @@ field:
     
 trap:
     lEUNKNOWN>r! c>r! lCOLON>r! hex. c>r! lEOS>r!
+    
 
 field1: int.     c>rrow
 
@@ -95,6 +96,8 @@ field64: string. c>rcommentname
 field16: ascii. # consume the field
 field33: ascii. # consume the field
 field39: int.   # consume the field
+field70: int.   # consume the field
+field71: ascii. # consume the field
 
 # literal data
 .EOS ""

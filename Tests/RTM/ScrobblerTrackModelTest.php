@@ -41,13 +41,14 @@ class ScrobblerTrackModelTest extends PHPUnit_Framework_TestCase
         $this->scrobble_time = (int) (300 / ScrobblerTrackModel::SCROBBLE_DIVIDER);
     }
     
-    public function trackMock($id, $length=300, $played=false, $playtime=null)
+    public function trackMock($id, $length=300, $played=false, $playtime=null, $deck=null)
     {
         $t = $this->getMock('SSLTrack');
         $t->expects($this->any()) ->method('getRow')             ->will($this->returnValue($id));
         $t->expects($this->any()) ->method('getLengthInSeconds') ->will($this->returnValue($length));
         $t->expects($this->any()) ->method('getPlayed')          ->will($this->returnValue($played));
         $t->expects($this->any()) ->method('getPlaytime')        ->will($this->returnValue($playtime));
+        $t->expects($this->any()) ->method('getDeck')            ->will($this->returnValue($deck));
         return $t;
     }
     

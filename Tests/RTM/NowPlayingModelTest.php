@@ -78,6 +78,7 @@
     1.4.1.1.a >> When the first track has played through to the end according to the timer, but not stopped, "Now Playing second track" is sent immediately as 2nd track OQTPNPP
     2.a >> When the first track is started, "Now Playing first track" is sent immediately as 1st is OQT
     2.1.a >> When the second track is started, "Now Playing second track" is sent immediately, as 2nd is OQTPNPP
+    
 
 */
 
@@ -117,6 +118,17 @@ class NowPlayingModelTest extends PHPUnit_Framework_TestCase implements NowPlayi
     protected $track123_START;
     protected $track456_START;
     
+    protected $track123_PLAYED_0;
+    protected $track123_PLAYING_1;
+    protected $track123_PLAYING_2;
+    protected $track456_PLAYED_0;
+    protected $track456_PLAYING_1;
+    protected $track456_PLAYING_2;
+    protected $track789_PLAYED_0;
+    protected $track789_PLAYING_1;
+    protected $track789_PLAYING_2;
+    
+    
     // self-shunt variables
     
     protected $now_playing_called;
@@ -131,6 +143,19 @@ class NowPlayingModelTest extends PHPUnit_Framework_TestCase implements NowPlayi
         $this->track789_PLAYING = $stm_test->trackMock(789, 300, true, 125);
         $this->track123_START   = $stm_test->trackMock(123, 300, false, 0);
         $this->track456_START   = $stm_test->trackMock(456, 300, false, 0);
+        
+        $this->track123_PLAYED_0  = $stm_test->trackMock(123, 300, true, 125, 0);
+        $this->track123_PLAYING_1 = $stm_test->trackMock(456, 300, true, 125, 1);
+        $this->track123_PLAYING_2 = $stm_test->trackMock(789, 300, true, 125, 2);
+       
+        $this->track456_PLAYED_0  = $stm_test->trackMock(123, 300, true, 125, 0);
+        $this->track456_PLAYING_1 = $stm_test->trackMock(456, 300, true, 125, 1);
+        $this->track456_PLAYING_2 = $stm_test->trackMock(789, 300, true, 125, 2);
+        
+        $this->track789_PLAYED_0  = $stm_test->trackMock(123, 300, true, 125, 0);
+        $this->track789_PLAYING_1 = $stm_test->trackMock(456, 300, true, 125, 1);
+        $this->track789_PLAYING_2 = $stm_test->trackMock(789, 300, true, 125, 2);
+        
         
         // deck models
         $this->stm_factory = new NowPlayingModelTest_SSLRepo();

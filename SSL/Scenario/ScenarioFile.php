@@ -24,20 +24,12 @@
  *  THE SOFTWARE.
  */
 
-/**
- * Various concrete implementations of SSLDiffDelegate exist for
- * different types of Diff (HistoryDiff, HistoryIndexDiff, etc.).
- * These correspond to different types of SSL file. The DiffObserver
- * uses SSLDiffDelegates to decide what a diff means, whilst keeping
- * the diff-monitoring machinery abstract.
- * 
- * This is different from SSLDiffObserver in that it has nothing to do
- * with event handling, even though the two interfaces look sort of similar
- * and are named sort of similarly as well. (Oops - never mind).
- * 
- * Typically, an SSLDiffDelegate will be some sort of SSL*Observable.
- */
-interface SSLDiffDelegate
+class ScenarioFile implements Scenario
 {
-    public function onDiff(SSLDom $changes);
+    protected $filename;
+    
+    public function __construct($filename)
+    {
+        $this->filename = $filename;
+    }
 }
