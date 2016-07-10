@@ -2,7 +2,9 @@
 twitter-*
 lastfm-*
 config.php
+SSL/Plugins/NowPlaying/nowplaying.txt
+
 .DS_Store
 .buildpath
 .project
-
+.settings
