@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Now Playing example</title>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.js"></script>
+
+<script type="text/javascript">
+
+var updateNowPlaying = function() {
+	$.getJSON( 'http://localhost/ajax.php', {}, function(data) {
+		if(data['playing']) $('#nowplaying').text(data['playing']);
+	} );
+	
+	setTimeout(updateNowPlaying, 2000);
+}
+
+$(document).ready(updateNowPlaying);
+</script>
+
+</head>
+<body>
+
+<div id="nowplaying"></div>
+
+</body>
+</html>
