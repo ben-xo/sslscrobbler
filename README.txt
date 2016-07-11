@@ -616,6 +616,7 @@ Thanks:
 * Dan Etherington (baseonmars), Zac Stevens (zts) and Attila Gyorffy (djliquiduk)
   for beta testing, feedback and moral support
 * DJ NightLife for his support of the project!
+* Brian Tiger Chow for bug reports and patches
 
 Shouts:
 * Last.fm for letting me use the back room of the office to broadcast loud radio
