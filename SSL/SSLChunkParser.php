@@ -81,6 +81,39 @@ class SSLChunkParser
         return $chunk;
     }
     
+    protected function resync($fp)
+    {
+        $done = false;
+        do
+        {
+            $next_four = fread($fp, 4);
+            if($next_four == false)
+            {
+                //eof
+                return false;
+            }
+
+            $next_four_length = strlen($next_four);
+            if($next_four_length < 4)
+            {
+                // eof;
+                return false;
+            }
+
+            if($next_four == 'oent')
+            {
+                // rewind by the length of 'oent'
+                fseek($fp, -4, SEEK_CUR);
+                return true;
+            }
+            fseek($fp, -3, SEEK_CUR); // seek to next chunk, byte by byte.
+        }
+        while(!feof($fp));
+
+        // eof
+        return false;
+    }
+
     public function parseFromFile($fp)
     {
         // It looks like newer Serato sometimes allocates large chunks of free space in the file at the end.
@@ -90,9 +123,24 @@ class SSLChunkParser
         {
             $header_bin = fread($fp, 8);
             $length_read = strlen($header_bin);
+
+            $just_blank_bytes = (str_pad($header_bin, 8, "\0") == "\0\0\0\0\0\0\0\0");
+            if($just_blank_bytes)
+            {
+                L::level(L::WARNING) &&
+                    L::log(L::WARNING, __CLASS__, "Hit unallocated blank space in file.",
+                        array());
+
+                // argh. Attempt to resync the stream to the next oent.
+                if(!$this->resync($fp))
+                {
+                    // eof.
+                    return false;
+                }
+            }
         }
-        while($length_read > 0 && str_pad($header_bin, 8, "\0") == "\0\0\0\0\0\0\0\0");
-                
+        while($length_read > 0 && $just_blank_bytes);
+
         if($length_read == 0)
         {
             L::level(L::DEBUG) &&
@@ -114,7 +162,10 @@ class SSLChunkParser
         {
             // a chunk larger than 1Mb!?
             $chunk_size = number_format($chunk_size / 1024 / 1024, 2);
-            throw new RuntimeException("Found chunk claiming to be enormous ({$chunk_size} MiB); are you reading the right file?");
+            $dumper = new Hexdumper();
+            throw new RuntimeException(
+                sprintf("Found chunk claiming to be enormous ({$chunk_size} MiB); are you reading the right file?\n%s", $dumper->hexdump($header_bin))
+            );
         }
 
         if($chunk_size > 0)
