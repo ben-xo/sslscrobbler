@@ -100,6 +100,7 @@ class SSLChunkParser
                 return false;
             }
 
+            // TODO: This will only work with one type of history file.
             if($next_four == 'oent')
             {
                 // rewind by the length of 'oent'
