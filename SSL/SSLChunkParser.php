@@ -125,6 +125,15 @@ class SSLChunkParser
             $header_bin = fread($fp, 8);
             $length_read = strlen($header_bin);
 
+            if($length_read == 0)
+            {
+                L::level(L::DEBUG) &&
+                    L::log(L::DEBUG, __CLASS__, "Reached EOF; no more to read",
+                        array());
+
+                return false; // if we read an exact chunk, it's not an 'eof'.
+            }
+
             $just_blank_bytes = (str_pad($header_bin, 8, "\0") == "\0\0\0\0\0\0\0\0");
             if($just_blank_bytes)
             {
@@ -140,17 +149,8 @@ class SSLChunkParser
                 }
             }
         }
-        while($length_read > 0 && $just_blank_bytes);
+        while($just_blank_bytes);
 
-        if($length_read == 0)
-        {
-            L::level(L::DEBUG) &&
-                L::log(L::DEBUG, __CLASS__, "Reached EOF; no more to read", 
-                    array());
-                
-            return false; // if we read an exact chunk, it's not an 'eof'.
-        }
-            
         if($length_read < 8)
             throw new OutOfBoundsException("No more data (read {$length_read} bytes)");
 
