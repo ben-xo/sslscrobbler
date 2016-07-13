@@ -256,7 +256,22 @@ class SSLTrack extends SSLStruct
     {
         return $this->getArtist() . ' - ' . $this->getTitle();
     }
-    
+
+    public function getFullStartTime()
+    {
+        return $this->renderTime($this->getStartTime());
+    }
+
+    public function getFullEndTime()
+    {
+        return $this->renderTime($this->getEndTime());
+    }
+
+    protected function renderTime($timestamp)
+    {
+        return date('Y-m-d H:i:s', $timestamp);
+    }
+
     /**
      * This will attempt to set the length via guess work, if it's not already set.
      */

@@ -229,8 +229,8 @@ class SSLRealtimeModelDeck
                 // track notification for this deck!
                 $my_tracks[$track->getRow()] = $track;
                 L::level(L::DEBUG) && 
-                    L::log(L::DEBUG, __CLASS__, "Saw %s in diff (row %s)", 
-                        array( $track->getTitle(), $track->getRow()));
+                    L::log(L::DEBUG, __CLASS__, "Saw %s in diff (row %s @ %s)", 
+                        array( $track->getTitle(), $track->getRow(), $track->getFullStartTime()));
             }
         }
         

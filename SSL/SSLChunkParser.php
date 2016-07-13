@@ -83,33 +83,46 @@ class SSLChunkParser
     
     protected function resync($fp)
     {
-        $done = false;
+        // read 4 bytes, and if it's not an 'oent', rewind by 3 then read the next 4
+        // until we find an 'oent' or until we run out of file.
+
+        $junk_size = 0;
         do
         {
             $next_four = fread($fp, 4);
-            if($next_four == false)
+            if($next_four === false)
+                throw new RuntimeException("Read error; failed to read whilst resyncing.");
+
+            if(strlen($next_four) < 4)
             {
-                //eof
+                L::level(L::DEBUG) &&
+                    L::log(L::DEBUG, __CLASS__, "Reached EOF whilst resyncing; no more to read after %d bytes junk",
+                        array($junk_size));
+
+                // reached end of file.
                 return false;
             }
 
-            $next_four_length = strlen($next_four);
-            if($next_four_length < 4)
-            {
-                // eof;
-                return false;
-            }
-
-            // TODO: This will only work with one type of history file.
+            // TODO: This will only work with one type of history file right now…
             if($next_four == 'oent')
             {
                 // rewind by the length of 'oent'
                 fseek($fp, -4, SEEK_CUR);
+
+                L::level(L::DEBUG) &&
+                    L::log(L::DEBUG, __CLASS__, "Skipped %d bytes junk",
+                        array($junk_size));
+
                 return true;
             }
             fseek($fp, -3, SEEK_CUR); // seek to next chunk, byte by byte.
+            $junk_size++;
         }
         while(!feof($fp));
+
+        L::level(L::DEBUG) &&
+            L::log(L::DEBUG, __CLASS__, "Reached EOF condition whilst resyncing; no more to read after %d bytes junk",
+                array($junk_size));
 
         // eof
         return false;
@@ -123,6 +136,9 @@ class SSLChunkParser
         do
         {
             $header_bin = fread($fp, 8);
+            if($header_bin === false)
+                throw new RuntimeException("Read error; failed to read 8 bytes of chunk header");
+
             $length_read = strlen($header_bin);
 
             if($length_read == 0)
@@ -142,6 +158,7 @@ class SSLChunkParser
                         array());
 
                 // argh. Attempt to resync the stream to the next oent.
+                // it looks like Serato sometimes has junk after the free space!
                 if(!$this->resync($fp))
                 {
                     // eof.
@@ -153,9 +170,6 @@ class SSLChunkParser
 
         if($length_read < 8)
             throw new OutOfBoundsException("No more data (read {$length_read} bytes)");
-
-        if($header_bin === false)
-            throw new RuntimeException("Read error; failed to read 8 bytes of chunk header");
             
         list($chunk_type, $chunk_size) = $this->parseHeader($header_bin);
         
@@ -175,8 +189,8 @@ class SSLChunkParser
             $chunk = $this->chunk_factory->newChunk($chunk_type, $body_bin);
 
             L::level(L::DEBUG) &&
-                L::log(L::DEBUG, __CLASS__, "Read %s chunk from file",
-                    array($chunk_type));
+                L::log(L::DEBUG, __CLASS__, "Read %s chunk from file (size: %d)",
+                    array($chunk_type, $chunk_size));
         }
         else
         {
