@@ -33,7 +33,7 @@ class TerminalNotifierPlugin implements SSLPlugin
 {
     protected $config;
 
-    public function __construct(array $config)
+    public function __construct(array $config=array())
     {
         $this->setConfig($config);
     }
