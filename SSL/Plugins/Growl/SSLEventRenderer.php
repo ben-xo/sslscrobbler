@@ -24,16 +24,16 @@
  *  THE SOFTWARE.
  */
 
-class SSLEventGrowlRenderer implements TrackChangeObserver, NowPlayingObserver, ScrobbleObserver
+class SSLEventRenderer implements TrackChangeObserver, NowPlayingObserver, ScrobbleObserver
 {
     /**
-     * @var Growl
+     * @var PopupNotifier
      */
-    protected $growler;
+    protected $popup_notifier;
     
-    public function __construct(Growl $growler)
+    public function __construct(PopupNotifier $popup_notifier)
     {
-        $this->growler = $growler;
+        $this->popup_notifier = $popup_notifier;
     }
 
     public function notifyTrackChange(TrackChangeEventList $events)
@@ -43,7 +43,7 @@ class SSLEventGrowlRenderer implements TrackChangeObserver, NowPlayingObserver, 
             /* @var $event TrackChangeEvent */
             
             // Commented out as this is actually quite noisy
-            // $this->growler->notify('alert', 'Track Change', $event);
+            // $this->popup_notifier->notify('alert', 'Track Change', $event);
             
             L::level(L::INFO) &&
                 L::log(L::INFO, __CLASS__, '>> Track change: >> %s', 
@@ -55,7 +55,7 @@ class SSLEventGrowlRenderer implements TrackChangeObserver, NowPlayingObserver, 
     {
         if($track)
         {
-            $this->growler->notify('alert', 'Now Playing', $track->getFullTitle());
+            $this->popup_notifier->notify('alert', 'Now Playing', $track->getFullTitle());
 
             L::level(L::INFO) &&
                 L::log(L::INFO, __CLASS__, '>> Now Playing: >> %s', 
@@ -63,7 +63,7 @@ class SSLEventGrowlRenderer implements TrackChangeObserver, NowPlayingObserver, 
         }
         else
         {
-            $this->growler->notify('alert', 'Now Playing', '<Playback Stopped>');
+            $this->popup_notifier->notify('alert', 'Now Playing', '<Playback Stopped>');
 
             L::level(L::INFO) &&
                 L::log(L::INFO, __CLASS__, '>> Now Playing: >> <Playback Stopped>', 
@@ -73,7 +73,7 @@ class SSLEventGrowlRenderer implements TrackChangeObserver, NowPlayingObserver, 
     
     public function notifyScrobble(SSLTrack $track)
     {
-        $this->growler->notify('alert', 'Scrobbling', $track->getFullTitle());
+        $this->popup_notifier->notify('alert', 'Scrobbling', $track->getFullTitle());
         
         L::level(L::INFO) &&
             L::log(L::INFO, __CLASS__, '>> Scrobbling: >> %s', 
