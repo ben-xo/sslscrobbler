@@ -51,6 +51,7 @@ $plugins = array(
     new NowPlayingLoggerPlugin($nowplayingloggerConfig),
 
     /* Disabled plugins */
+    // new TerminalNotifierPlugin(),
     // new JSONServerPOC(),
     // new AnalyzerPlugin(array('db' => dirname(__FILE__) . '/analyze.db')),
 );
