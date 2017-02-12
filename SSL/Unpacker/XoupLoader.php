@@ -89,11 +89,21 @@ class XoupLoader
             {
                 $source_ts = filemtime($filename);
                 $compiled_ts = filemtime($compiled_name);
+                $compiler_ts = filemtime(__FILE__);
 
                 if($compiled_ts < $source_ts)
                 {
                     L::level(L::DEBUG) &&
                         L::log(L::DEBUG, __CLASS__, 'source modified since last compilation',
+                            array());
+
+                    return null;
+                }
+
+                if($compiled_ts < $compiler_ts)
+                {
+                    L::level(L::DEBUG) &&
+                        L::log(L::DEBUG, __CLASS__, 'compiler modified since last compilation',
                             array());
 
                     return null;
