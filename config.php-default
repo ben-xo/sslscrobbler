@@ -49,7 +49,7 @@ $nowplayingloggerConfig = array(
 $plugins = array(
     new GrowlPlugin($growlConfig),
     new NowPlayingLoggerPlugin($nowplayingloggerConfig),
-    new DmcaAlerter(),
+    new DmcaAlerter( /* new TerminalNotifierPopupNotifier() */ ), // uncomment the Popup Notifier if you want Popup Notifications…
 
     /* Disabled plugins */
     // new TerminalNotifierPlugin(),

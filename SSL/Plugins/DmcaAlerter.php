@@ -39,8 +39,11 @@
  */
 class DmcaAlerter implements SSLPlugin, TrackChangeObserver, ScrobbleObserver
 {
-    public function __construct()
+    protected $notifier;
+
+    public function __construct(PopupNotifier $notifier = null)
     {
+        $this->notifier = $notifier;
     }
     
     public function onSetup() {}
@@ -192,6 +195,11 @@ class DmcaAlerter implements SSLPlugin, TrackChangeObserver, ScrobbleObserver
 
     protected function alert($message, $offending_item)
     {
+        if($this->notifier)
+        {
+            $this->notifier->notify('alert', "Don't play it!", sprintf($message, $offending_item));
+        }
+
         L::level(L::WARNING) &&
             L::log(L::WARNING, __CLASS__, $message,
                 array( $offending_item ));
