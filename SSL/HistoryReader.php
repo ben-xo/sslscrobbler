@@ -33,6 +33,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
     protected $wait_for_file = true;
     protected $dir_provided = false;
     protected $help = false;
+    protected $debug_help = false;
     protected $manual_tick = false;
     protected $csv = false;
     protected $log_file = '';
@@ -128,7 +129,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
                         
             if($this->help)
             {
-                $this->usage($this->appname, $argv);
+                $this->usage($this->appname, $argv, $this->debug_help);
                 return;
             }
             
@@ -225,7 +226,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         }
     }
     
-    public function usage($appname, array $argv)
+    public function usage($appname, array $argv, $debug_help=false)
     {
         echo "Usage: {$appname} [OPTIONS] [session file]\n";
         echo "Session file is optional. If omitted, the most recent history file from {$this->historydir} will be used automatically\n";
@@ -241,13 +242,21 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             $plugin->usage($appname, $argv);
         }
 
-        echo "Debugging options:\n";
-        echo "    -d or --dump:              Dump the file's complete structure and exit\n";
-        echo "          --dump-type <x>:     Use a specific parser. Options are: sessionfile, sessionindex\n";
-        echo "    -v or --verbosity <0-9>:   How much logging to output. (default: 0 (none))\n";
-        echo "    -l or --log-file <file>:   Where to send logging output. (If this option is omitted, output goes to stdout)\n";
-        echo "          --manual:            Replay the session file, one batch per tick. (Tick by pressing enter at the console)\n"; 
-        echo "          --csv:               Parse the session file as a CSV, not a binary file, for testing purposes. Best used with --manual\n"; 
+        if($debug_help)
+        {
+            echo "Debugging options:\n";
+            echo "    -d or --dump:              Dump the file's complete structure and exit\n";
+            echo "          --dump-type <x>:     Use a specific parser. Options are: sessionfile, sessionindex\n";
+            echo "    -v or --verbosity <0-9>:   How much logging to output. (default: 0 (none))\n";
+            echo "    -l or --log-file <file>:   Where to send logging output. (If this option is omitted, output goes to stdout)\n";
+            echo "          --manual:            Replay the session file, one batch per tick. (Tick by pressing enter at the console)\n";
+            echo "          --csv:               Parse the session file as a CSV, not a binary file, for testing purposes. Best used with --manual\n";
+        }
+        else
+        {
+            echo "    --debug-help:              Show help about debugging options.\n";
+        }
+
     }
     
     public function getNewFilename()
@@ -291,6 +300,13 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             if($arg == '--help' || $arg == '-h')
             {
                 $this->help = true;
+                continue;
+            }
+
+            if($arg == '--debug-help')
+            {
+                $this->help = true;
+                $this->debug_help = true;
                 continue;
             }
             
