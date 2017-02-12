@@ -66,35 +66,38 @@ field11: string. c>rfilesize
 field13: string. c>rbitrate
 field14: string. c>rfrequency
 field15: int.    c>rbpm 
+field16: hex.  c>rUNKNOWN16
 
 field17: string. c>rcomments
 field18: ascii.  c>rlang
 field19: string. c>rgrouping
-
 field20: string. c>rremixer
 field21: string. c>rlabel
 field22: string. c>rcomposer
 field23: string. c>ryear
+
 field28: timestamp. c>rstarttime
 field29: timestamp. c>rendtime
 field31: int. c>rdeck
 
+#field33: ascii. c>rUNKNOWN33
+#field39: int.   c>rUNKNOWN39
+
 field45: int. c>rplaytime
 
 field48: int. c>rsessionId
+
 field50: int. c>rplayed
 field51: string. c>rkey
 field52: int. c>radded
-
 field53: # usually last field
     timestamp. c>rupdatedAt
 
+field63: string. c>rplayername
 field64: string. c>rcommentname
 
-# known unknowns
-field16: ascii. # consume the field
-field33: ascii. # consume the field
-field39: int.   # consume the field
+field70: int. c>rUNKNOWN70
+field72: int. c>rUNKNOWN72
 
 # literal data
 .EOS ""
