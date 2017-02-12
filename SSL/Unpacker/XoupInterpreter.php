@@ -376,7 +376,7 @@ class XoupInterpreter extends Unpacker
             L::log(L::INFO, __CLASS__, $this->out_buffer,
                 array());
                 
-        $this->out_buffer = '';    
+        $this->out_buffer = '';
     }
 
 }

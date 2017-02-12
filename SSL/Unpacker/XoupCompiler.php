@@ -90,7 +90,8 @@ class XoupCompiler
         $output .= "    {\n";
         $output .= "        L::level(L::INFO) &&\n";
         $output .= "            L::log(L::INFO, __CLASS__, \$this->out_buffer,\n";
-        $output .= "                array());\n";
+        $output .= "                array());\n\n";
+        $output .= "        \$this->out_buffer = '';\n";
         $output .= "    }\n\n";
         foreach(array_keys($this->subs) as $sub)
         {
