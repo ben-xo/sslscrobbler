@@ -25,14 +25,15 @@
  */
 
 /**
- * This plugin sends a popup to Growl on the local machine whenever a track change, 
- * "Now Playing" event or "Scrobble" event occurs.
+ * This plugin sends a popup using terminal-notifier on macOS 
+ * You will need to "brew install terminal-notifier"
+ * https://github.com/julienXX/terminal-notifier
  */
-class GrowlPlugin implements SSLPlugin
+class TerminalNotifierPlugin implements SSLPlugin
 {
     protected $config;
 
-    public function __construct(array $config)
+    public function __construct(array $config=array())
     {
         $this->setConfig($config);
     }
@@ -44,7 +45,7 @@ class GrowlPlugin implements SSLPlugin
     public function getObservers()
     {
         return array(
-            new SSLEventRenderer( $this->getGrowler() )
+            new SSLEventRenderer( new TerminalNotifierPopupNotifier() )
         );
     }
 
@@ -52,20 +53,4 @@ class GrowlPlugin implements SSLPlugin
     { 
         $this->config = $config;
     }
-    
-    /**
-     * @return Growl
-     */
-    protected function getGrowler()
-    {
-        $growler = new GrowlPopupNotifier(
-            $this->config['address'],
-            $this->config['password'],
-            $this->config['app_name']
-        );
-        
-        $growler->addNotification('alert');
-        $growler->register();
-        return $growler;
-    }    
 }

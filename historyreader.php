@@ -53,9 +53,10 @@ else
 
 // Warnings about configuration vars which may have changed since an upgrade
 try {
-    if(!isset($log_levels))  throw new RuntimeException('$log_levels');
-    if(!isset($plugins))     throw new RuntimeException('$plugins');
-    if(!isset($cli_plugins)) throw new RuntimeException('$cli_plugins');
+    if(!isset($log_levels))        throw new RuntimeException('$log_levels');
+    if(!isset($plugins))           throw new RuntimeException('$plugins');
+    if(!isset($cli_plugins))       throw new RuntimeException('$cli_plugins');
+    if(!isset($default_log_level)) throw new RuntimeException('$default_log_level');
 } catch (RuntimeException $e) {
     echo $e->getMessage() . " not set; please check config.php and update it from config.php-default if necessary.\n";
     echo "Did you just upgrade SSLScrobbler? :)\n";
@@ -63,7 +64,7 @@ try {
 }
 
 $h = new HistoryReader();
-$h->setVerbosityOverride($log_levels);
+$h->setVerbosityOverride($log_levels, $default_log_level);
 foreach($plugins as $plugin) $h->addPlugin($plugin);
 foreach($cli_plugins as $plugin) $h->addCLIPlugin($plugin);
 unset($plugin);

@@ -53,12 +53,11 @@ section 4, TROUBLESHOOTING, for more information.
 * OSX (Mac):
   
   SSLScrobbler needs no particular installation, although if it's not already, 
-  you might like to install Growl. (In my experience, most Mac users already 
-  have Growl).
+  you might like to install terminal-notifier ("brew install terminal-notifier")
   
   SSLScrobbler is best started from the Terminal.
   
-* Windows 7 or Vista:
+* Windows Vista, 7, 8 or 10:
   
   Which PHP you install depends if you are on 32-bit or 64-bit Windows. If 
   you're on 32-bit Windows, follow the instructions below for Windows XP.
@@ -341,7 +340,7 @@ the TickSource to start ticking. Every tick, the following happens:
    can be scrobbled.
 8. Whenever the "Now Playing" track changes (or track play stops entirely),
    the NowPlayingModel sends events - mostly to plugins such as the 
-   Twitter plugin, Scrobbler, and Growl notifier.
+   Twitter plugin, Scrobbler, and Growl or Terminal notifier.
 9. Likewise, when a track becomes Scrobbleable, the ScrobbleModel sends 
    events to the Twitter, Scrobble and Growl plugins, etc.
 10. The various plugins then do their bits such as posting to Twitter.

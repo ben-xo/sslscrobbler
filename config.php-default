@@ -51,6 +51,7 @@ $plugins = array(
     new NowPlayingLoggerPlugin($nowplayingloggerConfig),
 
     /* Disabled plugins */
+    // new TerminalNotifierPlugin(),
     // new JSONServerPOC(),
     // new AnalyzerPlugin(array('db' => dirname(__FILE__) . '/analyze.db')),
 );
@@ -63,6 +64,7 @@ $cli_plugins = array(
 );
 
 // set max log levels for various internal components. (The default is unlimited.)
+$default_log_level = L::WARNING;
 $log_levels = array(
 //    'TickSource' => L::SILENT,
 //    'SSLHistoryFileMonitor' => L::DEBUG,
