@@ -190,7 +190,7 @@ class DmcaAlerter implements SSLPlugin, TrackChangeObserver, ScrobbleObserver
         return $count > 2; // …would it be too many in a row?
     }
 
-    protected function alert(string $message, string $offending_item)
+    protected function alert($message, $offending_item)
     {
         L::level(L::WARNING) &&
             L::log(L::WARNING, __CLASS__, $message,
