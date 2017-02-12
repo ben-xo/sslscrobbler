@@ -115,10 +115,10 @@ class DmcaAlerter implements SSLPlugin, TrackChangeObserver, ScrobbleObserver
         $this->last_two_albums[] = $album;
 
         if(count($this->last_three_artists) > 3)
-            array_unshift($this->last_three_artists);
+            array_shift($this->last_three_artists);
 
         if(count($this->last_two_albums) > 2)
-            array_unshift($this->last_two_albums);
+            array_shift($this->last_two_albums);
 
         L::level(L::DEBUG) &&
             L::log(L::DEBUG, __CLASS__, "Last 3 artists: '%s'; Last 2 albums: '%s'",
@@ -176,12 +176,15 @@ class DmcaAlerter implements SSLPlugin, TrackChangeObserver, ScrobbleObserver
 
     protected function isTooManyConsecutiveAlbums($album)
     {
+        if($album == '') return false;
+
         // it is possible for albums by different artists to have the same name, but
         // we don't compensate for that relatively unlikely case here.
 
         $count = 1; // if we were to play this album…
         foreach($this->last_two_albums as $past_album)
         {
+            if($past_album == '') continue;
             if($past_album == $album) $count++;
         }
         return $count > 2; // …would it be too many in a row?
