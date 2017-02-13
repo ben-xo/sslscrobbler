@@ -35,6 +35,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
     protected $help = false;
     protected $debug_help = false;
     protected $manual_tick = false;
+    protected $time_multiplier = 1.0;
     protected $csv = false;
     protected $log_file = '';
     protected $verbosity = L::INFO;
@@ -250,6 +251,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             echo "    -v or --verbosity <0-9>:   How much logging to output. (default: 0 (none))\n";
             echo "    -l or --log-file <file>:   Where to send logging output. (If this option is omitted, output goes to stdout)\n";
             echo "          --manual:            Replay the session file, one batch per tick. (Tick by pressing enter at the console)\n";
+            echo "          --multiply-time <n>: Speed up time by a factor of n\n";
             echo "          --csv:               Parse the session file as a CSV, not a binary file, for testing purposes. Best used with --manual\n";
         }
         else
@@ -359,6 +361,12 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
                 $this->manual_tick = true;
                 continue;
             }
+
+            if($arg == '--multiply-time')
+            {
+                $this->time_multiplier = (float) array_shift($argv);
+                continue;
+            }
             
             if($arg == '--csv')
             {
@@ -435,7 +443,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         else
         {
             // tick based on the clock
-            $pseudo_ts = $real_ts = new TickSource();
+            $pseudo_ts = $real_ts = new TickSource($this->time_multiplier);
         }
         
         if($this->post_process)
