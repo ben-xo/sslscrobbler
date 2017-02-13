@@ -28,6 +28,12 @@ class TickSource implements TickObservable, ExitObserver
 {
     protected $exit_notified = false;
     protected $tick_observers = array();
+    protected $time_multiplier = 1.0;
+
+    public function __construct($time_multiplier = 1.0)
+    {
+        $this->time_multiplier = (float) $time_multiplier;
+    }
     
     public function addTickObserver(TickObserver $o)
     {
@@ -54,6 +60,9 @@ class TickSource implements TickObservable, ExitObserver
         $continue = true;
         while($continue)
         {
+            // debugging option --multiply-time
+            $elapsed *= $this->time_multiplier;
+
             L::level(L::DEBUG) && 
                 L::log(L::DEBUG, __CLASS__, "Tick %s seconds", 
                     array($elapsed));
@@ -61,7 +70,7 @@ class TickSource implements TickObservable, ExitObserver
             $this->notifyTickObservers($elapsed);
             
             $processing_time = microtime(true) - $start_time;
-            
+
             if($processing_time > $interval)
             {
                 L::level(L::WARNING) && 
