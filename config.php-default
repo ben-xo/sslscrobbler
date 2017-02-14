@@ -64,8 +64,8 @@ $cli_plugins = array(
     new CLIIrcCatPlugin($irccatConfig),
 );
 
-// set max log levels for various internal components. (The default is unlimited.)
-$default_log_level = L::WARNING;
+// set max log levels for various internal components. (The default is INFO.)
+$default_log_level = L::INFO;
 $log_levels = array(
 //    'TickSource' => L::SILENT,
 //    'SSLHistoryFileMonitor' => L::DEBUG,
