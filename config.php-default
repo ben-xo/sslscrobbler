@@ -49,7 +49,11 @@ $nowplayingloggerConfig = array(
 $plugins = array(
     new GrowlPlugin($growlConfig),
     new NowPlayingLoggerPlugin($nowplayingloggerConfig),
-    new DmcaAlerter( /* new TerminalNotifierPopupNotifier() */ ), // uncomment the Popup Notifier if you want Popup Notifications…
+
+    // uncomment the Popup Notifier if you want Popup Notifications - but don't use
+    // at the same time as TerminalNotifierPlugin() (below) as the notifications overlap on OSX.
+    // best to use one or the other. (And turn off Growl… pointless these days!)
+    new DmcaAlerter( /* new TerminalNotifierPopupNotifier() */ ),
 
     /* Disabled plugins */
     // new TerminalNotifierPlugin(),
