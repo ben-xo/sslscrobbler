@@ -388,7 +388,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         }
     }
     
-    protected function setupLogging()
+    public function setupLogging()
     {
         if($this->verbosity == 0)
         {
