@@ -141,22 +141,22 @@ class DmcaAlerter implements SSLPlugin, TrackChangeObserver, ScrobbleObserver
 
         if(isset($this->artist_playcounts[$artist]) && $this->artist_playcounts[$artist] > 4)
         {
-            $this->alert("/!\ You have already played artist '%s' 4 times this show. /!\\", $artist);
+            $this->alert("You have already played artist '%s' 4 times this show.", $artist);
         }
 
         elseif(isset($this->album_playcounts[$album]) && $this->album_playcounts[$album] > 3)
         {
-            $this->alert("/!\ You have already played album '%s' 3 times this show. /!\\", $album);
+            $this->alert("You have already played album '%s' 3 times this show.", $album);
         }
 
         elseif($this->isTooManyConsecutiveArtists($artist))
         {
-            $this->alert("/!\ You have played artist '%s' too many times in a row. /!\\", $artist);
+            $this->alert("You have played artist '%s' too many times in a row.", $artist);
         }
 
         elseif($this->isTooManyConsecutiveAlbums($album))
         {
-            $this->alert("/!\ You have played album '%s' too many times in a row. /!\\", $album);
+            $this->alert("You have played album '%s' too many times in a row.", $album);
         }
 
         else
@@ -197,11 +197,11 @@ class DmcaAlerter implements SSLPlugin, TrackChangeObserver, ScrobbleObserver
     {
         if($this->notifier)
         {
-            $this->notifier->notify('alert', "Don't play it!", sprintf($message, $offending_item));
+            $this->notifier->notify(__CLASS__, "⚠️ Don't play it!", sprintf($message, $offending_item));
         }
 
         L::level(L::WARNING) &&
-            L::log(L::WARNING, __CLASS__, $message,
+            L::log(L::WARNING, __CLASS__, "⚠️  Don't play it! :- " . $message,
                 array( $offending_item ));
     }
 }
