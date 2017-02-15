@@ -73,9 +73,10 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
      * 
      * @param array $override
      */
-    public function setVerbosityOverride(array $override)
+    public function setVerbosityOverride(array $override, $default_log_level)
     {
         $this->override_verbosity = $override;
+        $this->verbosity = $default_log_level;
     }
 
     /**
@@ -387,7 +388,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         }
     }
     
-    protected function setupLogging()
+    public function setupLogging()
     {
         if($this->verbosity == 0)
         {
