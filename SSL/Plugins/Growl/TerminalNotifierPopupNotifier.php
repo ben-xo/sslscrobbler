@@ -28,7 +28,7 @@ class TerminalNotifierPopupNotifier implements PopupNotifier
 {
 	public function notify($name, $title, $message)
 	{
-		exec(sprintf('terminal-notifier -timeout 5 -title %s -message %s >/dev/null &',
-						escapeshellarg($title), escapeshellarg($message)));
+		exec(sprintf('terminal-notifier -timeout 5 -title %s -message %s -group %s >/dev/null &',
+						escapeshellarg($title), escapeshellarg($message), escapeshellarg($name)));
 	}
 }
