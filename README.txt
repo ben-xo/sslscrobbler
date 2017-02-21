@@ -2,7 +2,7 @@ SSLScrobbler v0.18
 ==================
 
 SSLScrobbler is a Scrobbler for Serato ScratchLive! (http://www.serato.com/) 
-written in PHP. See http://www.last.fm/help/faq?category=99 for an explanation 
+written in PHP. See https://www.last.fm/about/trackmymusic for an explanation 
 of Scrobbling.
 
 SSLScrobbler is designed to update Last.fm and/or Twitter when a track is 
