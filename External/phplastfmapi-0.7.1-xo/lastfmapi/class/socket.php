@@ -41,7 +41,7 @@ class lastfmApiSocket {
 	 * @param integer $port The port number
 	 * @return boolean
 	 */
-	function lastfmApiSocket ($host, $port) {
+	function __construct ($host, $port) {
 		// Set class variables
 		$this->host = $host;
 		$this->port = $port;
