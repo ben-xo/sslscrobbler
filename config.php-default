@@ -46,6 +46,13 @@ $nowplayingloggerConfig = array(
     'filename' => dirname(__FILE__) . '/SSL/Plugins/NowPlaying/nowplaying.txt'
 );
 
+$curlConfig = array(
+  'url' => 'http://localhost/nowplaying',
+  'port' => 80,
+  'verb' => 'POST',
+  'user_agent' => 'SSLScrobber',
+);
+
 $plugins = array(
     new GrowlPlugin($growlConfig),
     new NowPlayingLoggerPlugin($nowplayingloggerConfig),
