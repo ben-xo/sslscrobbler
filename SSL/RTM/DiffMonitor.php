@@ -31,6 +31,8 @@ class DiffMonitor extends SSLFileReader implements TickObserver
      * @var SSLDom
      */
     protected $dom_prototype;
+
+    protected $last_ignored_filename = '';
     
     public function setPrototype(SSLDom $prototype)
     {
@@ -64,10 +66,11 @@ class DiffMonitor extends SSLFileReader implements TickObserver
         if(isset($this->fns))
         {
             $old_filename = $this->filename;
-            $this->filename = $this->fns->getNewFilename();
-            $got_new_file = ($this->filename != $old_filename);
+            $new_filename = $this->fns->getNewFilename();
+            $got_new_file = $this->fileIsNewer($old_filename, $new_filename);
             if($got_new_file)
             {
+                $this->filename = $new_filename;
                 L::level(L::INFO) && 
                     L::log(L::INFO, __CLASS__, "Changed to new file %s", 
                         array($this->filename));
@@ -76,6 +79,39 @@ class DiffMonitor extends SSLFileReader implements TickObserver
             return $got_new_file;
         }
         return false;
+    }
+
+    protected function fileIsNewer($old_filename, $new_filename)
+    {
+        if($old_filename == $new_filename)
+        {
+            return false;
+        }
+
+        if(preg_match("/(\d+).session$/", $old_filename, $old) && 
+           preg_match("/(\d+).session$/", $new_filename, $new))
+        {
+            // this prevents us from switching to an older history file by mistake.
+            if($old[1] < $new[1])
+            {
+                return true;
+            }
+
+            // don't spam
+            if($new_filename != $this->last_ignored_filename)
+            {
+                L::level(L::INFO) &&
+                    L::log(L::INFO, __CLASS__, "Ignoring update to older session file %s",
+                        array($new_filename));
+
+                $this->last_ignored_filename = $new_filename;
+            }
+
+            return false;
+        }
+
+        // if they're different but we couldn't match them numerically, just assume it's newer.
+        return true;
     }
     
     public function notifyTick($seconds)
