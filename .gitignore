@@ -10,6 +10,15 @@ config.php
 SSL/Plugins/NowPlaying/nowplaying.txt
 SSL/Plugins/NowPlaying/SevenDigital.key
 
+# XOUP compiled files
+SSL/Structs/SSLSessionAdat.php
+SSL/Structs/SSLColumnUcow.php
+SSL/Structs/SSLVersionVrsn.php
+SSL/Structs/SSLLibraryTrackOtrk.php
+SSL/Structs/SSLTrackDeleteUent.php
+SSL/Structs/SSLTrackAdat.php
+SSL/Structs/SSLColumnUcok.php
+
 # Local crap
 .DS_Store
 .buildpath
