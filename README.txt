@@ -1,4 +1,4 @@
-SSLScrobbler v0.19
+SSLScrobbler v0.20
 ==================
 
 SSLScrobbler is a Scrobbler for Serato ScratchLive! (http://www.serato.com/) 
