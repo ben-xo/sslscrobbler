@@ -37,16 +37,19 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
      */
     protected $message_filters;
     
+    protected $sessionname;
+    
     /**
      * @var SSLTrack
      */
     protected $track_to_notify;
     
-    public function __construct(Twitter $twitter, $msg_format, array $message_filters)
+    public function __construct(Twitter $twitter, $msg_format, array $message_filters, $sessionname)
     {
         $this->twitter = $twitter;
         $this->msg_format = $msg_format;
         $this->message_filters = $message_filters;
+        $this->sessionname = $sessionname;
     }
     
     public function notifyNowPlaying(SSLTrack $track=null)
@@ -72,10 +75,17 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
             /* @var $mf ITrackMessageFilter */
             $message = $mf->apply($track, $message);
         }
+
+        $reply_id = $this->getReplyId();
+        $options = array();
+        if($reply_id) {
+            $options['in_reply_to_status_id'] = $reply_id;
+            $message = '@' . $this->sessionname . ' ' . $message;
+        }
         
         // Twitter max message length, minus the pre-processed message,
         // and give back 2 chars for '%s'
-        $max_title_length = 160 - (mb_strlen($message) - 2); 
+        $max_title_length = 280 - (mb_strlen($message) - 2); 
         
         $title = $track->getFullTitle();
         $title_length = mb_strlen($title);
@@ -93,7 +103,7 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
                 L::log(L::DEBUG, __CLASS__, 'Sending Now Playing to Twitter',
                     array( ));
 
-            $this->twitter->send($status);
+            $this->twitter->send($status, null, $options);
         }
         catch(Exception $e)
         {

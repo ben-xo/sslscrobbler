@@ -54,7 +54,12 @@ class TwitterPlugin implements SSLPlugin
     public function getObservers()
     {
         return array(
-            new SSLTwitterAdaptor( $this->getTwitter(), $this->config['message'], $this->config['filters'] )
+            new SSLTwitterAdaptor( 
+                $this->getTwitter(), 
+                $this->config['message'], 
+                $this->config['filters'],
+                $this->sessionname
+            )
         );
     }
 
