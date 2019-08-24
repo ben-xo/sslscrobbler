@@ -47,6 +47,7 @@ class PluginWrapper implements TickObservable, TickObserver,
                                NowPlayingObservable, NowPlayingObserver,
                                ScrobbleObservable, ScrobbleObserver
 {
+    /** @var SSLPlugin[] */
     protected $plugins = array();
     
     /* 
@@ -54,6 +55,16 @@ class PluginWrapper implements TickObservable, TickObserver,
      * as that's what PluginManager does, but it delegates everything
      * to our plugins.
      */
+    
+    public function setOptions(array $options)
+    {
+        foreach($this->plugins as $plugin)
+        {
+            if($plugin instanceof SSLOptionablePlugin) {
+                $plugin->setOptions($options);
+            }
+        }
+    }
     
     public function addPlugin($id, SSLPlugin $plugin)
     {
