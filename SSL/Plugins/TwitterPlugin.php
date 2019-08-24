@@ -37,6 +37,7 @@ class TwitterPlugin implements SSLPlugin, SSLOptionablePlugin
     protected $config;
     protected $sessionname;
     protected $synchronous = false;
+    protected $threading = false;
 
     public function __construct(array $config, $sessionname)
     {
@@ -50,6 +51,10 @@ class TwitterPlugin implements SSLPlugin, SSLOptionablePlugin
             // realtime can because tracks don't play that fast.
             $this->synchronous = true;
         }
+    }
+    
+    public function setThreading($do_threading) {
+        $this->threading = $do_threading;
     }
     
     public function onSetup() 
@@ -79,6 +84,7 @@ class TwitterPlugin implements SSLPlugin, SSLOptionablePlugin
             $this->sessionname
         );
         $adaptor->setSynchronous($this->synchronous);
+        $adaptor->setThreading($this->threading);
         return $adaptor;
     }
 

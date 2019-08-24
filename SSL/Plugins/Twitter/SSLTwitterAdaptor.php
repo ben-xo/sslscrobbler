@@ -45,6 +45,7 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
     protected $track_to_notify;
     
     protected $synchronous = false;
+    protected $threading = false;
     
     public function __construct(Twitter $twitter, $msg_format, array $message_filters, $sessionname)
     {
@@ -84,7 +85,7 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
 
         $reply_id = $this->getReplyId();
         $options = array();
-        if($reply_id) {
+        if($this->threading && $reply_id) {
             $options['in_reply_to_status_id'] = $reply_id;
             $message = '@' . $this->sessionname . ' ' . $message;
         }
@@ -136,6 +137,10 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
         $this->synchronous = $synchronous;
     }
 
+    public function setThreading($do_threading) {
+        $this->threading = $do_threading;
+    }
+    
     protected function saveReplyId($id) {
         $reply_file = 'twitter-' . $this->sessionname . '-last-reply.txt';
         file_put_contents($reply_file, "$id");

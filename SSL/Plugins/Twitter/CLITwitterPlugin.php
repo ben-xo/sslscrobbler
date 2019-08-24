@@ -27,7 +27,7 @@
 class CLITwitterPlugin implements CLIPlugin
 {
     /**
-     * @var array of TwitterPlugin
+     * @var TwitterPlugin[]
      */
     protected $plugins = array();
 
@@ -47,6 +47,7 @@ class CLITwitterPlugin implements CLIPlugin
     {
         echo "Twitter options:\n";
         echo "    -T or --twitter <session>: Post tracklists to Twitter. <session> is a 'save name' for the session. (Will ask you to authorize if you have not already)\n";
+        echo "          --twitter-thread <session>: Post as replies, so they appear in a single thread.\n";
         echo "\n";
     }
     
@@ -60,10 +61,18 @@ class CLITwitterPlugin implements CLIPlugin
         if($arg == '--twitter' || $arg == '-T')
         {
             $sessionname = array_shift($argv);
-            $this->plugins[] = $this->newTwitterPlugin($this->config, $sessionname);
+            $this->plugins[$sessionname] = $this->newTwitterPlugin($this->config, $sessionname);
             return true;
         }
-                
+
+        if($arg == '--twitter-thread')
+        {
+            $sessionname = array_shift($argv);
+            $this->plugins[$sessionname] = $this->newTwitterPlugin($this->config, $sessionname);
+            $this->plugins[$sessionname]->setThreading(true);
+            return true;
+        }
+        
         return false;
     }
     
