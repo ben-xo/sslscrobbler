@@ -103,7 +103,10 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
                 L::log(L::DEBUG, __CLASS__, 'Sending Now Playing to Twitter',
                     array( ));
 
-            $this->twitter->send($status, null, $options);
+            $response = $this->twitter->send($status, null, $options);
+            if($response['id']) {
+                $this->saveReplyId($response['id']);
+            }
         }
         catch(Exception $e)
         {
@@ -121,5 +124,25 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
     public function run()
     {
         $this->sendNowPlaying();
+    }
+
+    protected function saveReplyId($id) {
+        $reply_file = 'twitter-' . $this->sessionname . '-last-reply.txt';
+        file_put_contents($reply_file, "$id");
+    }
+
+    protected function getReplyId() {
+        $reply_file = 'twitter-' . $this->sessionname . '-last-reply.txt';
+        if (! file_exists($reply_file)) {
+            return false;
+        }
+        $reply_file_mtime = filemtime($reply_file);
+        $reply_file_age = time() - $reply_file_mtime;
+
+        if($reply_file_age > 3600 /* 1 hour */) {
+            unlink($reply_file);
+            return false;
+        }
+        return file_get_contents($reply_file);
     }
 }
