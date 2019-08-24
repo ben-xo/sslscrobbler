@@ -59,8 +59,11 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
             $this->track_to_notify = $track;
             
             // Send tweet in a new process, so that it doesn't block other plugins.
-            $runner = new ParallelRunner();
-            $runner->spinOff($this, 'Twitter update');
+            // N.B we no longer do this! Twitter updates are now synchronous, so that they can correctly thread.
+            // $runner = new ParallelRunner();
+            // $runner->spinOff($this, 'Twitter update');
+
+            $this->run();
             unset($this->track_to_notify);            
         }
     }
@@ -100,12 +103,12 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
         try
         {
             L::level(L::DEBUG) &&
-                L::log(L::DEBUG, __CLASS__, 'Sending Now Playing to Twitter',
-                    array( ));
+                L::log(L::DEBUG, __CLASS__, 'Sending Now Playing to Twitter: %s',
+                    array( $status ));
 
             $response = $this->twitter->send($status, null, $options);
-            if($response['id']) {
-                $this->saveReplyId($response['id']);
+            if($response->id) {
+                $this->saveReplyId($response->id);
             }
         }
         catch(Exception $e)
