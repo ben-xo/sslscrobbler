@@ -49,7 +49,7 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObs
     protected $tree;
     
     /**
-     * @var array of SSLHistoryDiffDom
+     * @var SSLHistoryDiffDom[]
      */
     protected $payloads = array();
     
@@ -104,6 +104,10 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObs
                 
         foreach($this->tick_observers as $observer)
         {
+            L::level(L::DEBUG) &&
+                L::log(L::DEBUG, __CLASS__, 'Sending tick to %s',
+                 array(get_class($observer)));
+            
             /* @var $observer TickObserver */
             $observer->notifyTick($seconds);
         }
@@ -169,7 +173,17 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObs
         $this->groupByTimestamp($tracks);
         $this->initialized = true;
     }
-    
+
+    /**
+     * Attempt to group rows by updatedAtTimestamp. This is perfect for older history files or files as
+     * they are written - simultaneously written parts of the file are grouped into a single tick yield.
+     * 
+     * However, sometimes Serato will post-process a history file after it's closed, messing up 
+     * updatedAt's so that they're no longer sequential. In that case, we yield rows one at a time with 
+     * fake timestamps based on the start time.
+     * 
+     * @param array $tracks
+     */
     protected function groupByTimestamp(array $tracks)
     {
         $last_updated_at = 0;
@@ -178,13 +192,15 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObs
         L::level(L::DEBUG) &&
             L::log(L::DEBUG, __CLASS__, 'Found %d tracks in file', 
                 array(count($tracks)));
+        
+        $has_meaningful_updated_at = $this->checkUpdatedAtIsMeaningful($tracks);
 
         //usort($tracks, array($this, 'timestampSort'));
                 
         foreach($tracks as $track)
         {
             /* @var $track SSLTrack */
-            if($track->getUpdatedAt() != $last_updated_at)
+            if($track->getUpdatedAt() > $last_updated_at)
             {
                 if(!empty($group)) 
                 {
@@ -194,11 +210,11 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObs
                         
                     $this->payloads[] = new SSLHistoryDiffDom($group);
                 }
-                $last_updated_at = $track->getUpdatedAt();
                 $group = array();   
             }
                             
             $group[] = $track;
+            $last_updated_at = $track->getUpdatedAt();
         }
                 
         if(!empty($group)) 
@@ -213,6 +229,50 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObs
         L::level(L::DEBUG) &&
             L::log(L::DEBUG, __CLASS__, 'Divided tracks in %d groups', 
                 array(count($this->payloads)));        
+    }
+    
+    /**
+     * 
+     * @param array $tracks
+     * @return bool
+     */
+    protected function checkUpdatedAtIsMeaningful(array $tracks) {
+        $last_updated_at = 0;
+        $last_row = 0;
+        $group_count = 0;
+        
+        foreach($tracks as $track)
+        {
+            $updated_at = $track->getUpdatedAt();
+            $row = $track->getRow();
+            
+            // check if updatedAts ever go back in time from row to row,
+            // which is a big clue that the history was bulk-rewritten (as
+            // it often is when you quit Serato).
+            if($updated_at < $last_updated_at) {
+                L::level(L::DEBUG) &&
+                    L::log(L::DEBUG, __CLASS__, 'UpdatedAt not meaningful: row %d updated before row %d',
+                        array($row, $last_row));
+                return false;
+            }
+            elseif($updated_at > $last_updated_at) {
+                // if the updated at is identical then they would be grouped together.
+                $group_count++;
+            }
+                        
+            $last_updated_at = $updated_at;
+            $last_row = $row;
+        }
+        
+        if($group_count < count($tracks)/2) {
+            L::level(L::DEBUG) &&
+            L::log(L::DEBUG, __CLASS__, 'UpdatedAt not meaningful: %d tracks but only %d groups',
+                array(count($tracks), $group_count));
+            return false;
+            
+        }
+        
+        return true;
     }
     
     private function timestampSort(SSLTrack $a, SSLTrack $b)
