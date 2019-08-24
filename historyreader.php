@@ -35,11 +35,14 @@ require_once 'SSL/Autoloader.php';
 //define('SCROBBLER_LOG', '/tmp/scrobbler.log');
 //define('SINGLE_THREADED', true);
 
-function __autoload($class)
+function ___autoload($class)
 {
     $a = new Autoloader();
     return $a->load($class);
 }
+
+spl_autoload_register("___autoload");
+
 
 if(file_exists('config.php'))
 {

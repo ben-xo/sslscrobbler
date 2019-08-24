@@ -209,6 +209,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             
             if($this->post_process)
             {
+                $this->plugin_manager->setOptions(array('post_process' => true));
                 $this->post_process($filename);
             }
             else
@@ -477,7 +478,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         $rtm_printer = new SSLRealtimeModelPrinter($rtm);
         $npm = new NowPlayingModel();
         $sm = new ScrobbleModel();
-
+        
         // the ordering here is important. See the README.txt for a collaboration diagram.
         $pseudo_ts->addTickObserver($this->plugin_manager);
         $real_ts->addTickObserver($mon);
@@ -522,12 +523,14 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         $ts = new InstantTickSource();
         $hfm = new SSLHistoryFileReplayer($filename);
         $ism = new ImmediateScrobbleModel(); // deal with PLAYED tracks one by one
-
+        $inp = new ImmediateNowPlayingModel(); // deal with PLAYED tracks one by one
+        
         $ts->addTickObserver($hfm);
         $hfm->addExitObserver($ts);
 
         $hfm->addDiffObserver($ism);
-
+        $hfm->addDiffObserver($inp);
+        
         // get the PluginWrapper that wraps all other plugins.
         $pw = $this->plugin_manager->getObservers();
         
@@ -535,6 +538,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         $ts->addTickObserver($pw[0]);
         $hfm->addDiffObserver($pw[0]);
         $ism->addScrobbleObserver($pw[0]);
+        $inp->addNowPlayingObserver($pw[0]);
         
         $this->plugin_manager->onStart();
 

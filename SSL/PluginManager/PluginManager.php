@@ -33,7 +33,7 @@
  * able to programmatically allow or inhibit events to various real plugins.
  * 
  */
-class PluginManager implements SSLPluggable, SSLPlugin, TickObserver
+class PluginManager implements SSLPluggable, SSLPlugin, TickObserver, SSLOptionablePlugin
 {
     /**
      * This object implements all of the various SSLPlugin interfaces
@@ -121,5 +121,9 @@ class PluginManager implements SSLPluggable, SSLPlugin, TickObserver
     {
         // PluginWrapper is all of the observers.
         return array($this->plugin_wrapper);
+    }
+    
+    public function setOptions(array $options) {
+        $this->plugin_wrapper->setOptions($options);
     }
 }

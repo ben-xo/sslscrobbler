@@ -32,15 +32,29 @@ require_once 'External/twitter-php/src/twitter.class.php';
  * 
  * For command line setup @see CLITwitterPlugin
  */
-class TwitterPlugin implements SSLPlugin
+class TwitterPlugin implements SSLPlugin, SSLOptionablePlugin
 {
     protected $config;
     protected $sessionname;
+    protected $synchronous = false;
+    protected $threading = false;
 
     public function __construct(array $config, $sessionname)
     {
         $this->setConfig($config);
         $this->sessionname = $sessionname;
+    }
+    
+    public function setOptions(array $options) {
+        if(isset($options['post_process']) && $options['post_process']) {
+            // post-processing can't tweet in parallel because it needs reply IDs.
+            // realtime can because tracks don't play that fast.
+            $this->synchronous = true;
+        }
+    }
+    
+    public function setThreading($do_threading) {
+        $this->threading = $do_threading;
     }
     
     public function onSetup() 
@@ -53,14 +67,25 @@ class TwitterPlugin implements SSLPlugin
     
     public function getObservers()
     {
-        return array(
-            new SSLTwitterAdaptor( $this->getTwitter(), $this->config['message'], $this->config['filters'] )
-        );
+        return array( $this->getAdaptor() );
     }
 
     public function setConfig(array $config)
     { 
         $this->config = $config;
+    }
+    
+    protected function getAdaptor() {
+        // TwitterSynchronousPlugin overrides this to set synchronous = true
+        $adaptor = new SSLTwitterAdaptor(
+            $this->getTwitter(),
+            $this->config['message'],
+            $this->config['filters'],
+            $this->sessionname
+        );
+        $adaptor->setSynchronous($this->synchronous);
+        $adaptor->setThreading($this->threading);
+        return $adaptor;
     }
 
     protected function loadOrAuthTwitterConfig()

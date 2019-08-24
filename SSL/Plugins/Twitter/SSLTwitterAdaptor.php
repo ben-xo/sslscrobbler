@@ -37,16 +37,22 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
      */
     protected $message_filters;
     
+    protected $sessionname;
+    
     /**
      * @var SSLTrack
      */
     protected $track_to_notify;
     
-    public function __construct(Twitter $twitter, $msg_format, array $message_filters)
+    protected $synchronous = false;
+    protected $threading = false;
+    
+    public function __construct(Twitter $twitter, $msg_format, array $message_filters, $sessionname)
     {
         $this->twitter = $twitter;
         $this->msg_format = $msg_format;
         $this->message_filters = $message_filters;
+        $this->sessionname = $sessionname;
     }
     
     public function notifyNowPlaying(SSLTrack $track=null)
@@ -55,9 +61,13 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
         {
             $this->track_to_notify = $track;
             
-            // Send tweet in a new process, so that it doesn't block other plugins.
-            $runner = new ParallelRunner();
-            $runner->spinOff($this, 'Twitter update');
+            if($this->synchronous) {
+                $this->run();
+            } else {
+                // Send tweet in a new process, so that it doesn't block other plugins.
+                $runner = new ParallelRunner();
+                $runner->spinOff($this, 'Twitter update');
+            }
             unset($this->track_to_notify);            
         }
     }
@@ -72,10 +82,17 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
             /* @var $mf ITrackMessageFilter */
             $message = $mf->apply($track, $message);
         }
+
+        $reply_id = $this->getReplyId();
+        $options = array();
+        if($this->threading && $reply_id) {
+            $options['in_reply_to_status_id'] = $reply_id;
+            $message = '@' . $this->sessionname . ' ' . $message;
+        }
         
         // Twitter max message length, minus the pre-processed message,
         // and give back 2 chars for '%s'
-        $max_title_length = 160 - (mb_strlen($message) - 2); 
+        $max_title_length = 280 - (mb_strlen($message) - 2); 
         
         $title = $track->getFullTitle();
         $title_length = mb_strlen($title);
@@ -90,10 +107,13 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
         try
         {
             L::level(L::DEBUG) &&
-                L::log(L::DEBUG, __CLASS__, 'Sending Now Playing to Twitter',
-                    array( ));
+                L::log(L::DEBUG, __CLASS__, 'Sending Now Playing to Twitter: %s',
+                    array( $status ));
 
-            $this->twitter->send($status);
+            $response = $this->twitter->send($status, null, $options);
+            if($response->id) {
+                $this->saveReplyId($response->id);
+            }
         }
         catch(Exception $e)
         {
@@ -111,5 +131,33 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
     public function run()
     {
         $this->sendNowPlaying();
+    }
+    
+    public function setSynchronous($synchronous) {
+        $this->synchronous = $synchronous;
+    }
+
+    public function setThreading($do_threading) {
+        $this->threading = $do_threading;
+    }
+    
+    protected function saveReplyId($id) {
+        $reply_file = 'twitter-' . $this->sessionname . '-last-reply.txt';
+        file_put_contents($reply_file, "$id");
+    }
+
+    protected function getReplyId() {
+        $reply_file = 'twitter-' . $this->sessionname . '-last-reply.txt';
+        if (! file_exists($reply_file)) {
+            return false;
+        }
+        $reply_file_mtime = filemtime($reply_file);
+        $reply_file_age = time() - $reply_file_mtime;
+
+        if($reply_file_age > 3600 /* 1 hour */) {
+            unlink($reply_file);
+            return false;
+        }
+        return file_get_contents($reply_file);
     }
 }
