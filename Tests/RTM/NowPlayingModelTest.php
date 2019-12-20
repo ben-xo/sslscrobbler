@@ -98,7 +98,7 @@ class NowPlayingModelTest_SSLRepo extends SSLRepo
     }
 }
 
-class NowPlayingModelTest extends PHPUnit_Framework_TestCase implements NowPlayingObserver
+class NowPlayingModelTest extends PHPUnit\Framework\TestCase implements NowPlayingObserver
 {
     /**
      * @var NowPlayingModel
@@ -122,7 +122,7 @@ class NowPlayingModelTest extends PHPUnit_Framework_TestCase implements NowPlayi
     protected $now_playing_called;
     protected $now_playing_called_with;
     
-    public function setUp()
+    public function setUp(): void
     {
         // tracks
         $stm_test = new ScrobblerTrackModelTest();
@@ -143,7 +143,7 @@ class NowPlayingModelTest extends PHPUnit_Framework_TestCase implements NowPlayi
         $this->srm->addNowPlayingObserver($this);
     }
     
-    public function tearDown()
+    public function tearDown(): void
     {
         Inject::reset();
     }

@@ -24,7 +24,7 @@
  *  THE SOFTWARE.
  */
 
-class ScrobblerTrackModelTest extends PHPUnit_Framework_TestCase
+class ScrobblerTrackModelTest extends PHPUnit\Framework\TestCase
 {
     protected $stm;
     protected $track;
@@ -32,7 +32,7 @@ class ScrobblerTrackModelTest extends PHPUnit_Framework_TestCase
     protected $scrobble_time;
     protected $now_playing_time;
     
-    public function setUp()
+    public function setUp(): void
     {
         $this->track = $this->trackMock(123);
         $this->stm = new ScrobblerTrackModel($this->track);
@@ -43,7 +43,7 @@ class ScrobblerTrackModelTest extends PHPUnit_Framework_TestCase
     
     public function trackMock($id, $length=300, $played=false, $playtime=null)
     {
-        $t = $this->getMock('SSLTrack');
+        $t = $this->createMock('SSLTrack');
         $t->expects($this->any()) ->method('getRow')             ->will($this->returnValue($id));
         $t->expects($this->any()) ->method('getLengthInSeconds') ->will($this->returnValue($length));
         $t->expects($this->any()) ->method('getPlayed')          ->will($this->returnValue($played));

@@ -30,13 +30,14 @@
 
 error_reporting(E_ALL | E_STRICT);
 
+require_once 'External/getID3/getid3.php';
 require_once 'SSL/Autoloader.php';
 
-function __autoload($class)
+function ___autoload($class)
 {
     $a = new Autoloader();
     return $a->load($class);
 }
 
 // oh PHPUnit.
-spl_autoload_register('__autoload');
+spl_autoload_register('___autoload');

@@ -24,21 +24,21 @@
  *  THE SOFTWARE.
  */
 
-class SSLRealtimeModelDeckTest extends PHPUnit_Framework_TestCase
+class SSLRealtimeModelDeckTest extends PHPUnit\Framework\TestCase
 {
     /**
      * @var SSLRealtimeModelDeck
      */
     protected $srmd;
     
-    public function setUp()
+    public function setUp(): void
     {
         $this->srmd = new SSLRealtimeModelDeck(0);
     }
 
     public function trackMock($id, $state)
     {
-        $t = $this->getMock('SSLTrack');
+        $t = $this->createMock('SSLTrack');
         
         // these shouldn't really be needed by SSLRealtimeModelDeck
         $t->expects($this->never()) ->method('getLengthInSeconds');

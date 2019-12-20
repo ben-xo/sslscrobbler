@@ -36,7 +36,7 @@ class SSLTrackTest_ExternalRepo extends ExternalRepo
     }
 }
 
-class SSLTrackTest extends PHPUnit_Framework_TestCase
+class SSLTrackTest extends PHPUnit\Framework\TestCase
 {
     var $external_repo;
     var $mock_getid3;
@@ -48,18 +48,22 @@ class SSLTrackTest extends PHPUnit_Framework_TestCase
     
     function mockSSLTrack($methods=array())
     {
-        return $this->getMock('SSLTrack', $methods);
+        return $this->getMockBuilder('SSLTrack')
+                    ->disableOriginalConstructor()
+                    ->setMethods($methods)
+                    ->getMock();
+        // return $this->createMock('SSLTrack', $methods);
     }
     
-    function setUp()
+    function setUp(): void
     {
         $this->external_repo = new SSLTrackTest_ExternalRepo();
-        $this->mock_getid3 = $this->getMock('getid3', array('Analyze'));
+        $this->mock_getid3 = $this->createMock('getid3', array('Analyze'));
         $this->external_repo->getID3 = $this->mock_getid3;
         Inject::map('ExternalRepo', $this->external_repo);
     }
     
-    function tearDown()
+    function tearDown(): void
     {
         Inject::reset();
     }

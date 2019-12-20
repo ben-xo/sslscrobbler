@@ -30,7 +30,7 @@ class RuntimeCachingSSLTrackTest extends SSLTrackTest
 {
     var $cache;
     
-    function setUp()
+    function setUp(): void
     {
         parent::setUp();
         $this->cache = new SSLTrackCache();
@@ -43,7 +43,13 @@ class RuntimeCachingSSLTrackTest extends SSLTrackTest
     
     function mockSSLTrack($methods=array())
     {
-        return $this->getMock('RuntimeCachingSSLTrack', $methods, array($this->cache));
+        $mock = $this->getMockBuilder('RuntimeCachingSSLTrack')
+                    ->disableOriginalConstructor()
+                    ->setMethods($methods)
+                    ->getMock();
+        $mock->__construct($this->cache);
+        return $mock;
+        // return $this->createMock('RuntimeCachingSSLTrack', $methods, array($this->cache));
     }
 
     function test_guess_length_necessary_with_try_hard_cached_results()

@@ -24,14 +24,14 @@
  *  THE SOFTWARE.
  */
 
-class UnpackerTest extends PHPUnit_Framework_TestCase
+class UnpackerTest extends PHPUnit\Framework\TestCase
 {
     /**
      * @var UnpackerTestUnpacker
      */
     protected $u;
     
-    public function setUp()
+    public function setUp(): void
     {
         $this->u = new UnpackerTestUnpacker();
     }

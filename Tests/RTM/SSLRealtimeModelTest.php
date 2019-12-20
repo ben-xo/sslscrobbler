@@ -38,7 +38,7 @@ class SSLRealtimeModelTest_SSLRepo extends SSLRepo
     }
 }
 
-class SSLRealtimeModelTest extends PHPUnit_Framework_TestCase implements TrackChangeObserver
+class SSLRealtimeModelTest extends PHPUnit\Framework\TestCase implements TrackChangeObserver
 {
     protected $rtm;
     protected $repo;
@@ -49,7 +49,7 @@ class SSLRealtimeModelTest extends PHPUnit_Framework_TestCase implements TrackCh
     protected $tcel;
     protected $decks = array();
     
-    public function setUp()
+    public function setUp(): void
     {
         $this->repo = new SSLRealtimeModelTest_SSLRepo();
         Inject::map('SSLRepo', $this->repo);
@@ -59,7 +59,7 @@ class SSLRealtimeModelTest extends PHPUnit_Framework_TestCase implements TrackCh
         $this->rtm->addTrackChangeObserver($this);
         foreach( array(0, 1, 2) as $i)
         {
-            $this->decks[$i] = $this->getMock(
+            $this->decks[$i] = $this->createMock(
             	'SSLRealtimeModelDeck', 
                 array(
                 	'notify', 
@@ -72,7 +72,7 @@ class SSLRealtimeModelTest extends PHPUnit_Framework_TestCase implements TrackCh
         $this->repo->decks = $this->decks;
     }
     
-    public function tearDown()
+    public function tearDown(): void
     {
         Inject::reset();
     }
@@ -84,7 +84,7 @@ class SSLRealtimeModelTest extends PHPUnit_Framework_TestCase implements TrackCh
     
     public function trackMock($id, $deck)
     {
-        $t = $this->getMock('SSLTrack');
+        $t = $this->createMock('SSLTrack');
         
         // these shouldn't really be needed by SSLRealtimeModelDeck
         $t->expects($this->never()) ->method('getLengthInSeconds');
