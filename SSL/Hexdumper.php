@@ -56,24 +56,24 @@ class Hexdumper
         $ordchars = '0123456789ABCDEFGHIJKLMNOPQRSTUV';
         for($i = 0; $i < $width; $i++)
         {
-            if(ord($row{$i}) == 0)
+            if(ord($row[$i]) == 0)
             {
                 // nulls
                 $string .= $this->highlight('.', 31); // red  
             }
-            elseif(ord($row{$i}) < 32) 
+            elseif(ord($row[$i]) < 32) 
             {
                 // <32 is not valid ascii; show these as ints (from the $ordchars array above)
-                $string .= $this->highlight($ordchars{ord($row{$i})}, 32); // green
+                $string .= $this->highlight($ordchars[ord($row[$i])], 32); // green
             }
-            elseif(ord($row{$i}) > 126)
+            elseif(ord($row[$i]) > 126)
             {
                 // >126 is not valid ascii, show these as ints with an !
                 $string .= $this->highlight('!', 33); // yellow
             }
             else
             {
-                $string .= $row{$i};
+                $string .= $row[$i];
             }
         }
         return $string;
