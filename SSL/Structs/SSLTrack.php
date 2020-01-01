@@ -317,6 +317,7 @@ class SSLTrack extends SSLStruct
         /* @var $getid3 getid3 */
         $getid3->option_tag_lyrics3 = false;
         $getid3->option_tag_apetag = false;
+        $getid3->option_tags_html = false;
         $getid3->option_extra_info = true;
         $getid3->encoding = 'UTF-8';
             
