@@ -134,14 +134,6 @@ class SSLRepo implements Factory
     }
     
     /**
-     * @return SSLTrack
-     */
-    public function newTrack()
-    {
-        return new SSLTrack();
-    }
-    
-    /**
      * @return RuntimeCachingSSLTrack
      */
     public function newRuntimeCachingTrack(SSLTrackCache $cache)
