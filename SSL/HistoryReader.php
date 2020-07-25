@@ -428,10 +428,16 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
      */
     protected function monitor($filename)
     {
+        // Use a dependency injection factory which returns TitleFilteredRuntimeCachingSSLTracks
+        // instead of regular RuntimeCachingSSLTracks in order to get nicer titles which scrobble better
+        // TODO: this doesn't feel like the right architecture as it's inheritance based, but title filtering is a behaviour.
+        Inject::map('SSLRepo', new TitleFilteredSSLRepo());
+        
         // Use the caching version via Dependency Injection. This means that all 
         // new SSLTracks created using a SSLTrackFactory will get a RuntimeCachingSSLTrack
         // that knows how to ask the cache about expensive lookups (such as getID3 stuff). 
         Inject::map('SSLTrackFactory', new SSLTrackCache());
+        
         
         if($this->manual_tick) 
         {
