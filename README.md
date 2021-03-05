@@ -19,7 +19,7 @@ reads the binary file and models what's going on.
 The app works on OS X (Mac) and Windows.
 
 
-0. CONTENTS
+0 CONTENTS
 =============
 1. OPERATING SSLSCROBBLER
 2. HOW IT WORKS
@@ -30,7 +30,7 @@ The app works on OS X (Mac) and Windows.
 7. CREDITS & LICENSE
 
 
-1. OPERATING SSLSCROBBLER
+1 OPERATING SSLSCROBBLER
 ===========================
 
 You should start SSLScrobbler before starting Serato DJ!, and then close it 
@@ -208,7 +208,7 @@ Put the now playing track into an IRC channel using IRCCat. (IRCCat sold
 separately - https://github.com/RJ/irccat).   
 
 
-2. HOW IT WORKS
+2 HOW IT WORKS
 =================
 
 SSLScrobbler monitors the current Serato DJ history file. The history file is
@@ -225,7 +225,7 @@ However, SSLScrobbler does not have access to the actual play time or play
 position of the songs, so it has to guess this.
 
 
-3. ADVANCED USE
+3 ADVANCED USE
 =================
 
 * If you want to enable or disable plugins, or change API keys, or other
@@ -237,7 +237,7 @@ position of the songs, so it has to guess this.
   as the file `database v2`). 
  
  
-4. TROUBLESHOOTING
+4 TROUBLESHOOTING
 ====================
 
 * SSLScrobbler looks for history files in the default locations, which are:
@@ -271,8 +271,8 @@ position of the songs, so it has to guess this.
   single-threaded).
   
  
-5. FOR DEVELOPERS
-===================
+5 FOR DEVELOPERS
+================
  
 5.1 Plugins
 -----------------
@@ -596,7 +596,7 @@ diff them. The data extraction part looks like this:
 At this point, we have concrete `SSLTrack` objects.
      
 
-6. THANKS & SHOUTS
+6 THANKS & SHOUTS
 ====================
 
 Thanks:
@@ -614,7 +614,7 @@ Shouts:
 * Mike Louth at Digitally Imported (di.fm)
 
 
-7. CREDITS & LICENSE
+7 CREDITS & LICENSE
 ======================
 
 SSLScrobbler is Free Open Source Software by Ben XO.
