@@ -1,5 +1,5 @@
-SSLScrobbler v0.23
-==================
+# SSLScrobbler v0.23
+
 
 SSLScrobbler is a Scrobbler for Serato DJ and Serato ScratchLive (http://www.serato.com/) 
 written in PHP. See https://www.last.fm/about/trackmymusic for an explanation 
@@ -19,8 +19,8 @@ reads the binary file and models what's going on.
 The app works on OS X (Mac) and Windows.
 
 
-0 CONTENTS
-=============
+# 0. CONTENTS
+
 1. OPERATING SSLSCROBBLER
 2. HOW IT WORKS
 3. ADVANCED USE
@@ -30,8 +30,7 @@ The app works on OS X (Mac) and Windows.
 7. CREDITS & LICENSE
 
 
-1 OPERATING SSLSCROBBLER
-===========================
+# 1. OPERATING SSLSCROBBLER
 
 You should start SSLScrobbler before starting Serato DJ!, and then close it 
 down after closing down Serato DJ. If you have no idea how to start it, See 
@@ -43,8 +42,8 @@ SSLScrobbler will read the current 'session' file from the Serato DJ history
 folder. It will follow from session to session, but use the `-i` option if you
 already have a session open.
 
-1.1 Installation
--------------------
+## 1.1 Installation
+
 
 * OSX (Mac):
   
@@ -79,8 +78,8 @@ already have a session open.
   SSLScrobbler is best started from a DOS box / Command prompt.
 
 
-1.2 Getting Started
-----------------------
+## 1.2 Getting Started
+
 
 SSLScrobbler is currently designed to be run from the command line. 
 
@@ -118,8 +117,8 @@ SSLScrobbler is currently designed to be run from the command line.
 To quit SSL Scrobbler, click on its window and press Ctrl-C.
 
 
-1.3 Quick HOWTO
-------------------
+## 1.3 Quick HOWTO
+
 
 TO SCROBBLE AS YOU PLAY:
 
@@ -142,8 +141,8 @@ TO TWEET AS YOU PLAY
  
 
 
-1.3 Options
---------------
+## 1.3 Options
+
 
 Add the following options to the command when running from Terminal / DOS: 
 
@@ -208,8 +207,8 @@ Put the now playing track into an IRC channel using IRCCat. (IRCCat sold
 separately - https://github.com/RJ/irccat).   
 
 
-2 HOW IT WORKS
-=================
+# 2. HOW IT WORKS
+
 
 SSLScrobbler monitors the current Serato DJ history file. The history file is
 a binary file containing information about all the tracks in the session. 
@@ -225,8 +224,8 @@ However, SSLScrobbler does not have access to the actual play time or play
 position of the songs, so it has to guess this.
 
 
-3 ADVANCED USE
-=================
+# 3. ADVANCED USE
+
 
 * If you want to enable or disable plugins, or change API keys, or other
   advanced "configuration", copy `config.php-default` to `config.php` and edit.
@@ -237,8 +236,8 @@ position of the songs, so it has to guess this.
   as the file `database v2`). 
  
  
-4 TROUBLESHOOTING
-====================
+# 4. TROUBLESHOOTING
+
 
 * SSLScrobbler looks for history files in the default locations, which are:
   
@@ -271,11 +270,11 @@ position of the songs, so it has to guess this.
   single-threaded).
   
  
-5 FOR DEVELOPERS
-================
+# 5. FOR DEVELOPERS
+
  
-5.1 Plugins
------------------
+## 5.1 Plugins
+
 
 It's quite easy to write plugins for SSLScrobbler. Examine the examples in the 
 folder SSL/Plugins. 
@@ -291,14 +290,14 @@ The following observer types are currently provided:
 * `NowPlayingObserver` - triggered when a track becomes the 'Now Playing' track
 * `ScrobbleObserver` - triggered when a track is definitively scrobble-able. 
 
-5.2 Unit Tests
------------------
+## 5.2 Unit Tests
+
 
 Run with phpunit:
  * `phpunit --bootstrap Tests/bootstrap.php Tests`
 
-5.3 Architecture
------------------
+## 5.3 Architecture
+
 
 ### 5.3.1 Runtime Model
 
@@ -461,8 +460,7 @@ Unknown chunk types are safely ignored (modelled by `SSLUnknownChunk` - in
 The Serato DJ crate file (`database v2`) is also in this format, but I have 
 not modelled any of it. Have fun exploring these files using `--dump` :)
 
-### 5.3.2.1 Example content
-
+### 5.3.3 Example content
 
 Here's an example of what `--dump` might output on a history file:
 
@@ -596,8 +594,8 @@ diff them. The data extraction part looks like this:
 At this point, we have concrete `SSLTrack` objects.
      
 
-6 THANKS & SHOUTS
-====================
+# 6. THANKS & SHOUTS
+
 
 Thanks:
 * Jesse Ward (jw76), for beta testing and bug reports
@@ -614,8 +612,8 @@ Shouts:
 * Mike Louth at Digitally Imported (di.fm)
 
 
-7 CREDITS & LICENSE
-======================
+# 7. CREDITS & LICENSE
+
 
 SSLScrobbler is Free Open Source Software by Ben XO.
 SSLScrobbler is licensed under the MIT license.
