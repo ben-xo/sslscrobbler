@@ -337,65 +337,65 @@ the `TickSource` to start ticking. Every tick, the following happens:
 
 Here's the diagram:
 
-  +------------+
-  | TickSource |  
-  +-----+------+
-        |
-        | A timer event (roughly every 2 seconds)
-        |
-        |-----------------------+-----------------------------------------+
-        v 2                     v 1                                       |
-  +-----------------------+ +---------------+                             |
-  | SSLHistoryFileMonitor | | PluginManager |                             |
-  +-----+-----------------+ +---------------+                             |
-        |                                                                 |
-        | Diff event (when history file changes) as an                    |
-        | <SSLHistoryDiffDom> object (which contains <SSLTrack>s)         |
-        |                                                                 |
-        v 3                                                               |
-  +------------------+  6. <TrackChangeEventList> from deck models sent   |
-  | SSLRealtimeModel +----------------------------------------------+     |
-  +------------------+                                              |     |
-        ^                                                           |     |
-        | 4. Sent: Diff event (delegated to correct deck model)     |     |
-        | 5. Received: <TrackChangeEvent>s (start, stop, update)    |     |
-        |                                                           |     |
-        |---------------+------------ . . . --------------+         |     |
-        v               v    decks created as necessary   v         |     |
-  +---------------+ +---------------+       +---------------+       |     |
-  | DeckModel (0) | | DeckModel (1) | . . . | DeckModel (n) |       |     |
-  +---------------+ +---------------+       +---------------+       |     |
-                                                                    |     |
-                                                                    |     |
-     +----+--------------------------+-------------------------+----+     |
-     |    | Print track changes      | Decide if a stopped     |       +--+
-     |    | to console               | track should scrobble   |       |
-     |    v 7                        v 12                      v 8     v 16
-     |  +----------------------+   +---------------+    +-----------------+ 
-     |  | RealtimeModelPrinter |   | ScrobbleModel |    | NowPlayingModel |
-     |  +----------------------+   +-+-------------+    +--------------+--+
-     |                               |                                 |
-     |                               | "Scrobble"        "Now Playing" |   
-     |                               |  event                   event  +--+
-     |                               |                                    |
-     |                               .                                    .
-     |                               . . . . Other Plugins  . . . . . . . .
-     |                               .                                    .
-     |                               |                                    |
-     |                               |                                    |
-     |                               | 14  +---------------------+  11,19 |
-     |                               +---->| SSLScrobblerAdaptor |<-------+ 
-     |                               |     +---------------------+        |
-     |                               |                                    |
-     |                               |     +---------------------+  10,18 |
-     |                               |     | SSLTwitterAdaptor   |<-------+
-     |                               |     +---------------------+        |
-     |                               |                                    |
-     |                               | 13  +---------------------+   9,17 |
-     |                               +---->| SSLGrowlRenderer    |<-------+
-     |                                     +---------------------+
-     | Print track changes via Growl         ^ 15
-     +---------------------------------------+
+    +------------+
+    | TickSource |  
+    +-----+------+
+          |
+          | A timer event (roughly every 2 seconds)
+          |
+          |-----------------------+-----------------------------------------+
+          v 2                     v 1                                       |
+    +-----------------------+ +---------------+                             |
+    | SSLHistoryFileMonitor | | PluginManager |                             |
+    +-----+-----------------+ +---------------+                             |
+          |                                                                 |
+          | Diff event (when history file changes) as an                    |
+          | <SSLHistoryDiffDom> object (which contains <SSLTrack>s)         |
+          |                                                                 |
+          v 3                                                               |
+    +------------------+  6. <TrackChangeEventList> from deck models sent   |
+    | SSLRealtimeModel +----------------------------------------------+     |
+    +------------------+                                              |     |
+          ^                                                           |     |
+          | 4. Sent: Diff event (delegated to correct deck model)     |     |
+          | 5. Received: <TrackChangeEvent>s (start, stop, update)    |     |
+          |                                                           |     |
+          |---------------+------------ . . . --------------+         |     |
+          v               v    decks created as necessary   v         |     |
+    +---------------+ +---------------+       +---------------+       |     |
+    | DeckModel (0) | | DeckModel (1) | . . . | DeckModel (n) |       |     |
+    +---------------+ +---------------+       +---------------+       |     |
+                                                                      |     |
+                                                                      |     |
+       +----+--------------------------+-------------------------+----+     |
+       |    | Print track changes      | Decide if a stopped     |       +--+
+       |    | to console               | track should scrobble   |       |
+       |    v 7                        v 12                      v 8     v 16
+       |  +----------------------+   +---------------+    +-----------------+ 
+       |  | RealtimeModelPrinter |   | ScrobbleModel |    | NowPlayingModel |
+       |  +----------------------+   +-+-------------+    +--------------+--+
+       |                               |                                 |
+       |                               | "Scrobble"        "Now Playing" |   
+       |                               |  event                   event  +--+
+       |                               |                                    |
+       |                               .                                    .
+       |                               . . . . Other Plugins  . . . . . . . .
+       |                               .                                    .
+       |                               |                                    |
+       |                               |                                    |
+       |                               | 14  +---------------------+  11,19 |
+       |                               +---->| SSLScrobblerAdaptor |<-------+ 
+       |                               |     +---------------------+        |
+       |                               |                                    |
+       |                               |     +---------------------+  10,18 |
+       |                               |     | SSLTwitterAdaptor   |<-------+
+       |                               |     +---------------------+        |
+       |                               |                                    |
+       |                               | 13  +---------------------+   9,17 |
+       |                               +---->| SSLGrowlRenderer    |<-------+
+       |                                     +---------------------+
+       | Print track changes via Growl         ^ 15
+       +---------------------------------------+
    
    
 Various things have been omitted from this diagram, in particular the 
