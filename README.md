@@ -300,8 +300,8 @@ Run with phpunit:
 5.3 Architecture
 -----------------
 
-5.3.1 Runtime Model
-....................
+### 5.3.1 Runtime Model
+
 
 While running, the `SSLScrobbler` engine is event driven (see 5.1 for the list
 of events). Here are the main object collaborations and the ways they 
@@ -405,8 +405,8 @@ at run time, and is used for configuration on-the-fly. It does this
 by inserting a layer between each of the observers which keeps track of the
 various event observers.
 
-5.3.2 ScratchLive File Format Model
-....................................
+### 5.3.2 ScratchLive File Format Model
+
 
 ScratchLive stores most of its data in a chunked format, where a chunk header 
 is 8-bytes (4-byte identifier and a 4-byte length) followed by <length> bytes. 
@@ -461,8 +461,8 @@ Unknown chunk types are safely ignored (modelled by `SSLUnknownChunk` - in
 The Serato DJ crate file (`database v2`) is also in this format, but I have 
 not modelled any of it. Have fun exploring these files using `--dump` :)
 
-5.3.2.1 Example content
-........................
+### 5.3.2.1 Example content
+
 
 Here's an example of what `--dump` might output on a history file:
 
