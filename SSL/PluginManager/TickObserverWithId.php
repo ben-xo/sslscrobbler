@@ -39,6 +39,6 @@ class TickObserverWithId extends PluginWithId implements TickObserver
     
     public function notifyTick($seconds)
     {
-        $this->o->notifyTick($changes);
+        $this->o->notifyTick($seconds);
     }
 }
