@@ -1,5 +1,6 @@
 # SSLScrobbler v0.23
 
+[![Testing sslscrobbler](https://github.com/ben-xo/sslscrobbler/actions/workflows/testing.yml/badge.svg)](https://github.com/ben-xo/sslscrobbler/actions/workflows/testing.yml)
 
 SSLScrobbler is a Scrobbler for Serato DJ and Serato ScratchLive (http://www.serato.com/) 
 written in PHP. See https://www.last.fm/about/trackmymusic for an explanation 
