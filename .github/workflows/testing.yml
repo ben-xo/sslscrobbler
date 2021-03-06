@@ -4,7 +4,7 @@ jobs:
   build:
     strategy:
       matrix:
-        operating-system: [osx, windows]
+        operating-system: ['windows-latest', 'macos-latest']
         php-versions: ['7.3', 7.4', '8.0']
     runs-on: ${{ matrix.operating-system }}
     steps:
