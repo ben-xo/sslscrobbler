@@ -59,4 +59,9 @@ abstract class GetterSetter {
     {
         return $this->fields;
     }
+
+    public function toJson()
+    {
+        return json_decode($this->fields);
+    }
 }
