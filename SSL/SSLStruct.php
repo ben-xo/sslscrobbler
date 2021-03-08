@@ -76,7 +76,11 @@ abstract class SSLStruct extends GetterSetter
     {
         foreach($fields as $k => $v)
         {
-            $this->fields[$k] = $v;
+            if(is_string($v)) {
+                $this->fields[$k] = trim($v);
+            } else {
+                $this->fields[$k] = $v;
+            }
         }
     }
     

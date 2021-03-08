@@ -24,23 +24,29 @@
  *  THE SOFTWARE.
  */
 
-class JSONServerPOC implements SSLPlugin, NowPlayingObserver, TickObserver, ParallelTask
+class JsonServerPlugin implements SSLPlugin, NowPlayingObserver, TickObserver, ParallelTask
 {
     protected $socket;
+    protected $port;
     
     protected $most_recent_track;
     protected $most_recent_accepted_connection;
     
+    public function __construct(array $config, $port)
+    {
+        $this->port = $port;
+    }
+
     public function onSetup() 
     {
     }
     
     public function onStart() 
     {
-        $this->socket = socket_create_listen(10080, SOMAXCONN);
+        $this->socket = socket_create_listen($this->port, SOMAXCONN);
         if($this->socket == false)
         {
-            throw new RuntimeException("Listening on port 10080 failed: " . socket_last_error());
+            throw new RuntimeException("Listening on port {$this->port} failed: " . socket_last_error());
         }
         
         socket_set_nonblock($this->socket);
@@ -109,15 +115,14 @@ class JSONServerPOC implements SSLPlugin, NowPlayingObserver, TickObserver, Para
             if(isset($this->most_recent_track))
             {
                 $track = $this->most_recent_track;
-                $data = array(
-                    'artist' => $track->getArtist(),
-                    'title' => $track->getTitle(),
-                    'album' => $track->getAlbum(),
-                    'length' => $track->getLengthInSeconds()
-                );
+                $data = $this->most_recent_track->toJson();
+            }
+            else
+            {
+                $data = json_encode(null);
             }
             
-            $body = json_encode($data);
+            $body = $data;
             $len = strlen($body);
             $lines = array(
                 'HTTP/1.0 200 OK',
