@@ -80,12 +80,25 @@ field28: timestamp. c>rstarttime
 field29: timestamp. c>rendtime
 field31: int. c>rdeck
 
-#field33: ascii. c>rUNKNOWN33
-#field39: int.   c>rUNKNOWN39
+field33: hex.  c>rUNKNOWN33
+field37: hex. c>rUNKNOWN37
+field39: int.  c>rpreview
+
+field40: hex. c>rUNKNOWN40
+field41: hex. c>rUNKNOWN41
+field42: hex. c>rUNKNOWN42
+field43: hex. c>rUNKNOWN43
+field44: hex. c>rUNKNOWN44
 
 field45: int. c>rplaytime
 
+field46: hex. c>rUNKNOWN46
+field47: hex. c>rUNKNOWN47
+
 field48: int. c>rsessionId
+
+field49: hex. c>rUNKNOWN49
+
 
 field50: int. c>rplayed
 field51: string. c>rkey
@@ -93,11 +106,35 @@ field52: int. c>radded
 field53: # usually last field
     timestamp. c>rupdatedAt
 
+field54: hex. c>rUNKNOWN54
+field55: hex. c>rUNKNOWN55
+field56: hex. c>rUNKNOWN56
+field57: hex. c>rUNKNOWN57
+field58: hex. c>rUNKNOWN58
+field59: hex. c>rUNKNOWN59
+field60: hex. c>rUNKNOWN60
+field61: hex. c>rUNKNOWN61
+field62: hex. c>rUNKNOWN62
+field63: hex. c>rUNKNOWN63
+field64: hex. c>rUNKNOWN64
+
 field63: string. c>rplayername
 field64: string. c>rcommentname
 
-field70: int. c>rUNKNOWN70
-field72: int. c>rUNKNOWN72
+field65: hex. c>rUNKNOWN65
+field66: hex. c>rUNKNOWN66
+field67: hex. c>rUNKNOWN67
+field68: hex. c>rUNKNOWN68
+field69: hex. c>rUNKNOWN69
+field70: int. c>rejected
+field71: hex. c>rUNKNOWN71
+field72: hex. c>rUNKNOWN72
+field73: hex. c>rUNKNOWN73
+field74: hex. c>rUNKNOWN74
+field75: hex. c>rUNKNOWN75
+field76: hex. c>rUNKNOWN76
+field77: hex. c>rUNKNOWN77
+field78: hex. c>rUNKNOWN78
 
 # literal data
 .EOS ""

@@ -62,7 +62,8 @@ class RuntimeCachingSSLTrack extends SSLTrack
      */
     public function setLengthIfUnknown()
     {
-        if(!isset($this->length))
+        $length = $this->getLength();
+        if(!isset($length))
         {
             // have a go at pulling it from the cache, if it's in the cache!
             $cached_track = $this->track_cache->getByRow($this->getRow());
@@ -72,18 +73,20 @@ class RuntimeCachingSSLTrack extends SSLTrack
                 $cached_length = $cached_track->getLength();
                 if(isset($cached_length)) 
                 {
-                    $this->length = $cached_length;
+                    $this->setLength($cached_length);
                 }
             }
             
             parent::setLengthIfUnknown();
             
+            $length = $this->getLength();
+
             // save in the cache, for next time.
-            if(isset($this->length))
+            if(isset($length))
             {
                 if(isset($cached_track))
                 {
-                    $cached_track->length = $this->length;
+                    $cached_track->length = $length;
                 }
                 else
                 {

@@ -50,122 +50,10 @@ class SSLTrack extends SSLStruct
      * an expensive full-file-scan.
      */
     const TRY_HARD = 1;
-    
-    protected
-        $filename,
-        $row,
-        $deck,
-        $artist, 
-        $title,
-        $album, 
-        $played, 
-        $length,
-        $start_time, 
-        $end_time,
-        $updated_at = 0,
-        $added,
-        $playtime,
-        $fullpath,
-        $fields = array()
-    ;
-    
+       
     public function getUnpacker()
     {
         return $this->getUnpackerForFile(dirname(__FILE__) . '/SSLTrackAdat.xoup');
-    }
-    
-    public function populateFrom(array $fields)
-    {
-        $this->fields = $fields;
-        isset($fields['filename']) && $this->filename = trim($fields['filename']);
-        isset($fields['row']) && $this->row = $fields['row'];
-        isset($fields['title']) && $this->title = trim($fields['title']);
-        isset($fields['artist']) && $this->artist = trim($fields['artist']);
-        isset($fields['deck']) && $this->deck = $fields['deck'];
-        isset($fields['starttime']) && $this->start_time = $fields['starttime'];
-        isset($fields['endtime']) && $this->end_time = $fields['endtime'];
-        isset($fields['played']) && $this->played = (bool) $fields['played'];
-        isset($fields['added']) && $this->added = $fields['added'];
-        isset($fields['updatedAt']) && $this->updated_at = $fields['updatedAt'];
-        isset($fields['playtime']) && $this->playtime = $fields['playtime'];
-        isset($fields['length']) && $this->length = trim($fields['length']);
-        isset($fields['album']) && $this->album = trim($fields['album']);
-        isset($fields['fullpath']) && $this->fullpath = trim($fields['fullpath']);
-    }
-    
-    public function toArray()
-    {
-        return array(
-            'filename' => $this->filename,
-            'row' => $this->row,
-            'title' => $this->title,
-            'artist' => $this->artist,
-            'deck' => $this->deck,
-            'starttime' => $this->start_time,
-            'endtime' => $this->end_time,
-            'played' => $this->played,
-            'added' => $this->added,
-            'updatedAt' => $this->updated_at,
-            'playtime' => $this->playtime,
-            'length' => $this->length,
-            'album' => $this->album,
-            'fullpath' => $this->fullpath
-        );
-    }
-    
-    public function getFilename()
-    {
-        return $this->filename;
-    }
-    
-    public function getFullpath()
-    {
-        return $this->fullpath;
-    }
-    
-    public function getRow()
-    {
-        return $this->row;
-    }
-    
-    public function getDeck()
-    {
-        return $this->deck;
-    }
-    
-    public function getArtist()
-    {
-        return $this->artist;
-    }
-
-    public function getTitle()
-    {
-        return $this->title;
-    }
-
-    public function getAlbum()
-    {
-        return $this->album;
-    }
-
-    public function getPlayed()
-    {
-        return $this->played;
-    }
-
-    public function getPlayTime()
-    {
-        return $this->playtime;
-    }
-
-    public function getStartTime()
-    {
-        return $this->start_time;
-    }
-
-    public function getEndTime()
-    {
-        return $this->end_time;
     }
     
     /**
@@ -185,7 +73,7 @@ class SSLTrack extends SSLStruct
         {
             $this->setLengthIfUnknown();
         }
-        return $this->length;
+        return parent::getLength();
     }
     
     /**
@@ -210,15 +98,10 @@ class SSLTrack extends SSLStruct
         }
         return 0;
     }
-    
-    public function getUpdatedAt()
-    {
-        return $this->updated_at;
-    }
-    
+       
     public function isPlayed()
     {
-        return (bool) $this->played;
+        return (bool) $this->getPlayed();
     }
     
     public function getStatus()
@@ -277,9 +160,10 @@ class SSLTrack extends SSLStruct
      */
     protected function setLengthIfUnknown()
     {
-        if(!isset($this->length))
+        $length = parent::getLength();
+        if(!isset($length))
         {
-            $this->length = $this->guessLengthFromFile();
+            $this->setLength($this->guessLengthFromFile());
         }
     }
 
@@ -354,10 +238,17 @@ class SSLTrack extends SSLStruct
     
     public function __toString()
     {
+        $played = $this->getPlayed();
+        $added = $this->getAdded();
+        $playtime = $this->getPlaytime();
+        $deck = $this->getDeck();
+        $artist = $this->getArtist();
+        $title = $this->getTitle();
+
         return sprintf("PLAYED:%s - ADDED:%s - DECK:%s - %s - %s - %s", 
-            $this->played ? '1' : '0', isset($this->added) ? ($this->added ? '1' : '0') : 'X', 
-            $this->deck,
-            $this->artist, $this->title,  floor($this->playtime / 60) . ':' . ($this->playtime % 60)
+            $played ? '1' : '0', isset($added) ? ($added ? '1' : '0') : 'X', 
+            $deck,
+            $artist, $title,  floor($playtime / 60) . ':' . ($playtime % 60)
         );
         
         // debugging
@@ -372,5 +263,27 @@ class SSLTrack extends SSLStruct
     protected function file_exists($filename)
     {
         return file_exists($filename);
+    }
+
+    // exists to make phpunit happy
+
+    public function getRow()
+    {
+        return parent::getRow();
+    }
+
+    public function getPlayed()
+    {
+        return parent::getPlayed();
+    }
+
+    public function getPlaytime()
+    {
+        return parent::getPlaytime();
+    }
+
+    public function getDeck()
+    {
+        return parent::getDeck();
     }
 }

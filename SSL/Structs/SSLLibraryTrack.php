@@ -26,40 +26,8 @@
 
 class SSLLibraryTrack extends SSLStruct
 {
-
-    protected
-        $fields = array()
-    ;
-    
     public function getUnpacker()
     {
         return $this->getUnpackerForFile(dirname(__FILE__) . '/SSLLibraryTrackOtrk.xoup');
-    }
-    
-    public function populateFrom(array $fields)
-    {
-        $this->fields = $fields;
-
-    }
-    
-    public function toArray()
-    {
-        /*return array(
-            'filename' => $this->filename,
-            'row' => $this->row,
-            'title' => $this->title,
-            'artist' => $this->artist,
-            'deck' => $this->deck,
-            'starttime' => $this->start_time,
-            'endtime' => $this->end_time,
-            'played' => $this->played,
-            'added' => $this->added,
-            'updatedAt' => $this->updated_at,
-            'playtime' => $this->playtime,
-            'length' => $this->length,
-            'album' => $this->album,
-            'fullpath' => $this->fullpath
-        );*/
-        return $this->fields;
     }
 }

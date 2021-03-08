@@ -74,5 +74,10 @@ class SSLColumn extends SSLStruct
     {
         isset($fields['key']) && $this->key = $fields['key'];
         isset($fields['width']) && $this->width = $fields['width'];
+
+        unset($fields['key']);
+        unset($fields['width']);
+
+        parent::populateFrom($fields);
     }
 }

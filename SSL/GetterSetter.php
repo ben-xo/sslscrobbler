@@ -2,7 +2,7 @@
 
 /**
  *  @author      Ben XO (me@ben-xo.com)
- *  @copyright   Copyright (c) 2010 Ben XO
+ *  @copyright   Copyright (c) 2021 Ben XO
  *  @license     MIT License (http://www.opensource.org/licenses/mit-license.html)
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,15 +24,39 @@
  *  THE SOFTWARE.
  */
 
-class SSLTrackDelete extends SSLStruct
-{
-    public function getUnpacker()
+abstract class GetterSetter {
+    
+    protected $fields = array();
+    
+    /**
+     * Missing Method Magic Accessor
+     *
+     * @param string $method Method to call (get* or set*)
+     * @param array $params array of parameters for the method 
+     * @return mixed the result of the method
+     */
+    public function __call($method, $params)
     {
-        return $this->getUnpackerForFile( dirname(__FILE__) . '/SSLTrackDeleteUent.xoup' );
+        $var_name = substr($method, 3);
+        $var_name[0] = strtolower($var_name[0]);
+        switch(strtolower(substr($method, 0, 3)))
+        {
+            case 'get':
+                if(isset($this->fields[$var_name]))
+                    return $this->fields[$var_name];
+                break;
+                
+            case 'set':
+                $this->fields[$var_name] = $params[0];
+                break;
+                
+            default:
+                throw new Exception("Unknown method '" . $method . "' called on " . __CLASS__);
+        }
     }
-      
-    public function __toString()
+
+    public function toArray()
     {
-        return sprintf("DELETED %d", $this->getRow());
+        return $this->fields;
     }
 }
