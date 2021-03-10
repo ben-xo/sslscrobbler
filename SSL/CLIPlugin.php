@@ -52,4 +52,12 @@ interface CLIPlugin
      * @param SSLPluggable $sslpluggable
      */
     public function addPluginsTo(SSLPluggable $sslpluggable);
+
+    /**
+     * Interactive arg setting. Modified $argv in place.
+     * 
+     * @param array $argv
+     */
+    public function addPrompts(array &$argv);
+
 }
