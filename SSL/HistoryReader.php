@@ -231,11 +231,12 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
     
     public function usage($appname, array $argv, $debug_help=false)
     {
+        echo "\n";
         echo "Usage: {$appname} [OPTIONS] [session file]\n";
         echo "Session file is optional. If omitted, the most recent history file from {$this->historydir} will be used automatically\n";
         echo "    -h or --help:              This message.\n";
-        echo "    -i or --immediate:         Do not wait for the next history file to be created before monitoring. (Use if you started {$appname} mid way through a session)\n";
-        echo "    -p or --post-process:      Loop through the file and send events to plugins after the fact. Use for scrobbling an offline session. Implies --immediate\n";
+        echo "    -i or --immediate:         Do not wait for the next history file - use the current one. You want this if Serato is already running.\n";
+        echo "    -p or --post-process:      Loop through the file after the fact. Use for scrobbling a set you played with no internet.\n";
         echo "          --dir:               Use the most recent history file from this directory.\n";
         echo "\n";
 
@@ -260,7 +261,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         {
             echo "    --debug-help:              Show help about debugging options.\n";
         }
-
+        echo "\n";
     }
     
     public function getNewFilename()
