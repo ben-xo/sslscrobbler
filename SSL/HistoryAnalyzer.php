@@ -80,15 +80,15 @@ class HistoryAnalyzer
             $this->parseOptions($argv);
             $this->setupLogging();
                         
+            // guess history file (always go for the most recently modified)
+            $this->historydir = $this->getDefaultHistoryDir();
+            
             if($this->help)
             {
                 $this->usage($this->appname, $argv);
                 return;
             }
             
-            // guess history file (always go for the most recently modified)
-            $this->historydir = $this->getDefaultHistoryDir();
-
             $this->dbo = new SQLite3($this->db);
             $this->initializeDb();
             

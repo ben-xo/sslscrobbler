@@ -128,6 +128,11 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             
             // do this as early as possible, but not before parsing options which may affect it.
             $this->setupLogging();
+
+            if (!$this->dir_provided) {
+                // guess history file (always go for the most recently modified)
+                $this->historydir = $this->getDefaultHistoryDir();
+            }
                         
             if($this->help)
             {
@@ -149,11 +154,6 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             
             if(empty($filename))
             {
-                if (!$this->dir_provided) {
-                    // guess history file (always go for the most recently modified)
-                    $this->historydir = $this->getDefaultHistoryDir();
-                }
-                
                 if($this->wait_for_file)
                 {
                     echo "Waiting for new session file...\n";
