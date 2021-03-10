@@ -69,33 +69,10 @@ class CLIJsonServerPlugin implements CLIPlugin
 
     public function addPrompts(array &$argv)
     {
-        // $twitter_session_files = glob('twitter-*.txt');
-        // if($twitter_session_files)
-        // {
-        //     $twitter_session_file = $twitter_session_files[0];
-        //     preg_match('/twitter-([^.]+)\.txt/', $twitter_session_file, $matches);
-        //     if(isset($matches[1])) {
-        //         $twitter_name = $matches[1];
-        //         while(true) {
-        //             $answer = strtolower(trim(readline("Twitter: do you want to tweet to $twitter_name? [Y/n] ")));
-        //             if ($answer == 'y' || $answer == '') {
-        //                 $argv[] = '-T';
-        //                 $argv[] = $twitter_name;
-        //                 return;
-        //             } elseif($answer == 'n') {
-        //                 unlink($twitter_session_file);
-        //                 continue;
-        //             }
-        //         }
-        //     }
-
-        //     $twitter_name = trim(readline("Twitter: type your Twitter name (empty to skip): "));
-        //     if ($twitter_name) {
-        //         $argv[] = '-T';
-        //         $argv[] = $twitter_name;
-        //         return;
-        //     }
-        // }
+        $port = 8080;
+        echo "Json Server: now playing info will be available at http://localhost:$port/nowplaying.json\n";
+        $argv[] = '-J';
+        $argv[] = $port;
     }
 
     public function addPluginsTo(SSLPluggable $sslpluggable)
