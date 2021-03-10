@@ -1,9 +1,31 @@
 #!/bin/sh
 cd "`dirname $0`"
+
+resize -s 50 200 >/dev/null
+
+which php
+if [ "$?" == "1" ]; then
+	echo ""
+	echo "You do not have PHP installed. Please:"
+	echo "* install Mac Homebrew from https://brew.sh/"
+	echo "* type 'brew install php' into Terminal"
+	echo "… then come back and try again!"
+	echo ""
+	echo "Press enter to exit"
+	read
+	exit 1
+fi
+
+
 echo ""
 echo "See README.txt for things you should type here, but to get started try one of these:"
 echo ""
 echo "php historyreader.php -L <lastfm-name>"
 echo "php historyreader.php -T <twitter-name>"
+echo ""
+echo ""
+echo "Here is the help:"
+echo ""
+php historyreader.php --help
 echo ""
 bash
