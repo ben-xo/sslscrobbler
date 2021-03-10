@@ -73,6 +73,7 @@ $cli_plugins = array(
     new CLITwitterPlugin($twitterConfig),
     new CLIDBPlugin($dbConfig),
     new CLIIrcCatPlugin($irccatConfig),
+    new CLIJsonServerPlugin(),
 );
 
 // set max log levels for various internal components. (The default is INFO.)

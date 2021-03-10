@@ -49,7 +49,7 @@
  * as such.
  * 
  */
-abstract class SSLStruct
+abstract class SSLStruct extends GetterSetter
 {
     /**
      * @var XoupRepo
@@ -72,7 +72,17 @@ abstract class SSLStruct
      * Take data (often the output of running the parser)
      * and fill up the object.
      */
-    abstract public function populateFrom(array $fields);
+    public function populateFrom(array $fields)
+    {
+        foreach($fields as $k => $v)
+        {
+            if(is_string($v)) {
+                $this->fields[$k] = trim($v);
+            } else {
+                $this->fields[$k] = $v;
+            }
+        }
+    }
     
     /**
      * Utility method for SSLStruct subclasses

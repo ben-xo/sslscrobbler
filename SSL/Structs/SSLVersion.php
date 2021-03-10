@@ -33,18 +33,8 @@ class SSLVersion extends SSLStruct
         return $this->getUnpackerForFile( dirname(__FILE__) . '/SSLVersionVrsn.xoup' );
     }
         
-    public function populateFrom(array $fields)
-    {
-        isset($fields['version']) && $this->version = $fields['version'];
-    }
-    
-    public function getVersion()
-    {
-        return $this->version;
-    }
-       
     public function __toString()
     {
-        return '>>> ' . $this->version;
+        return '>>> ' . $this->getVersion();
     }
 }
