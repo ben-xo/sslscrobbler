@@ -293,7 +293,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         $dir = getenv('USERPROFILE') . '\My Documents\My Music\_Serato_\History\Sessions';
         if(is_dir($dir)) return $dir;
         
-        throw new RuntimeException("Could not find your ScratchLive History folder; it wasn't where I was expecting.");
+        throw new RuntimeException("Could not find your Serato DJ / ScratchLive History folder; it wasn't where I was expecting. You'll have to tell me where to look with the --dir option.");
     }
     
     protected function parseOptions(array $argv)
