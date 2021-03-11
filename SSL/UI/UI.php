@@ -50,21 +50,8 @@ class UI
     /**
      * Reads a line from stdin.
      */
-    public function readline($prompt) 
+    public function readline($prompt_text) 
     {
-        echo $prompt;
-        
-        // would be easier to do this with readline(), but some people don't have the extension installed.
-        if(($fp = fopen("php://stdin", 'r')) !== false) 
-        {
-            $input = trim(fgets($fp));
-            fclose($fp);
-        }
-        else
-        {
-            throw new RuntimeException('Failed to open stdin');
-        }
-        
-        return $input;
+        return Inject::the(new PromptFactory())->newPrompt()->readline($prompt_text);
     }    
 }

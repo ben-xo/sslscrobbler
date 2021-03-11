@@ -2,7 +2,7 @@
 
 /**
  *  @author      Ben XO (me@ben-xo.com)
- *  @copyright   Copyright (c) 2010 Ben XO
+ *  @copyright   Copyright (c) 2021 Ben XO
  *  @license     MIT License (http://www.opensource.org/licenses/mit-license.html)
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,40 +24,13 @@
  *  THE SOFTWARE.
  */
 
-/**
- * A CLIPlugin is a plugin that has command line options.
- * 
- * @see CLITwitterPlugin
- * @see CLILastfmPlugin
- */
-interface CLIPlugin
+class PromptFactory implements Factory
 {
     /**
-     * Help output.
-     * 
-     * @return null
+     * @return Prompt
      */
-    public function usage($appname, array $argv);
-    
-    /**
-     * Attempt to parse a CLI option.
-     * 
-     * @return true if the option was parsed by the plugin, false otherwise.
-     */
-    public function parseOption($arg, array &$argv);
-    
-    /**
-     * Yield some SSLPlugins and add them to an SSLPluggable object (Such as HistoryReader).
-     * 
-     * @param SSLPluggable $sslpluggable
-     */
-    public function addPluginsTo(SSLPluggable $sslpluggable);
-
-    /**
-     * Interactive arg setting. Modified $argv in place.
-     * 
-     * @param array $argv
-     */
-    public function addPrompts(array &$argv);
-
+    public function newPrompt()
+    {
+        return new StdIOPrompt();
+    }
 }

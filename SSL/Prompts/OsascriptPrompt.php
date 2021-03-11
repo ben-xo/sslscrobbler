@@ -24,40 +24,19 @@
  *  THE SOFTWARE.
  */
 
-/**
- * A CLIPlugin is a plugin that has command line options.
- * 
- * @see CLITwitterPlugin
- * @see CLILastfmPlugin
- */
-interface CLIPlugin
+class OsascriptPrompt implements Prompt
 {
     /**
-     * Help output.
-     * 
-     * @return null
+     * @return string
      */
-    public function usage($appname, array $argv);
-    
-    /**
-     * Attempt to parse a CLI option.
-     * 
-     * @return true if the option was parsed by the plugin, false otherwise.
-     */
-    public function parseOption($arg, array &$argv);
-    
-    /**
-     * Yield some SSLPlugins and add them to an SSLPluggable object (Such as HistoryReader).
-     * 
-     * @param SSLPluggable $sslpluggable
-     */
-    public function addPluginsTo(SSLPluggable $sslpluggable);
+    public function readline($prompt_text)
+    {
 
-    /**
-     * Interactive arg setting. Modified $argv in place.
-     * 
-     * @param array $argv
-     */
-    public function addPrompts(array &$argv);
+        $prompt_text = escapeshellarg($prompt_text);
+        $command = "osascript -e 'try\ntell app \"SystemUIServer\"\n"
+                 . "set answer to text returned of (display dialog \"'$prompt_text'\" default answer \"\")\n"
+                 . "end\nend\nactivate app (path to frontmost application as text)\nanswer'";
 
+        return trim(shell_exec($command));
+    }
 }

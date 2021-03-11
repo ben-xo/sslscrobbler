@@ -69,7 +69,12 @@ class CLIDBPlugin implements CLIPlugin
                 
         return false;
     }
-    
+
+    public function addPrompts(array &$argv)
+    {
+        // not worth it
+    }
+
     public function addPluginsTo(SSLPluggable $sslpluggable)
     {
         L::level(L::DEBUG) && 

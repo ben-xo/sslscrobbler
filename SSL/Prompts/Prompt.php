@@ -24,40 +24,10 @@
  *  THE SOFTWARE.
  */
 
-/**
- * A CLIPlugin is a plugin that has command line options.
- * 
- * @see CLITwitterPlugin
- * @see CLILastfmPlugin
- */
-interface CLIPlugin
+interface Prompt
 {
     /**
-     * Help output.
-     * 
-     * @return null
+     * @return string
      */
-    public function usage($appname, array $argv);
-    
-    /**
-     * Attempt to parse a CLI option.
-     * 
-     * @return true if the option was parsed by the plugin, false otherwise.
-     */
-    public function parseOption($arg, array &$argv);
-    
-    /**
-     * Yield some SSLPlugins and add them to an SSLPluggable object (Such as HistoryReader).
-     * 
-     * @param SSLPluggable $sslpluggable
-     */
-    public function addPluginsTo(SSLPluggable $sslpluggable);
-
-    /**
-     * Interactive arg setting. Modified $argv in place.
-     * 
-     * @param array $argv
-     */
-    public function addPrompts(array &$argv);
-
+    public function readline($prompt_text);
 }

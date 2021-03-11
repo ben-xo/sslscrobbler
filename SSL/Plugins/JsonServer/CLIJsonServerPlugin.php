@@ -63,10 +63,17 @@ class CLIJsonServerPlugin implements CLIPlugin
             $this->plugins[] = $this->newJsonServerPlugin($this->config, $port);
             return true;
         }
-                
         return false;
     }
-    
+
+    public function addPrompts(array &$argv)
+    {
+        $port = 8080;
+        echo "Json Server: now playing info will be available at http://localhost:$port/nowplaying.json\n";
+        $argv[] = '-J';
+        $argv[] = $port;
+    }
+
     public function addPluginsTo(SSLPluggable $sslpluggable)
     {
         L::level(L::DEBUG) && 

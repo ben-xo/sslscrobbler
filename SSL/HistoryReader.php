@@ -308,6 +308,19 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
                 continue;
             }
 
+            if($arg == '--prompt')
+            {
+                $this->addPrompts($argv);
+                continue;
+            }
+
+            if($arg == '--prompt-osascript')
+            {
+                Inject::map('PromptFactory', new OsascriptPromptFactory());
+                $this->addPrompts($argv);
+                continue;
+            }
+
             if($arg == '--debug-help')
             {
                 $this->help = true;
@@ -577,5 +590,14 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         }
         if($fp) return $fp;
         throw new RuntimeException("No $type file found in $from_dir");
+    }
+
+    protected function addPrompts(array &$argv)
+    {
+        foreach($this->cli_plugins as $plugin)
+        {
+            /* @var $plugin CLIPlugin */
+            $plugin->addPrompts($argv);
+        }
     }
 }

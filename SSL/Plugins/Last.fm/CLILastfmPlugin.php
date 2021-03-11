@@ -66,7 +66,42 @@ class CLILastfmPlugin implements CLIPlugin
                 
         return false;
     }
-    
+
+    public function addPrompts(array &$argv)
+    {
+        $ui = new UI();
+        $lastfm_session_files = glob('lastfm-*.txt');
+        if($lastfm_session_files)
+        {
+            $lastfm_session_file = $lastfm_session_files[0];
+            preg_match('/lastfm-([^.]+)\.txt/', $lastfm_session_file, $matches);
+            if(isset($matches[1])) {
+                $lastfm_name = $matches[1];
+                while(true) {
+                    $answer = strtolower($ui->readline("Last.fm: do you want to scrobble to www.last.fm/user/$lastfm_name? [Y/n] "));
+                    if ($answer == 'y' || $answer == '') {
+                        $argv[] = '-L';
+                        $argv[] = $lastfm_name;
+                        return;
+                    } elseif($answer == 'n') {
+                        $answer = strtolower($ui->readline("Last.fm: do you want to log out from www.last.fm/user/$lastfm_name? [y/N] "));
+                        if ($answer == 'y') {
+                            unlink($lastfm_session_file);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        $lastfm_name = $ui->readline("Last.fm: type your Last.fm user name (empty to skip): ");
+        if ($lastfm_name) {
+            $argv[] = '-L';
+            $argv[] = $lastfm_name;
+            return;
+        }
+    }   
+
     public function addPluginsTo(SSLPluggable $sslpluggable)
     {
         L::level(L::DEBUG) && 
