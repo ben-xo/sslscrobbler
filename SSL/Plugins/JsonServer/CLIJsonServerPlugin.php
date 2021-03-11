@@ -63,7 +63,6 @@ class CLIJsonServerPlugin implements CLIPlugin
             $this->plugins[] = $this->newJsonServerPlugin($this->config, $port);
             return true;
         }
-                
         return false;
     }
 

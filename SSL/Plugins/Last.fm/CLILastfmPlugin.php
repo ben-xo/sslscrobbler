@@ -69,6 +69,7 @@ class CLILastfmPlugin implements CLIPlugin
 
     public function addPrompts(array &$argv)
     {
+        $prompt = Inject::the(new PromptFactory())->newPrompt();
         $lastfm_session_files = glob('lastfm-*.txt');
         if($lastfm_session_files)
         {
@@ -77,13 +78,13 @@ class CLILastfmPlugin implements CLIPlugin
             if(isset($matches[1])) {
                 $lastfm_name = $matches[1];
                 while(true) {
-                    $answer = strtolower(trim(readline("Last.fm: do you want to scrobble to www.last.fm/user/$lastfm_name? [Y/n] ")));
+                    $answer = $prompt->readline("Last.fm: do you want to scrobble to www.last.fm/user/$lastfm_name? [Y/n] ");
                     if ($answer == 'y' || $answer == '') {
                         $argv[] = '-L';
                         $argv[] = $lastfm_name;
                         return;
                     } elseif($answer == 'n') {
-                        $answer = strtolower(trim(readline("Last.fm: do you want to log out from www.last.fm/user/$lastfm_name? [y/N] ")));
+                        $answer = $prompt->readline("Last.fm: do you want to log out from www.last.fm/user/$lastfm_name? [y/N] ");
                         if ($answer == 'y') {
                             unlink($lastfm_session_file);
                         }
@@ -91,13 +92,13 @@ class CLILastfmPlugin implements CLIPlugin
                     }
                 }
             }
+        }
 
-            $lastfm_name = trim(readline("Last.fm: type your Last.fm user name (empty to skip): "));
-            if ($lastfm_name) {
-                $argv[] = '-L';
-                $argv[] = $lastfm_name;
-                return;
-            }
+        $lastfm_name = $prompt->readline("Last.fm: type your Last.fm user name (empty to skip): ");
+        if ($lastfm_name) {
+            $argv[] = '-L';
+            $argv[] = $lastfm_name;
+            return;
         }
     }   
 

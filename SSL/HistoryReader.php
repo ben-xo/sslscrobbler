@@ -314,6 +314,13 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
                 continue;
             }
 
+            if($arg == '--prompt-osascript')
+            {
+                Inject::map('PromptFactory', new OsascriptPromptFactory());
+                $this->addPrompts($argv);
+                continue;
+            }
+
             if($arg == '--debug-help')
             {
                 $this->help = true;

@@ -54,7 +54,7 @@ $curlConfig = array(
 );
 
 $plugins = array(
-    new GrowlPlugin($growlConfig),
+    // new GrowlPlugin($growlConfig),
     new NowPlayingLoggerPlugin($nowplayingloggerConfig),
 
     // uncomment the Popup Notifier if you want Popup Notifications - but don't use
