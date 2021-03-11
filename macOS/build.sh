@@ -16,4 +16,4 @@ platypus -i '../vinyl.icns' \
          -I am.xo.SSLScrobbler \
          -f '../SSL' -f '../config.php-default' -f '../External' -f '../historyreader.php' -f '../README.md' -f '../LICENSE' \
          -C '--prompt-osascript|--immediate' \
-         '../historyreader.php'
+         '../historyreader.php' $@
