@@ -32,11 +32,10 @@ class OsascriptPrompt implements Prompt
     public function readline($prompt_text)
     {
 
-    	$prompt_text = escapeshellarg($prompt_text);
-    	echo "HERE\n";
-    	$command = "osascript -e 'try\ntell app \"SystemUIServer\"\n"
-    	         . "set answer to text returned of (display dialog \"'$prompt_text'\" default answer \"\")\n"
-    	         . "end\nend\nactivate app (path to frontmost application as text)\nanswer'";
+        $prompt_text = escapeshellarg($prompt_text);
+        $command = "osascript -e 'try\ntell app \"SystemUIServer\"\n"
+                 . "set answer to text returned of (display dialog \"'$prompt_text'\" default answer \"\")\n"
+                 . "end\nend\nactivate app (path to frontmost application as text)\nanswer'";
 
         return strtolower(trim(shell_exec($command)));
     }
