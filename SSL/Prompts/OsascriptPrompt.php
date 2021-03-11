@@ -37,6 +37,6 @@ class OsascriptPrompt implements Prompt
                  . "set answer to text returned of (display dialog \"'$prompt_text'\" default answer \"\")\n"
                  . "end\nend\nactivate app (path to frontmost application as text)\nanswer'";
 
-        return strtolower(trim(shell_exec($command)));
+        return trim(shell_exec($command));
     }
 }

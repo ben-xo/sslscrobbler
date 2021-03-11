@@ -31,6 +31,19 @@ class StdIOPrompt implements Prompt
      */
     public function readline($prompt_text)
     {
-        return strtolower(trim(readline($prompt_text)));
+        echo $prompt_text;
+        
+        // would be easier to do this with readline(), but some people don't have the extension installed.
+        if(($fp = fopen("php://stdin", 'r')) !== false) 
+        {
+            $input = trim(fgets($fp));
+            fclose($fp);
+        }
+        else
+        {
+            throw new RuntimeException('Failed to open stdin');
+        }
+        
+        return $input;
     }
 }

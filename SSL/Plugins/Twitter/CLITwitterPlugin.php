@@ -78,7 +78,7 @@ class CLITwitterPlugin implements CLIPlugin
 
     public function addPrompts(array &$argv)
     {
-        $prompt = Inject::the(new PromptFactory())->newPrompt();
+        $ui = new UI();
         $twitter_session_files = glob('twitter-*.txt');
         if($twitter_session_files)
         {
@@ -87,13 +87,13 @@ class CLITwitterPlugin implements CLIPlugin
             if(isset($matches[1])) {
                 $twitter_name = $matches[1];
                 while(true) {
-                    $answer = $prompt->readline("Twitter: do you want to tweet to @$twitter_name? [Y/n] ");
+                    $answer = strtolower($ui->readline("Twitter: do you want to tweet to @$twitter_name? [Y/n] "));
                     if ($answer == 'y' || $answer == '') {
                         $argv[] = '-T';
                         $argv[] = $twitter_name;
                         return;
                     } elseif($answer == 'n') {
-                        $answer = $prompt->readline("Twitter: do you want to log out from @$twitter_name? [y/N] ");
+                        $answer = strtolower($ui->readline("Twitter: do you want to log out from @$twitter_name? [y/N] "));
                         if ($answer == 'y') {
                             unlink($twitter_session_file);
                         }
@@ -103,7 +103,7 @@ class CLITwitterPlugin implements CLIPlugin
             }
         }
 
-        $twitter_name = $prompt->readline("Twitter: type your Twitter name (empty to skip): @");
+        $twitter_name = $ui->readline("Twitter: type your Twitter name (empty to skip): @");
         if ($twitter_name) {
             $argv[] = '-T';
             $argv[] = $twitter_name;
