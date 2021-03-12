@@ -82,13 +82,27 @@ already have a session open.
 ## 1.2 Getting Started
 
 
-SSLScrobbler is currently designed to be run from the command line. 
+SSLScrobbler is designed to be run from the command line, but on macOS there is
+a simple GUI to help you get started.
 
 
 **TO START**:
 
-*OSX (Mac):*
+*macOS (super-easy method):*
  
+The simplest way to get started is to use the macOS app. 
+ * Download the macOS.zip file from https://github.com/ben-xo/sslscrobbler/releases
+ * unzip it to get `SSL Scrobbler.app` (with a nice vinyl record icon)
+ * Option-click it and choose "Open", then confirm you are sure that it's okay
+ * The app will ask you for permission to use `SystemUIServer`. Say yes. This is so we can pop up questions.
+ * It will then pop up some questions. Just follow the prompts.
+ * Then start Serato DJ and watch what happens!
+
+
+*macOS (traditional method):*
+
+It is more flexible when used from Terminal.
+
  * Open Terminal (you can open it quickly from Spotlight)
  * Drag the file historyreader.php into the Terminal window, and hit enter. It 
    should say something like: 
@@ -100,6 +114,8 @@ SSLScrobbler is currently designed to be run from the command line.
         $ ./historyreader.php --help
     
  *Windows:*
+
+ There's no GUI version for Windows yet. Sorry.
  
  * Open a DOS box. You can do this by clicking 'Start' -> Run -> typing "cmd" 
    and pressing enter. 
