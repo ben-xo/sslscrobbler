@@ -8,7 +8,7 @@ fi
 
 VERSION=$(head -n 1 ../README.md | cut -d' ' -f3)
 
-platypus -i '../vinyl.icns' \
+platypus -i 'vinyl.icns' \
          -a 'SSL Scrobbler' \
          -o 'Text Window' \
          -p '/usr/bin/php' \
