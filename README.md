@@ -43,6 +43,7 @@ SSLScrobbler will read the current 'session' file from the Serato DJ history
 folder. It will follow from session to session, but use the `-i` option if you
 already have a session open.
 
+
 ## 1.1 Installation
 
 
@@ -51,7 +52,9 @@ already have a session open.
   SSLScrobbler needs no particular installation, although if it's not already, 
   you might like to install terminal-notifier ("brew install terminal-notifier")
   
-  SSLScrobbler is best started from the Terminal.
+  There is an app you can download from https://github.com/ben-xo/sslscrobbler/releases
+
+  SSLScrobbler can also be started from Terminal, and has more options this way.
   
 * Windows Vista, 7, 8 or 10:
   
