@@ -642,6 +642,9 @@ SSLScrobbler includes the following external libraries:
 * vgd.php (http://v.gd/developers.php)
   originally by Richard West, released into the public domain.
 
+* vinyl.icns (https://findicons.com/icon/41917/vinyl)
+  originally by Nando Design Studio (Fernando Albuquerque), license Freeware Non-commercial
+
 The "NowPlaying" plugin, written for Boston Music Hack Day 
 (http://musichackdayboston.pbworks.com/w/page/31299401/sQRatchLive) also 
 comes bundled with the following:
