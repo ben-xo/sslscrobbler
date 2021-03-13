@@ -93,6 +93,74 @@ class JsonServerPlugin implements SSLPlugin, NowPlayingObserver, TickObserver, P
         $this->handleRequest($this->most_recent_accepted_connection);
     }
     
+    protected function generateJSON()
+    {
+        if(isset($this->most_recent_track))
+        {
+            $body = $this->most_recent_track->toJson();
+        }
+        else
+        {
+            $body = json_encode(null);
+        }
+        
+        $len = strlen($body);
+        return array(
+            'HTTP/1.0 200 OK',
+            'Date: ' . date('r'),
+            'Content-Type: application/json',
+            'Content-Length: ' . $len,
+            'Server: ScratchLive! Scrobbler',
+            'Connection: close', 
+            '',
+            $body
+        );
+    }
+
+    protected function generateHTML()
+    {
+        $body = "<!doctype html>\n<html><head><title>Now Playing in Serato</title></head><body>\n";
+
+        if(isset($this->most_recent_track))
+        {
+            $data = $this->most_recent_track->toArray();
+            foreach($data as $k => $v)
+            {
+                $body .= sprintf("<div id=\"%s\">%s</div>\n", $k, htmlspecialchars($v));
+            }
+        }
+        
+        $body .= "</body></html>";
+
+        $len = strlen($body);
+        return array(
+            'HTTP/1.0 200 OK',
+            'Date: ' . date('r'),
+            'Content-Type: text/html',
+            'Content-Length: ' . $len,
+            'Server: ScratchLive! Scrobbler',
+            'Connection: close', 
+            '',
+            $body
+        );
+    }
+
+    protected function generate404()
+    {
+        $body = '<html><head><title>404 Not Found</title></head><body>No Dice.</body></html>';
+        $len = strlen($body);
+        return array(
+            'HTTP/1.0 404 Not Found',
+            'Date: ' . date('r'),
+            'Content-Type: text/html',
+            'Content-Length: ' . $len,
+            'Server: ScratchLive! Scrobbler',
+            'Connection: close', 
+            '',
+            $body
+        );
+    }
+
     protected function handleRequest($conn)
     {
         socket_set_block($conn);
@@ -111,54 +179,24 @@ class JsonServerPlugin implements SSLPlugin, NowPlayingObserver, TickObserver, P
         $get_line = explode(' ', $request[0]);
         if(preg_match('#^/nowplaying\.json(?:\?.*|$)#', $get_line[1]))
         {
-            $data = array();
-            if(isset($this->most_recent_track))
-            {
-                $track = $this->most_recent_track;
-                $data = $this->most_recent_track->toJson();
-            }
-            else
-            {
-                $data = json_encode(null);
-            }
-            
-            $body = $data;
-            $len = strlen($body);
-            $lines = array(
-                'HTTP/1.0 200 OK',
-                'Date: ' . date('r'),
-                'Content-Type: application/json',
-                'Content-Length: ' . $len,
-                'Server: ScratchLive! Scrobbler',
-                'Connection: close', 
-                '',
-                $body
-            );
-            socket_write($conn, implode("\n", $lines));
-            socket_close($conn);
-            L::level(L::DEBUG) && 
-                L::log(L::DEBUG, __CLASS__, "Finished handling request.", 
-                    array());
+            $route_name = 'nowplaying.json';
+            $lines = $this->generateJSON();
+        }
+        if(preg_match('#^/nowplaying.html(?:\?.*|$)#', $get_line[1]))
+        {
+            $route_name = 'nowplaying.html';
+            $lines = $this->generateHTML();
         }
         else
         {
-            $body = '<html><head><title>404 Not Found</title></head><body>No Dice.</body></html>';
-            $len = strlen($body);
-            $lines = array(
-                'HTTP/1.0 404 Not Found',
-                'Date: ' . date('r'),
-                'Content-Type: text/html',
-                'Content-Length: ' . $len,
-                'Server: ScratchLive! Scrobbler',
-                'Connection: close', 
-                '',
-                $body
-            );
-            socket_write($conn, implode("\n", $lines));
-            socket_close($conn);
-            L::level(L::DEBUG) && 
-                L::log(L::DEBUG, __CLASS__, "Handled unknown request.", 
-                    array());
+            $route_name = 'unknown';
+            $lines = $this->generate404();
         }
+
+        socket_write($conn, implode("\n", $lines));
+        socket_close($conn);
+        L::level(L::DEBUG) && 
+            L::log(L::DEBUG, __CLASS__, "Finished handling %s request.", 
+                array($route_name));
     }
 }
