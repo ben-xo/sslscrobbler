@@ -234,9 +234,9 @@ separately - https://github.com/RJ/irccat).
 
 **JSON Server options**
 `-J` or `--json port`
-Makes the current playing track info available at `http://localhost:<port>/nowplaying.json`.
+Makes the current playing track info available at `http://<your ip>:<port>/nowplaying.json`.
 Also, makes it available in a way which can be styled using CSS (which e.g. for OBS) at 
-`http://localhost:<port>/nowplaying.html`
+`http://<your ip>:<port>/nowplaying.html`
 
 
 # 2. HOW IT WORKS

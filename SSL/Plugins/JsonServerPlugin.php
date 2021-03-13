@@ -54,6 +54,24 @@ class JsonServerPlugin implements SSLPlugin, NowPlayingObserver, TickObserver, P
         L::level(L::DEBUG) && 
             L::log(L::DEBUG, __CLASS__, "Installed JSON listener...", 
                 array());
+
+        if(L::level(L::INFO))
+        {
+            L::log(L::INFO, __CLASS__, "now playing info will be available at:", 
+                array());
+
+            L::log(L::INFO, __CLASS__, "- http://localhost:%d/nowplaying.json", 
+                array($this->port));
+
+            L::log(L::INFO, __CLASS__, "- http://localhost:%d/nowplaying.html (for OBS on this computer)", 
+                array($this->port));
+
+            L::log(L::INFO, __CLASS__, "- http://%s:%d/nowplaying.json", 
+                array($this->getLocalIP(), $this->port));
+
+            L::log(L::INFO, __CLASS__, "- http://%s:%d/nowplaying.html (for OBS on this computer)", 
+                array($this->getLocalIP(), $this->port));
+        }
     }
     
     public function onStop() 
@@ -200,5 +218,13 @@ class JsonServerPlugin implements SSLPlugin, NowPlayingObserver, TickObserver, P
         L::level(L::DEBUG) && 
             L::log(L::DEBUG, __CLASS__, "Finished handling %s request.", 
                 array($route_name));
+    }
+
+    private function getLocalIP()
+    {
+        $sock = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+        socket_connect($sock, "8.8.8.8", 53);
+        socket_getsockname($sock, $name); // $name passed by reference
+        return $name;
     }
 }
