@@ -119,7 +119,9 @@ class JsonServerPlugin implements SSLPlugin, NowPlayingObserver, TickObserver, P
 
     protected function generateHTML()
     {
-        $body = "<!doctype html>\n<html><head><title>Now Playing in Serato</title></head><body>\n";
+        $body = "<!doctype html>\n<html><head><title>Now Playing in Serato</title>\n";
+        $body .= "<meta http-equiv=\"refresh\" content=\"5\">\n";
+        $body .= "</head><body>\n";
 
         if(isset($this->most_recent_track))
         {
