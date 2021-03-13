@@ -46,7 +46,8 @@ class CLIJsonServerPlugin implements CLIPlugin
     public function usage($appname, array $argv)
     {
         echo "JSON Server options:\n";
-        echo "    -J or --json <port> : Listen on port at http://localhost:<port>/nowplaying.json and server the details of the current playing track\n";
+        echo "    -J or --json <port> : Listen on port at http://localhost:<port>/nowplaying.json and serve the details of the current playing track\n";
+        echo "                        : Also HTML version http://localhost:<port>/nowplaying.html for styling with OBS\n";
         echo "\n";
     }
     
@@ -69,7 +70,7 @@ class CLIJsonServerPlugin implements CLIPlugin
     public function addPrompts(array &$argv)
     {
         $port = 8080;
-        echo "Json Server: now playing info will be available at http://localhost:$port/nowplaying.json\n";
+        echo "Json Server: now playing info will be available at http://localhost:$port/nowplaying.json and http://localhost:$port/nowplaying.html\n";
         $argv[] = '-J';
         $argv[] = $port;
     }
