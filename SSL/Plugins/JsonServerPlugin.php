@@ -220,6 +220,13 @@ class JsonServerPlugin implements SSLPlugin, NowPlayingObserver, TickObserver, P
                 array($route_name));
     }
 
+    /**
+     * Returns which of your IPs is the one that gets to the internet by setting up a connection to Google DNS
+     * (which doesn't send any traffic, as it's UDP).
+     * 
+     * N.B. Whilst this is most likely to be the IP of your computer on your local network, it could also give
+     * a different IP (that's no use for OBS) if you happen to be on a VPN or something.
+     */
     private function getLocalIP()
     {
         $sock = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
