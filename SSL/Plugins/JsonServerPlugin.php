@@ -31,12 +31,20 @@ class JsonServerPlugin implements SSLPlugin, NowPlayingObserver, TickObserver, P
     
     protected $most_recent_track;
     protected $most_recent_accepted_connection;
+    
+    protected $config;
 
     public function __construct(array $config, $port)
     {
         $this->port = $port;
+        $this->setConfig($config);
     }
 
+    public function setConfig(array $config)
+    {
+        $this->config = $config;
+    }
+    
     public function onSetup() 
     {
     }

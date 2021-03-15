@@ -27,9 +27,11 @@
 class CLIJsonServerPlugin implements CLIPlugin
 {
     /**
-     * @var array of JsonServerPlugin
+     * @var array[JsonServerPlugin]
      */
     protected $plugins = array();
+    
+    protected $used_ports = array();
 
     protected $config;
 
@@ -47,9 +49,16 @@ class CLIJsonServerPlugin implements CLIPlugin
     {
         echo "JSON / HTML Server options:\n";
         echo "    -J or --json <port>\n";
-        echo " or -H or --html <port>: Enable local web server for the details of the current playing track.\n";
-        echo "                         The info will be available as JSON at http://<your ip>:<port>/nowplaying.json and\n";
-        echo "                         also as HTML for styling with OBS at http://<your ip>:<port>/nowplaying.html\n";
+        echo " or -H or --html <port>   : Enable local web server for the details of the current playing track.\n";
+        echo "                            The info will be available as JSON at http://<your ip>:<port>/nowplaying.json and\n";
+        echo "                            also as HTML for styling with OBS at http://<your ip>:<port>/nowplaying.html\n";
+        echo "\n";
+        echo "                            If OBS runs on the same computer you can use URLs such as http://localhost:<port>/nowplaying.html\n";
+        echo "\n";
+        echo "                            By default, all available fields are displayed, but you can narrow it down to just the fields you want\n";
+        echo "                            using URLs such as http://<your ip>:<port>/nowplaying.html?artist&title which you can style with CSS.\n";
+        echo "\n";
+        echo "    --html-template <file>: A optional file containing strings like {{artist}} or {{title}}.\n";
         echo "\n";
     }
     
@@ -63,9 +72,48 @@ class CLIJsonServerPlugin implements CLIPlugin
         if($arg == '--json' || $arg == '-J' || $arg == '--html' || $arg == '-H')
         {
             $port = array_shift($argv);
+
+            if(in_array($port, $this->used_ports))
+                throw new RuntimeException("Port $port is already claimed by another JSON / HTML Server. Did you mean to specify more than one?");
+
+            $this->used_ports[] = $port;
             $this->plugins[] = $this->newJsonServerPlugin($this->config, $port);
             return true;
         }
+
+        if($arg == '--html-template')
+        {
+            $template_filename = array_shift($argv);
+
+            if(!file_exists($template_filename) || !is_file($template_filename))
+                throw new RuntimeException("File '$template_filename' does not exist.");
+
+            if(!is_readable($template_filename))
+                    throw new RuntimeException("File '$template_filename' can not be read.");
+
+            $template_body = file_get_contents($template_filename);
+            if($template_body === false)
+                throw new RuntimeException("Could not load file '$template_body'");
+
+            $this->config['template'] = $template_body;
+
+            $match_count = preg_match_all('/{{([a-zA-Z0-9]+?)}}/', $template_body, $matches);
+            if(!$match_count)
+                throw new RuntimeException("Template $template_filename does not contain any fields such as {{artist}} or {{title}}");
+
+            $this->config['template_fields'] = $matches[1];
+
+            L::level(L::INFO) &&
+                L::log(L::INFO, __CLASS__, "loaded HTML template from %s with %d templated fields",
+                    array($template_filename, $match_count));
+
+            L::level(L::DEBUG) &&
+                L::log(L::DEBUG, __CLASS__, "Fields in this template: %s",
+                    array(implode(', ', $matches[1])));
+
+            return true;
+        }
+
         return false;
     }
 
@@ -85,6 +133,7 @@ class CLIJsonServerPlugin implements CLIPlugin
 
         foreach($this->plugins as $plugin)
         {
+            $plugin->setConfig($this->config);
             $sslpluggable->addPlugin($plugin);
         }
     }
