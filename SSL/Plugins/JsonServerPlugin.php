@@ -192,7 +192,7 @@ class JsonServerPlugin implements SSLPlugin, NowPlayingObserver, TickObserver, P
 
     protected function generate404()
     {
-        $body = '<html><head><title>404 Not Found</title></head><body>No Dice.</body></html>';
+        $body = '<html><head><title>404 Not Found</title></head><body>No Dice. Try <a href="/nowplaying.html">this link?</a></body></html>';
         $len = strlen($body);
         return array(
             'HTTP/1.0 404 Not Found',
