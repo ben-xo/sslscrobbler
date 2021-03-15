@@ -52,7 +52,7 @@ class JsonServerPlugin implements SSLPlugin, NowPlayingObserver, TickObserver, P
         socket_set_nonblock($this->socket);
         
         L::level(L::DEBUG) && 
-            L::log(L::DEBUG, __CLASS__, "Installed JSON listener...", 
+            L::log(L::DEBUG, __CLASS__, "Installed JSON / HTML listener...", 
                 array());
 
         if(L::level(L::INFO))
@@ -99,7 +99,7 @@ class JsonServerPlugin implements SSLPlugin, NowPlayingObserver, TickObserver, P
             {
                 $this->most_recent_accepted_connection = $conn;
                 $runner = new ParallelRunner();
-                $runner->spinOff($this, 'JSON Request');
+                $runner->spinOff($this, 'JSON / HTML Request');
                 unset($this->most_recent_accepted_connection);
             }
         }
