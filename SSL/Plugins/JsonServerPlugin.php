@@ -31,7 +31,7 @@ class JsonServerPlugin implements SSLPlugin, NowPlayingObserver, TickObserver, P
     
     protected $most_recent_track;
     protected $most_recent_accepted_connection;
-    
+
     public function __construct(array $config, $port)
     {
         $this->port = $port;
@@ -135,7 +135,7 @@ class JsonServerPlugin implements SSLPlugin, NowPlayingObserver, TickObserver, P
         );
     }
 
-    protected function generateHTML()
+    protected function generateHTML(array $filters)
     {
         $body = "<!doctype html>\n<html><head><title>Now Playing in Serato</title>\n";
         $body .= "<meta http-equiv=\"refresh\" content=\"5\">\n";
@@ -144,9 +144,26 @@ class JsonServerPlugin implements SSLPlugin, NowPlayingObserver, TickObserver, P
         if(isset($this->most_recent_track))
         {
             $data = $this->most_recent_track->toArray();
-            foreach($data as $k => $v)
+            if(empty($filters))
             {
-                $body .= sprintf("<div id=\"%s\">%s</div>\n", $k, htmlspecialchars($v));
+                foreach($data as $k => $v)
+                {
+                    $body .= sprintf("<div id=\"%s\">%s</div>\n", $k, htmlspecialchars($v));
+                }
+            }
+            else
+            {
+                foreach($filters as $filter)
+                {
+                    if(isset($data[$filter]))
+                    {
+                        $body .= sprintf("<div id=\"%s\">%s</div>\n", htmlspecialchars($filter), htmlspecialchars($data[$filter]));
+                    }
+                    else
+                    {
+                        $body .= sprintf("<!-- no such field %s -->\n", htmlspecialchars($filter));
+                    }
+                }
             }
         }
         
@@ -202,10 +219,19 @@ class JsonServerPlugin implements SSLPlugin, NowPlayingObserver, TickObserver, P
             $route_name = 'nowplaying.json';
             $lines = $this->generateJSON();
         }
-        if(preg_match('#^/nowplaying.html(?:\?.*|$)#', $get_line[1]))
+        if(preg_match('#^/nowplaying.html(?:\?(.*))?$#', $get_line[1], $matches))
         {
             $route_name = 'nowplaying.html';
-            $lines = $this->generateHTML();
+            $filters = array();
+            if(isset($matches[1]))
+            {
+                $args = explode('&', $matches[1], 100);
+                foreach($args as $arg)
+                {
+                    $filters[] = urldecode($arg);
+                }
+            }
+            $lines = $this->generateHTML($filters);
         }
         else
         {
