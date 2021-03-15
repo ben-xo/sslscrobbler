@@ -157,7 +157,7 @@ class JsonServerPlugin implements SSLPlugin, NowPlayingObserver, TickObserver, P
                 {
                     if(isset($data[$filter]))
                     {
-                        $body .= sprintf("<div id=\"%s\">%s</div>\n", htmlspecialchars($filter), htmlspecialchars($data[$filter]));
+                        $body .= sprintf("<div class=\"%s\">%s</div>\n", htmlspecialchars($filter), htmlspecialchars($data[$filter]));
                     }
                     else
                     {
