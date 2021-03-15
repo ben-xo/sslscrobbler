@@ -46,7 +46,7 @@ class CLIJsonServerPlugin implements CLIPlugin
     public function usage($appname, array $argv)
     {
         echo "JSON / HTML Server options:\n";
-        echo "    -J or --json <port>\n"
+        echo "    -J or --json <port>\n";
         echo " or -H or --html <port>: Enable local web server for the details of the current playing track.\n";
         echo "                         The info will be available as JSON at http://<your ip>:<port>/nowplaying.json and\n";
         echo "                         also as HTML for styling with OBS at http://<your ip>:<port>/nowplaying.html\n";
