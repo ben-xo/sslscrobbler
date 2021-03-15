@@ -189,6 +189,44 @@ class JsonServerPlugin implements SSLPlugin, NowPlayingObserver, TickObserver, P
             $body
         );
     }
+    
+    protected function generateTemplate()
+    {
+        if(isset($this->most_recent_track))
+        {
+            $data = $this->most_recent_track->toArray();
+            $body = $this->config['template'];
+            
+            $patterns = array();
+            $replacements = array();
+            
+            foreach($this->config['template_fields'] as $field)
+            {
+                if(isset($data[$field]))
+                {
+                    $patterns[] = "/{{" . preg_quote($field, '/') . "}}/";
+                    $replacements[] = htmlspecialchars($data[$field]);
+                }
+            }
+            $body = preg_replace($patterns, $replacements, $this->config['template']);
+        }
+        else
+        {
+            $body = '';
+        }
+
+        $len = strlen($body);
+        return array(
+            'HTTP/1.0 200 OK',
+            'Date: ' . date('r'),
+            'Content-Type: text/html',
+            'Content-Length: ' . $len,
+            'Server: ScratchLive! Scrobbler',
+            'Connection: close',
+            '',
+            $body
+        );
+    }
 
     protected function generate404()
     {
@@ -222,24 +260,31 @@ class JsonServerPlugin implements SSLPlugin, NowPlayingObserver, TickObserver, P
         
         $request = explode("\n", $request);
         $get_line = explode(' ', $request[0]);
-        if(preg_match('#^/nowplaying\.json(?:\?.*|$)#', $get_line[1]))
+        if(preg_match('#^/nowplaying\.json(?:\?[^.]*|$)#', $get_line[1]))
         {
             $route_name = 'nowplaying.json';
             $lines = $this->generateJSON();
         }
-        if(preg_match('#^/nowplaying.html(?:\?(.*))?$#', $get_line[1], $matches))
+        elseif(preg_match('#^/nowplaying\.html(?:\?([^.]*))?$#', $get_line[1], $matches))
         {
             $route_name = 'nowplaying.html';
-            $filters = array();
-            if(isset($matches[1]))
+            if(isset($this->config['template']))
             {
-                $args = explode('&', $matches[1], 100);
-                foreach($args as $arg)
-                {
-                    $filters[] = urldecode($arg);
-                }
+                $lines = $this->generateTemplate();
             }
-            $lines = $this->generateHTML($filters);
+            else
+            {
+                $filters = array();
+                if(isset($matches[1]))
+                {
+                    $args = explode('&', $matches[1], 100);
+                    foreach($args as $arg)
+                    {
+                        $filters[] = urldecode($arg);
+                    }
+                }
+                $lines = $this->generateHTML($filters);
+            }
         }
         else
         {
