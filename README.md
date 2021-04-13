@@ -1,4 +1,4 @@
-# SSLScrobbler v0.25
+# SSLScrobbler v0.26
 
 [![Testing sslscrobbler](https://github.com/ben-xo/sslscrobbler/actions/workflows/testing.yml/badge.svg)](https://github.com/ben-xo/sslscrobbler/actions/workflows/testing.yml)
 
@@ -135,6 +135,7 @@ It is more flexible when used from Terminal.
 **TO QUIT:**
 
 To quit SSL Scrobbler, click on its window and press Ctrl-C.
+(or in the macOS app, press the quit button in the bottom right)
 
 
 ## 1.3 Quick HOWTO
@@ -158,7 +159,11 @@ TO SCROBBLE SEVERAL PEOPLE IN THE ROOM:
 TO TWEET AS YOU PLAY
 
     php historyreader.php -T twitterusername
- 
+
+
+MAKE TRACK DATA AVAILABLE FOR OBS (OR WHATEVER)
+
+    php historyreader.php -J 8080
 
 
 ## 1.3 Options
@@ -225,6 +230,13 @@ Exactly what SQL is run, and where it is sent, is configued in `config.php`.
 `-I` or `--irccat host:port#channel`
 Put the now playing track into an IRC channel using IRCCat. (IRCCat sold
 separately - https://github.com/RJ/irccat).   
+
+
+**JSON Server options**
+`-J` or `--json port`
+Makes the current playing track info available at `http://<your ip>:<port>/nowplaying.json`.
+Also, makes it available in a way which can be styled using CSS (which e.g. for OBS) at 
+`http://<your ip>:<port>/nowplaying.html`
 
 
 # 2. HOW IT WORKS

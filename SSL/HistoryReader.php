@@ -124,9 +124,12 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
                 
         try
         {
+            // do this now so that we can still use defailt logging during parsing options
+            $this->setupLogging();
+
             $this->parseOptions($argv);
-            
-            // do this as early as possible, but not before parsing options which may affect it.
+
+            // do it again, as parsing options may have altered the logging setup
             $this->setupLogging();
 
             if (!$this->dir_provided) {
