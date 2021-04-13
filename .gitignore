@@ -1,4 +1,7 @@
 
+# Composer
+vendor
+
 # API keys
 twitter-*
 lastfm-*
@@ -9,6 +12,8 @@ config.php
 # Demo files
 SSL/Plugins/NowPlaying/nowplaying.txt
 SSL/Plugins/NowPlaying/SevenDigital.key
+template.html
+Demo
 
 # XOUP compiled files
 SSL/Structs/SSLSessionAdat.php
@@ -18,6 +23,10 @@ SSL/Structs/SSLLibraryTrackOtrk.php
 SSL/Structs/SSLTrackDeleteUent.php
 SSL/Structs/SSLTrackAdat.php
 SSL/Structs/SSLColumnUcok.php
+
+# Built versions of the app from macOS/build.sh
+SSL Scrobbler.app*
+SSL Scrobbler*.zip
 
 # Local crap
 .DS_Store
