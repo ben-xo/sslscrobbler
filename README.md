@@ -673,6 +673,9 @@ SSLScrobbler includes the following external libraries:
 * vgd.php (http://v.gd/developers.php)
   originally by Richard West, released into the public domain.
 
+* php-discord-sdk (https://github.com/cubiclesoft/php-discord-sdk)
+  originally by CubicleSoft, licensed under the MIT license.
+
 * vinyl.icns (https://findicons.com/icon/41917/vinyl)
   originally by Nando Design Studio (Fernando Albuquerque), license Freeware Non-commercial
 
