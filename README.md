@@ -1,4 +1,4 @@
-# SSLScrobbler v0.26
+# SSLScrobbler v0.27
 
 [![Testing sslscrobbler](https://github.com/ben-xo/sslscrobbler/actions/workflows/testing.yml/badge.svg)](https://github.com/ben-xo/sslscrobbler/actions/workflows/testing.yml)
 
@@ -6,7 +6,7 @@ SSLScrobbler is a Scrobbler for Serato DJ and Serato ScratchLive (http://www.ser
 written in PHP. See https://www.last.fm/about/trackmymusic for an explanation 
 of Scrobbling.
 
-SSLScrobbler is designed to update Last.fm and/or Twitter when a track is 
+SSLScrobbler is designed to update Last.fm, Twitter and/or Discord when a track is 
 playing or played. 
 
 It is so named because Serato DJ used to be called Serato Scratch Live (SSL) when I started this project.
@@ -159,6 +159,10 @@ TO SCROBBLE SEVERAL PEOPLE IN THE ROOM:
 TO TWEET AS YOU PLAY
 
     php historyreader.php -T twitterusername
+
+TO MESSAGE DISCORD AS YOU PLAY
+
+    php historyreader.php --discord webhook-name
 
 
 MAKE TRACK DATA AVAILABLE FOR OBS (OR WHATEVER)
@@ -672,6 +676,9 @@ SSLScrobbler includes the following external libraries:
   
 * vgd.php (http://v.gd/developers.php)
   originally by Richard West, released into the public domain.
+
+* php-discord-sdk (https://github.com/cubiclesoft/php-discord-sdk)
+  originally by CubicleSoft, licensed under the MIT license.
 
 * vinyl.icns (https://findicons.com/icon/41917/vinyl)
   originally by Nando Design Studio (Fernando Albuquerque), license Freeware Non-commercial
