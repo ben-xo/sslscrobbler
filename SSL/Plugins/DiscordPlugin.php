@@ -1,0 +1,146 @@
+<?php
+
+/**
+ *  @author      Ben XO (me@ben-xo.com)
+ *  @copyright   Copyright (c) 2010 Ben XO
+ *  @license     MIT License (http://www.opensource.org/licenses/mit-license.html)
+ *  
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *  
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *  
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ */
+
+require_once 'External/php-discord-sdk/support/sdk_discord.php';
+
+/**
+ * Sends your current Now Playing track to a Twitter account.
+ * 
+ * For command line setup @see CLITwitterPlugin
+ */
+class DiscordPlugin implements SSLPlugin, SSLOptionablePlugin
+{
+    protected $config;
+    protected $sessionname;
+    protected $synchronous = false;
+    protected $threading = false;
+
+    public function __construct(array $config, $sessionname)
+    {
+        $this->setConfig($config);
+        $this->sessionname = $sessionname;
+    }
+    
+    public function setOptions(array $options) {
+    }
+    
+   
+    public function onSetup() 
+    {
+        $this->loadOrAuthDiscordConfig();
+    }
+    
+    public function onStart() {}
+    public function onStop() {}
+    
+    public function getObservers()
+    {
+        return array( $this->getAdaptor() );
+    }
+
+    public function setConfig(array $config)
+    { 
+        $this->config = $config;
+    }
+    
+    protected function getAdaptor() {
+        $adaptor = new SSLDiscordAdaptor(
+            $this->getDiscordSDK(),
+            $this->config['message'],
+            $this->config['filters'],
+            $this->sessionname
+        );
+        return $adaptor;
+    }
+
+    protected function loadOrAuthDiscordConfig()
+    {
+        $auth_file = 'discord-' . $this->sessionname . '.txt';
+        while(!file_exists($auth_file))
+        {
+            echo "Discord: Authorizing for {$this->sessionname}...\n";
+            $this->authDiscord($this->sessionname);
+        }
+        
+        list(
+            $this->config['channel_id'],
+            $this->config['app_client_id'],
+            $this->config['bot_or_bearer'],
+            $this->config['bot_or_bearer_token']
+        ) = explode("\n", trim(file_get_contents($auth_file)));
+    }
+        
+    protected function authDiscord($save_name)
+    {   
+        $config = $this->config;
+        
+        $ui = new UI();
+        
+        // Connecting a desktop app to Discord requires you to set up an API account at Discord's side (because they seem strict
+        // about not having API keys and details in your code). So, now we guide you through that flow.
+        echo "You'll need to do a few steps at Discord first.\n";
+        
+        $url = "https://discord.com/developers/applications";
+        $ui->openBrowser($url);
+        $app_client_id = $ui->readline("* Visit $url and create a new app. (Call it whatever you like). Paste the APPLICATION ID here: ");
+        
+        $bot_or_bearer = 'bot';
+        
+        $ui->readline("* Ok, now make sure to turn off 'public bot', and then hit 'save'. Then, authorize the app! (Enter to continue)");
+        $ui->openBrowser("https://discord.com/oauth2/authorize?client_id={$app_client_id}&scope=bot&permissions=2048");
+
+        $bot_or_bearer_token = $ui->readline("* Visit the 'bot' tab, and 'click to reveal token', then paste that here: \n");
+        $channel_id = $ui->readline("* Copy the Channel ID of the channel you want to post updates to, then paste it here: \n");
+        
+        $this->config['app_client_id'] = $app_client_id;
+        $this->config['channel_id'] = $channel_id;
+        $this->config['bot_or_bearer'] = $bot_or_bearer;
+        $this->config['bot_or_bearer_token'] = $bot_or_bearer_token;
+
+        echo "(Written to discord-{$save_name}.txt)\n";
+        
+        if(file_put_contents("discord-{$save_name}.txt", implode( "\n", array($app_client_id, $channel_id, $bot_or_bearer, $bot_or_bearer_token))))
+        {
+            return;
+        }
+        
+        throw new RuntimeException("Failed to save {$bot_or_bearer} token to discord-{$save_name}.txt");
+    }  
+     
+    /**
+     * @return DiscordSDK
+     */
+    protected function getDiscordSDK()
+    {
+        $config = $this->config;
+        $discord = new DiscordSDK();
+        $discord->SetAccessInfo(
+            $config['bot_or_bearer'],
+            $config['bot_or_bearer_token']
+        );
+        return $discord;
+    }
+}
