@@ -47,13 +47,13 @@ class SSLDiscordAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
     
     protected $synchronous = false;
     
-    public function __construct(DiscordSDK $discord, $msg_format, array $message_filters, $sessionname, $channel_id)
+    public function __construct(DiscordSDK $discord, $msg_format, array $message_filters, $sessionname, $webhook_url)
     {
         $this->discord = $discord;
         $this->msg_format = $msg_format;
         $this->message_filters = $message_filters;
         $this->sessionname = $sessionname;
-        $this->channel_id = $channel_id;
+        $this->webhook_url = $webhook_url;
     }
     
     public function notifyNowPlaying(SSLTrack $track=null)
@@ -97,7 +97,7 @@ class SSLDiscordAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
             $options = array(
                 'content' => $message
             );
-            $response = $this->discord->RunAPI("POST", "channels/" . $this->channel_id . "/messages", $options);
+            $response = $this->discord->SendWebhookMessage($this->webhook_url, $options);
             if(isset($response['error']))
             {
                 throw new RuntimeException($response['error']);

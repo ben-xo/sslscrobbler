@@ -72,7 +72,7 @@ class DiscordPlugin implements SSLPlugin, SSLOptionablePlugin
             $this->config['message'],
             $this->config['filters'],
             $this->sessionname,
-            $this->config['channel_id']
+            $this->config['webhook_url']
         );
         return $adaptor;
     }
@@ -86,12 +86,7 @@ class DiscordPlugin implements SSLPlugin, SSLOptionablePlugin
             $this->authDiscord($this->sessionname);
         }
         
-        list(
-            $this->config['app_client_id'],
-            $this->config['channel_id'],
-            $this->config['bot_or_bearer'],
-            $this->config['bot_or_bearer_token']
-        ) = explode("\n", trim(file_get_contents($auth_file)));
+        $this->config['webhook_url'] = trim(file_get_contents($auth_file));
     }
         
     protected function authDiscord($save_name)
@@ -104,26 +99,13 @@ class DiscordPlugin implements SSLPlugin, SSLOptionablePlugin
         // about not having API keys and details in your code). So, now we guide you through that flow.
         echo "You'll need to do a few steps at Discord first.\n";
         
-        $url = "https://discord.com/developers/applications";
-        $ui->openBrowser($url);
-        $app_client_id = $ui->readline("* Create a new app. (Call it whatever you like). Paste the APPLICATION ID here: ");
+        $webhook_url = $ui->readline("* You will need to ask the guild owner to create a webhook URL. Paste the URL here: ");
         
-        $bot_or_bearer = 'bot';
-        
-        $ui->readline("* Ok, now visit the 'bot' tab, and make sure to turn off 'public bot', and then hit 'save'. Then, authorize the app! (Enter to continue)");
-        $ui->openBrowser("https://discord.com/oauth2/authorize?client_id={$app_client_id}&scope=bot&permissions=2048");
-
-        $bot_or_bearer_token = $ui->readline("* On the 'bot' tab, and 'click to reveal token', then paste that here: ");
-        $channel_id = $ui->readline("* Copy the Channel ID of the channel you want to post updates to, then paste it here: ");
-        
-        $this->config['app_client_id'] = $app_client_id;
-        $this->config['channel_id'] = $channel_id;
-        $this->config['bot_or_bearer'] = $bot_or_bearer;
-        $this->config['bot_or_bearer_token'] = $bot_or_bearer_token;
+        $this->config['webhook_url'] = $webhook_url;
 
         echo "(Written to discord-{$save_name}.txt)\n";
         
-        if(file_put_contents("discord-{$save_name}.txt", implode( "\n", array($app_client_id, $channel_id, $bot_or_bearer, $bot_or_bearer_token))))
+        if(file_put_contents("discord-{$save_name}.txt", $webhook_url))
         {
             return;
         }
@@ -136,12 +118,7 @@ class DiscordPlugin implements SSLPlugin, SSLOptionablePlugin
      */
     protected function getDiscordSDK()
     {
-        $config = $this->config;
         $discord = new DiscordSDK();
-        $discord->SetAccessInfo(
-            $config['bot_or_bearer'],
-            $config['bot_or_bearer_token']
-        );
         return $discord;
     }
 }
