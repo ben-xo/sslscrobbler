@@ -76,7 +76,6 @@ class TwitterPlugin implements SSLPlugin, SSLOptionablePlugin
     }
     
     protected function getAdaptor() {
-        // TwitterSynchronousPlugin overrides this to set synchronous = true
         $adaptor = new SSLTwitterAdaptor(
             $this->getTwitter(),
             $this->config['message'],
