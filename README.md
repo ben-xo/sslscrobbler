@@ -209,7 +209,7 @@ Scrobble / send 'Now Playing' to Last.fm for user <username>.
 
 The first time you specify this, it will ask you to authorize the app to your 
 Last.fm account. The authorization information is stored in a file called 
-`<username>-lastfm.txt`
+`lastfm-<username>.txt`
 
 NOTE: you can include `-L` multiple times and scrobble to multiple accounts.
   
@@ -219,9 +219,19 @@ Post tracklists to Twitter. It will tweet once for every 'Now Playing'.
 
 The first time you specify this option, it will ask you to authorize the app 
 to your Twitter account. The authorization information is stored in a file 
-called `<session>-twitter.txt`
+called `twitter-<session>.txt`
 
 NOTE: you can include `-T` multiple times and tweet to multiple accounts.
+
+**Discord options**:
+`--discord <session>`:
+Post tracklists to Discord. It will send a message once for every 'Now Playing'. 
+
+The first time you specify this option, it will ask you to paste a URL for a webhook
+which can be provided by your guild admin for a channel on your server. The 
+authorization information is stored in a file called `discord-<session>.txt`
+
+NOTE: you can include `--discord` multiple times and message multiple channels.
   
 **DB options**:
 `-D` or `--db <key>`:
