@@ -71,7 +71,8 @@ class DiscordPlugin implements SSLPlugin, SSLOptionablePlugin
             $this->getDiscordSDK(),
             $this->config['message'],
             $this->config['filters'],
-            $this->sessionname
+            $this->sessionname,
+            $this->config['channel_id']
         );
         return $adaptor;
     }
@@ -86,8 +87,8 @@ class DiscordPlugin implements SSLPlugin, SSLOptionablePlugin
         }
         
         list(
-            $this->config['channel_id'],
             $this->config['app_client_id'],
+            $this->config['channel_id'],
             $this->config['bot_or_bearer'],
             $this->config['bot_or_bearer_token']
         ) = explode("\n", trim(file_get_contents($auth_file)));
@@ -105,15 +106,15 @@ class DiscordPlugin implements SSLPlugin, SSLOptionablePlugin
         
         $url = "https://discord.com/developers/applications";
         $ui->openBrowser($url);
-        $app_client_id = $ui->readline("* Visit $url and create a new app. (Call it whatever you like). Paste the APPLICATION ID here: ");
+        $app_client_id = $ui->readline("* Create a new app. (Call it whatever you like). Paste the APPLICATION ID here: ");
         
         $bot_or_bearer = 'bot';
         
-        $ui->readline("* Ok, now make sure to turn off 'public bot', and then hit 'save'. Then, authorize the app! (Enter to continue)");
+        $ui->readline("* Ok, now visit the 'bot' tab, and make sure to turn off 'public bot', and then hit 'save'. Then, authorize the app! (Enter to continue)");
         $ui->openBrowser("https://discord.com/oauth2/authorize?client_id={$app_client_id}&scope=bot&permissions=2048");
 
-        $bot_or_bearer_token = $ui->readline("* Visit the 'bot' tab, and 'click to reveal token', then paste that here: \n");
-        $channel_id = $ui->readline("* Copy the Channel ID of the channel you want to post updates to, then paste it here: \n");
+        $bot_or_bearer_token = $ui->readline("* On the 'bot' tab, and 'click to reveal token', then paste that here: ");
+        $channel_id = $ui->readline("* Copy the Channel ID of the channel you want to post updates to, then paste it here: ");
         
         $this->config['app_client_id'] = $app_client_id;
         $this->config['channel_id'] = $channel_id;

@@ -31,6 +31,7 @@ class SSLDiscordAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
      */
     protected $discord;
     protected $msg_format;
+    protected $channel_id;
     
     /**
      * @var Array of ITrackMessageFilter
@@ -46,12 +47,13 @@ class SSLDiscordAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
     
     protected $synchronous = false;
     
-    public function __construct(DiscordSDK $discord, $msg_format, array $message_filters, $sessionname)
+    public function __construct(DiscordSDK $discord, $msg_format, array $message_filters, $sessionname, $channel_id)
     {
         $this->discord = $discord;
         $this->msg_format = $msg_format;
         $this->message_filters = $message_filters;
         $this->sessionname = $sessionname;
+        $this->channel_id = $channel_id;
     }
     
     public function notifyNowPlaying(SSLTrack $track=null)
@@ -95,7 +97,7 @@ class SSLDiscordAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
             $options = array(
                 'content' => $message
             );
-            $response = $this->discord->RunAPI("POST", "channels/" . $this->config['channel_id'] . "/messages", $options);
+            $response = $this->discord->RunAPI("POST", "channels/" . $this->channel_id . "/messages", $options);
             if(isset($response['error']))
             {
                 throw new RuntimeException($response['error']);
