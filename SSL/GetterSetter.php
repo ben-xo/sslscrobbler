@@ -27,6 +27,7 @@
 abstract class GetterSetter {
     
     protected $fields = array();
+    protected $types = array();
     
     /**
      * Missing Method Magic Accessor
@@ -43,13 +44,50 @@ abstract class GetterSetter {
         {
             case 'get':
                 if(isset($this->fields[$var_name]))
+                {
                     return $this->fields[$var_name];
+                }
+
+                if(isset($this->types[$var_name]))
+                {
+                    $type = $this->types[$var_name];
+                    switch($type)
+                    {
+                        case 'string': return '';
+                        case 'int':    return 0;
+                        case 'float':  return 0.0;
+                        default:
+                            throw new Exception("Unknown type '" . $type . "' for method '" . $method . "' called on " . __CLASS__);
+                    }
+                }
                 break;
                 
             case 'set':
-                $this->fields[$var_name] = $params[0];
+                $val = $params[0];
+                if(isset($this->types[$var_name]))
+                {
+                    $type = $this->types[$var_name];
+                    switch($type)
+                    {
+                        case 'string':
+                            $val = string($val);
+                            break;
+
+                        case 'int':
+                            $val = int($val);
+                            break;
+
+                        case 'float':
+                            $val = float($val);
+                            break;
+
+                        default:
+                            throw new Exception("Unknown type '" . $type . "' for method '" . $method . "' called on " . __CLASS__);
+                    }
+                }
+                $this->fields[$var_name] = $val;
                 break;
-                
+
             default:
                 throw new Exception("Unknown method '" . $method . "' called on " . __CLASS__);
         }
