@@ -59,53 +59,63 @@ class SSLCompoundChunk extends SSLChunk implements ArrayAccess, Iterator
         $this->selected_index = $index;
     }
     
+    
     public function count()
     {
         return count($this->chunks);
     }
     
     // ArrayAccess implementation
+    #[\ReturnTypeWillChange]
     public function offsetExists ($offset) 
     {
         return isset($this->chunks[$offset]);
     }
     
+    #[\ReturnTypeWillChange]
     public function offsetGet ($offset) 
     {
         return $this->chunks[$offset];
     }
     
+    #[\ReturnTypeWillChange]
     public function offsetSet ($offset, $value) 
     {
         throw new RuntimeException('SSLCompoundChunks are immutable');
     }
     
+    #[\ReturnTypeWillChange]
     public function offsetUnset ($offset) 
     {
         throw new RuntimeException('SSLCompoundChunks are immutable');
     }
     
     // Iterator implementation
+    #[\ReturnTypeWillChange]
     public function current () 
     {
         return current($this->chunks);
     }
     
+    #[\ReturnTypeWillChange]
     public function next () 
     {
         return next($this->chunks);
     }
 
+    #[\ReturnTypeWillChange]
     public function key () 
     {
         return key($this->chunks);
     }
 
+    #[\ReturnTypeWillChange]
     public function valid () 
     {
         return (bool) current($this->chunks);
     }
 
+    #[\ReturnTypeWillChange]
     public function rewind () 
     {
         return reset($this->chunks);

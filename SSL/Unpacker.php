@@ -212,7 +212,7 @@ abstract class Unpacker
                         $vals = unpack('Nval', $datum); // unsigned long (always 32 bit, big endian byte order)
                         if($vals['val'] & 0x80000000)
                         {
-                            $vals['val'] |= 0xFFFFFFFF00000000; // extend sign
+                            $vals['val'] |= -0x100000000; // extend sign
                         }
                         break;
                         
@@ -220,7 +220,7 @@ abstract class Unpacker
                         $vals = unpack('nval', $datum); // unsigned short (always 16 bit, big endian byte order)
                         if($vals['val'] & 0x8000)
                         {
-                            $vals['val'] |= 0xFFFFFFFFFFFF0000; // extend sign
+                            $vals['val'] |= -0x10000; // extend sign
                         }
                         break;
                         
@@ -228,7 +228,7 @@ abstract class Unpacker
                         $vals = unpack('cval', $datum); // char
                         if($vals['val'] & 0x80)
                         {
-                            $vals['val'] |= 0xFFFFFFFFFFFFFF00; // extend sign
+                            $vals['val'] |= -0x100; // extend sign
                         }
                         break;
                         
