@@ -216,7 +216,7 @@ class SSLTrack extends SSLStruct
                         array( $playtime ));
 
                 $minutes = floor($playtime / 60);
-                $seconds = $playtime % 60;
+                $seconds = int($playtime) % 60;
                 return sprintf("%d:%02d", $minutes, $seconds);
             }
 
