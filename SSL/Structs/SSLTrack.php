@@ -92,7 +92,9 @@ class SSLTrack extends SSLStruct
             $this->setLengthIfUnknown();
         }
         
-        if(preg_match('/^(\d+):(\d+)/', $this->getLength(), $matches))
+        $length = $this->getLength();
+
+        if(isset($length) && preg_match('/^(\d+):(\d+)/', $length, $matches))
         {
             return $matches[1] * 60 + $matches[2];
         }
