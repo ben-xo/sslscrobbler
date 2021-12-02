@@ -44,7 +44,7 @@ class SSLChunkParser
     {
         $this->chunk_factory = Inject::the(new SSLChunkFactory());
         $this->data = $data;
-        $this->data_len = strlen($data);
+        $this->data_len = strlen((string)$data);
     }
     
     public function hasMore()
