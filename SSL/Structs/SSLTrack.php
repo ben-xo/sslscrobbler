@@ -179,7 +179,7 @@ class SSLTrack extends SSLStruct
     {
         $fullpath = $this->getFullpath();
 
-        if(strlen($fullpath) == 0)
+        if(isset($fullpath) && strlen($fullpath) == 0)
         {
             L::level(L::WARNING) &&
                 L::log(L::WARNING, __CLASS__, 'Guessing MP3 length from file failed: full path was empty. Perhaps this entry was manually added?',
@@ -218,7 +218,7 @@ class SSLTrack extends SSLStruct
                         array( $playtime ));
 
                 $minutes = floor($playtime / 60);
-                $seconds = int($playtime) % 60;
+                $seconds = (int)$playtime % 60;
                 return sprintf("%d:%02d", $minutes, $seconds);
             }
 
@@ -264,7 +264,7 @@ class SSLTrack extends SSLStruct
     
     protected function file_exists($filename)
     {
-        return file_exists($filename);
+        return isset($filename) && file_exists($filename);
     }
 
     // exists to make phpunit happy
