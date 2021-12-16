@@ -1,6 +1,8 @@
 <?php
 /**
  * PHP Scrobbler
+ * 
+ * VERSION 1.1.2
  *
  * This class lets you submit tracks to a lastfm account. Curl needed.
  * 
@@ -33,8 +35,8 @@ class md_Scrobbler
 	protected $clientId;
 	protected $clientVer;
 
-	const SCROBBLER_URL    = 'http://post.audioscrobbler.com/?hs=true&p=1.2.1&c=<client-id>&v=<client-ver>&u=<user>&t=<timestamp>&a=<auth>';
-	const SCROBBLER_WS_URL = 'http://post.audioscrobbler.com/?hs=true&p=1.2.1&c=<client-id>&v=<client-ver>&u=<user>&t=<timestamp>&a=<auth>&api_key=<api_key>&sk=<session_key>';
+	const SCROBBLER_URL    = 'https://post.audioscrobbler.com/?hs=true&p=1.2.1&c=<client-id>&v=<client-ver>&u=<user>&t=<timestamp>&a=<auth>';
+	const SCROBBLER_WS_URL = 'https://post.audioscrobbler.com/?hs=true&p=1.2.1&c=<client-id>&v=<client-ver>&u=<user>&t=<timestamp>&a=<auth>&api_key=<api_key>&sk=<session_key>';
 	
 	// curl timeout
 	const TIMEOUT       = 10;
@@ -57,6 +59,8 @@ class md_Scrobbler
 	protected $api_key;
 	protected $api_secret;
 	protected $api_sk;
+
+	public $debug = false;
 
 	/**
 	 * New md_Scrobbler
@@ -154,7 +158,7 @@ class md_Scrobbler
 							   );
 		return true;
 	}
-	
+
 	public function getQueueSize()
 	{
 	    return count($this->queue);
@@ -187,7 +191,6 @@ class md_Scrobbler
 		{
 			throw new RuntimeException("$trackDuration is required");
 		}
-
 	    $data = $this->generateNowPlayingPostData($artist, $track, $album, $trackDuration, $trackNumber, $mbTrackId);
 	    $this->sendSubmission( 'nowPlaying', $data );
 	}
@@ -235,6 +238,15 @@ class md_Scrobbler
 	
 	protected function doCurl($url, $post_data)
 	{
+		if($this->debug) 
+		{
+			echo "URL: $url\n";
+			if($post_data) 
+			{
+				var_dump($post_data);
+			}
+		}
+
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_TIMEOUT, self::TIMEOUT);
 		curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, self::TIMEOUT);
@@ -248,6 +260,9 @@ class md_Scrobbler
 		if(defined('SCROBBLER_LOG')) {
 		    file_put_contents(SCROBBLER_LOG, time() . ' ' . $data . "\n", FILE_APPEND);
 		}
+
+		if($this->debug) print "Response: $data\n";
+
 		curl_close ($curl);
 		return $data;
 	}
@@ -255,12 +270,17 @@ class md_Scrobbler
 	protected function handShake()
 	{
 	    $url = $this->generateScrobblerUrl();
+
+		if($this->debug) print "Handshake URL: $url\n";
+
 		$curl = curl_init($url);
 		curl_setopt($curl, CURLOPT_TIMEOUT, self::TIMEOUT);
 		curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, self::TIMEOUT);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
 
 		$data = curl_exec($curl);
+
+		if($this->debug) print "Handshake Response: $data\n";
 
 		curl_close($curl);
 		$data = explode("\n", $data);
@@ -270,13 +290,13 @@ class md_Scrobbler
 			switch($data[0])
 			{
 				case 'BANNED':
-					throw new md_Scrobbler_Exception('Client banned.');
+					throw new md_Scrobbler_Exception('Client banned: ' . $data[0]);
 					break;
 				case 'BADTIME':
-					throw new md_Scrobbler_Exception('Wrong system clock.');
+					throw new md_Scrobbler_Exception('Wrong system clock: ' . $data[0]);
 					break;
 				case 'BADAUTH':
-					throw new md_Scrobbler_Exception('Wrong credentials.');
+					throw new md_Scrobbler_Exception('Wrong credentials: ' . $data[0]);
 					break;
 				default:
 					throw new md_Scrobbler_Exception('Unexpected handshake error: ' . $data[0]);
@@ -370,8 +390,8 @@ class md_Scrobbler
 			throw new RuntimeException("$trackDuration is required");
 		}
 
-		$body = 'a=' . rawurlencode($artist) . '&'
-		. 't=' . rawurlencode($track) . '&'
+		$body = 'a=' . rawurlencode((string)$artist) . '&'
+		. 't=' . rawurlencode((string)$track) . '&'
 		. 'l=' . $trackDuration . '&'
 		. 'b=' . rawurlencode($album) . '&'
 		. 'n=' . $trackNumber . '&'
