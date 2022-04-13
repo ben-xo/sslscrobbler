@@ -1,7 +1,7 @@
 <?php
 
 /**
- *  @author      Ben XO (me@ben-xo.com)
+ *  @author      Ben XO (me@ben-xo.com) & Nick Masi
  *  @copyright   Copyright (c) 2010 Ben XO
  *  @license     MIT License (http://www.opensource.org/licenses/mit-license.html)
  *  
@@ -38,6 +38,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
     protected $time_multiplier = 1.0;
     protected $csv = false;
     protected $log_file = '';
+    protected $log_file_only_name = false;
     protected $verbosity = L::INFO;
         
     /**
@@ -256,6 +257,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             echo "          --dump-type <x>:     Use a specific parser. Options are: sessionfile, sessionindex\n";
             echo "    -v or --verbosity <0-9>:   How much logging to output. (default: 0 (none))\n";
             echo "    -l or --log-file <file>:   Where to send logging output. (If this option is omitted, output goes to stdout)\n";
+            echo "    -ln or --log-file-name-only <file>:  Same as -l but only logs the name of the track playing\n";
             echo "          --manual:            Replay the session file, one batch per tick. (Tick by pressing enter at the console)\n";
             echo "          --multiply-time <n>: Speed up time by a factor of n\n";
             echo "          --csv:               Parse the session file as a CSV, not a binary file, for testing purposes. Best used with --manual\n";
@@ -368,6 +370,13 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
                 $this->log_file = array_shift($argv);
                 continue;
             }
+
+            if($arg == '--log-file-name-only' || $arg == '-ln')
+            {
+                $this->log_file = array_shift($argv);
+                $this->log_file_only_name = true;
+                continue;
+            }
             
             if($arg == '--verbosity' || $arg == '-v')
             {
@@ -417,7 +426,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         if($this->log_file)
         {
             $logger = new FileLogger();
-            $logger->setLogFile($this->log_file);
+            $logger->setLogFile($this->log_file, $this->log_file_only_name);
         }
         else
         {
