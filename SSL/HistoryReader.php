@@ -46,6 +46,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
      * @var array of SSLPlugin
      */
     protected $cli_plugins = array();
+    protected $has_now_playing_plugin = false; // this plugin deserves a special help message if disabled
     
     /**
      * @var PluginManager
@@ -87,6 +88,8 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
     public function addCLIPlugin(CLIPlugin $plugin)
     {
         $this->cli_plugins[] = $plugin;
+        if($plugin instanceof CLINowPlayingLoggerPlugin)
+            $this->has_now_playing_plugin = true;
     }
 
     public function addPlugin(SSLPlugin $plugin)
@@ -241,19 +244,16 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         echo "    -i or --immediate:         Do not wait for the next history file - use the current one. You want this if Serato is already running.\n";
         echo "    -p or --post-process:      Loop through the file after the fact. Use for scrobbling a set you played with no internet.\n";
         echo "          --dir:               Use the most recent history file from this directory.\n";
+        echo "    -l or --log-file <file>:   Where to send logging output. (If this option is omitted, output goes to stdout)\n";
+        if(!$this->has_now_playing_plugin) {
+        echo "\n  **Note:** For options to log the current playing track title into a file for live streams etc., enable CLINowPlayingLoggerPlugin in config.php (see example on config.php-default).\n\n";
+        }
         echo "\n";
 
-        $now_playing_cli_plugin_enabled = false;
         foreach($this->cli_plugins as $plugin)
         {
             /* @var $plugin CLIPlugin */
             $plugin->usage($appname, $argv);
-
-            if($plugin instanceof CLINowPlayingLoggerPlugin)
-            {
-                // try to be helpful and signpost from the regular logging options up to the Now Playing logger.
-                $now_playing_cli_plugin_enabled = true;
-            }
         }
 
         if($debug_help)
@@ -262,10 +262,6 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             echo "    -d or --dump:              Dump the file's complete structure and exit\n";
             echo "          --dump-type <x>:     Use a specific parser. Options are: sessionfile, sessionindex\n";
             echo "    -v or --verbosity <0-9>:   How much logging to output. (default: 0 (none))\n";
-            echo "    -l or --log-file <file>:   Where to send logging output. (If this option is omitted, output goes to stdout)\n";
-            if(!$now_playing_cli_plugin_enabled) {
-                echo "                              Note: For options to log the current playing track title into a file for live streams etc., enable CLINowPlayingLoggerPlugin in config.php (see example on config.php-default).\n";
-            }
             echo "          --manual:            Replay the session file, one batch per tick. (Tick by pressing enter at the console)\n";
             echo "          --multiply-time <n>: Speed up time by a factor of n\n";
             echo "          --csv:               Parse the session file as a CSV, not a binary file, for testing purposes. Best used with --manual\n";

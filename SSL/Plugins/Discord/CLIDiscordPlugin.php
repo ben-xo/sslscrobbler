@@ -47,7 +47,7 @@ class CLIDiscordPlugin implements CLIPlugin
     public function usage($appname, array $argv)
     {
         echo "Discord options:\n";
-        echo "    --discord <session>: Post tracklists to Discord. <session> is a 'save name' for the session. You will be guided through creating a bot if this is the first time.\n";
+        echo "    --discord <session>:       Post tracklists to Discord. <session> is a 'save name' for the session. You will be guided through creating a bot if this is the first time.\n";
         echo "\n";
     }
 

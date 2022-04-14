@@ -49,16 +49,16 @@ class CLIJsonServerPlugin implements CLIPlugin
     {
         echo "JSON / HTML Server options:\n";
         echo "    -J or --json <port>\n";
-        echo " or -H or --html <port>   : Enable local web server for the details of the current playing track.\n";
-        echo "                            The info will be available as JSON at http://<your ip>:<port>/nowplaying.json and\n";
-        echo "                            also as HTML for styling with OBS at http://<your ip>:<port>/nowplaying.html\n";
+        echo " or -H or --html <port>   :    Enable local web server for the details of the current playing track.\n";
+        echo "                               The info will be available as JSON at http://<your ip>:<port>/nowplaying.json and\n";
+        echo "                               also as HTML for styling with OBS at http://<your ip>:<port>/nowplaying.html\n";
         echo "\n";
-        echo "                            If OBS runs on the same computer you can use URLs such as http://localhost:<port>/nowplaying.html\n";
+        echo "                               If OBS runs on the same computer you can use URLs such as http://localhost:<port>/nowplaying.html\n";
         echo "\n";
-        echo "                            By default, all available fields are displayed, but you can narrow it down to just the fields you want\n";
-        echo "                            using URLs such as http://<your ip>:<port>/nowplaying.html?artist&title which you can style with CSS.\n";
+        echo "                               By default, all available fields are displayed, but you can narrow it down to just the fields you want\n";
+        echo "                               using URLs such as http://<your ip>:<port>/nowplaying.html?artist&title which you can style with CSS.\n";
         echo "\n";
-        echo "    --html-template <file>: A optional file containing strings like {{artist}} or {{title}}.\n";
+        echo "    --html-template <file>:     A optional file containing strings like {{artist}} or {{title}}.\n";
         echo "\n";
     }
     
