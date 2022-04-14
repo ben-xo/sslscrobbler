@@ -133,15 +133,15 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             // do it again, as parsing options may have altered the logging setup
             $this->setupLogging();
 
-            if (!$this->dir_provided) {
-                // guess history file (always go for the most recently modified)
-                $this->historydir = $this->getDefaultHistoryDir();
-            }
-                        
             if($this->help)
             {
                 $this->usage($this->appname, $argv, $this->debug_help);
                 return;
+            }
+
+            if (!$this->dir_provided) {
+                // guess history file (always go for the most recently modified)
+                $this->historydir = $this->getDefaultHistoryDir();
             }
             
             // yield CLI configured plugins.
@@ -178,7 +178,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
                 
                 echo "Using file $filename ...\n";
             }
-                            
+
             if(!file_exists($filename))
                 throw new InvalidArgumentException("No such file $filename.");
                 
