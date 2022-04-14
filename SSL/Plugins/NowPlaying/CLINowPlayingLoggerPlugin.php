@@ -36,6 +36,7 @@ class CLINowPlayingLoggerPlugin implements CLIPlugin
         echo "Log 'Now Playing' Track options:\n";
         echo "    -ln or --log-track <file>: log the current playing track to a file (e.g. for streaming)\n";
         echo "    -ls or --log-serialized <file>: log the current playing track to a file in PHP serialized form (contains more info, but not human readable)\n";
+        echo "    -lt or --log-tostring <file>: log the current playing track to a file in a fuller representation like in the logs\n";
         echo "\n";
     }
 
@@ -52,7 +53,7 @@ class CLINowPlayingLoggerPlugin implements CLIPlugin
         {
             $config = array(
                 'filename' => array_shift($argv),
-                'transform' => 'tostring'
+                'transform' => 'basic'
             );
             $this->plugins[] = $this->newNowPlayingLoggerPlugin($config);
             return true;
@@ -68,6 +69,16 @@ class CLINowPlayingLoggerPlugin implements CLIPlugin
             return true;
         }
 
+
+        if($arg == '--log-tostring' || $arg == '-lt')
+        {
+            $config = array(
+                'filename' => array_shift($argv),
+                'transform' => 'tostring'
+            );
+            $this->plugins[] = $this->newNowPlayingLoggerPlugin($config);
+            return true;
+        }
         return false;
     }
 
@@ -88,8 +99,8 @@ class CLINowPlayingLoggerPlugin implements CLIPlugin
         }
     }
 
-    protected function newNowPlayingLoggerPlugin($config, $key)
+    protected function newNowPlayingLoggerPlugin($config)
     {
-        return new NowPlayingLoggerPlugin($config, $key);
+        return new NowPlayingLoggerPlugin($config);
     }
 }

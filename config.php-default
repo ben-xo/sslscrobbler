@@ -61,7 +61,7 @@ $dbConfig = array(
 //// This example will spit a file out in the current working dir
 // $nowplayingloggerConfig = array(
 //     'filename' => 'nowplaying.txt',
-//     'transform' => 'tostring'
+//     'transform' => 'basic'
 // );
 
 $curlConfig = array(

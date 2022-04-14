@@ -101,6 +101,12 @@ class NowPlayingLoggerPlugin implements SSLPlugin, NowPlayingObserver
                     return serialize($track);
 
                 // Most people probably just want a plain text file with the artist - title.
+                case 'basic':
+                    if($track)
+                        return $track->getFullTitle();
+                    return '';
+
+                // log like in the logs
                 case 'tostring':
                     return (string) $track;
             }
