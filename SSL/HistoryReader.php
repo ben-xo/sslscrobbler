@@ -38,7 +38,6 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
     protected $time_multiplier = 1.0;
     protected $csv = false;
     protected $log_file = '';
-    protected $log_file_only_name = false;
     protected $verbosity = L::INFO;
         
     /**
@@ -428,7 +427,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         if($this->log_file)
         {
             $logger = new FileLogger();
-            $logger->setLogFile($this->log_file, $this->log_file_only_name);
+            $logger->setLogFile($this->log_file);
         }
         else
         {

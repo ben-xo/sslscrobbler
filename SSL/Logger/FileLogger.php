@@ -28,32 +28,19 @@ class FileLogger implements Logger
 {
 
     protected $log_file = '';
-    protected $only_name;
 
     public function log($timestamp, $level, $source, $message) {
-        // logs into the appropriate file rather than console
-        if ($this->only_name) {
-            // log only the track name in write mode, this has the affect of the file only and always
-            // containing the name of the currently playing track (the point of this feature is that it
-            // allows you to point BUTT [Broadcast Using This Tool] to the log file and thereby always
-            // display the name of the song currently playing in Serato)
-            if (strcmp($source, "NowPlayingModel") == 0 && strcmp(substr($message, 0, 14), "enqueued track") == 0) {
-                $file = fopen($this->log_file, 'w');
-                fwrite($file, substr($message, 18) . "\n");
-                fclose($file);
-            }
-        } else {
-            // log everything sent into the file in append mode
-            $file = fopen($this->log_file, "a");
-            $level = L::getNameFor($level);
-            fwrite($file, date("Y-m-d H:i:s", $timestamp) . " {$level}: {$source} - {$message}\n");  
-            fclose($file);
-        }
+        // logs log messages into the appropriate file rather than console.
+        // see NowPlayingLoggerPlugin for logging track titles.
 
+        // log everything sent into the file in append mode
+        $file = fopen($this->log_file, "a");
+        $level = L::getNameFor($level);
+        fwrite($file, date("Y-m-d H:i:s", $timestamp) . " {$level}: {$source} - {$message}\n");
+        fclose($file);
     }
 
-    public function setLogFile($log_file_input, $only_name_option) {
+    public function setLogFile($log_file_input) {
         $this->log_file = $log_file_input;
-        $this->only_name = $only_name_option;
     }
 }
