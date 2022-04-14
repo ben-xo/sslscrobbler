@@ -89,6 +89,7 @@ $plugins = array(
 );
 
 $cli_plugins = array(
+    new CLINowPlayingLoggerPlugin(),
     new CLILastfmPlugin($lastfmConfig),
     new CLITwitterPlugin($twitterConfig),
     new CLIDiscordPlugin($discordConfig),
