@@ -86,7 +86,7 @@ class CLINowPlayingLoggerPlugin implements CLIPlugin
     {
         // always go with a sensible default.
         $argv[] = '-ln';
-        $argv[] = "nowplaying.txt";
+        $argv[] = "sslscrobbler_nowplaying.txt";
     }
 
     public function addPluginsTo(SSLPluggable $sslpluggable)
