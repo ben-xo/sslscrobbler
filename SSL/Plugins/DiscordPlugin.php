@@ -110,7 +110,7 @@ class DiscordPlugin implements SSLPlugin, SSLOptionablePlugin
             return;
         }
         
-        throw new RuntimeException("Failed to save {$bot_or_bearer} token to discord-{$save_name}.txt");
+        throw new RuntimeException("Failed to save webhook URL to discord-{$save_name}.txt");
     }  
      
     /**

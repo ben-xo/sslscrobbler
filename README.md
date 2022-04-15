@@ -47,7 +47,7 @@ already have a session open.
 ## 1.1 Installation
 
 
-* OSX (Mac):
+### 1.1.1 macOS
     
   There is an app you can download from https://github.com/ben-xo/sslscrobbler/releases
 
@@ -65,13 +65,11 @@ already have a session open.
   See "Getting Started" for more.
 
 
-* Windows Vista, 7, 8, 10 or 11:
+### 1.1.2 Windows
   
   I haven't tested this part in a while - try installing PHP from
   http://www.anindya.com/ or following the instructions on https://www.php.net/
    
-* Windows:
-
   You should install PHP 8 and Growl. You must reboot after installing these, 
   even if it doesn't ask!
   
@@ -86,21 +84,25 @@ already have a session open.
   
         display_errors = 
     
-  ...and change it to On if it is Off.  
+  ...and change it to `On` if it is `Off`.  
   
-  SSLScrobbler is best started from a DOS box / Command prompt.
+  SSLScrobbler is best started from a DOS box / Command prompt (see below)
 
 
 ## 1.2 Getting Started
 
 
-SSLScrobbler is designed to be run from the command line, but on macOS there is
-a simple GUI to help you get started.
+SSLScrobbler is designed to be run from the command prompt / terminal, but on 
+macOS there is also a GUI to help you get started.
 
 
-**TO START**:
+### 1.2.1 TO START
 
-*macOS (super-easy method):*
+I use this app through Terminal on macOS. But, there is a macOS GUI version too.
+On Windows you must use Command Prompt. There is a guided-prompt setup mode.
+Read on.
+
+#### 1.2.1.1 macOS (super-easy method):
  
 The simplest way to get started is to use the macOS app. 
  * Download the macOS.zip file from https://github.com/ben-xo/sslscrobbler/releases
@@ -111,7 +113,7 @@ The simplest way to get started is to use the macOS app.
  * Then start Serato DJ and watch what happens!
 
 
-*macOS (traditional method / more options):*
+#### 1.2.1.2 macOS (traditional method / more options):
 
 It is more flexible when used from Terminal.
 
@@ -124,14 +126,17 @@ It is more flexible when used from Terminal.
  * For help and information on options, type `--help` before hitting enter. e.g: 
 
         $ ./historyreader.php --help
-    
- *Windows:*
+
+ * For the guided setup mode, try `--prompt` .
+
+
+#### 1.2.1.3 Windows:
 
  There's no GUI version for Windows yet. Sorry.
  
- * Open a DOS box. You can do this by clicking 'Start' -> Run -> typing "cmd" 
+ * Open a Command Prompt. You can do this by clicking 'Start' -> Run -> typing "`cmd`" 
    and pressing enter. 
- * Type `php` and then drag the file `historyreader.php` into the DOS box, and hit 
+ * Type `php` and then drag the file `historyreader.php` into the command prompt, and hit 
    enter. It should say something like:
     
         C:\> php "C:\Documents and Settings\ben\Desktop\historyreader.php"
@@ -140,10 +145,12 @@ It is more flexible when used from Terminal.
  
         C:\> php "C:\Documents and Settings\ben\Desktop\historyreader.php" --help
  
+ * For guided setup mopde, try `--prompt` .
 
-**TO QUIT:**
 
-To quit SSL Scrobbler, click on its window and press Ctrl-C.
+### 1.2.2 TO QUIT
+
+To quit SSL Scrobbler, click on its window and press `Ctrl`+`C`.
 (or in the macOS app, press the quit button in the bottom right)
 
 
@@ -192,6 +199,12 @@ Add the following options to the command when running from Terminal / DOS:
 
 `-h` or `--help`
 A reminder of this information.
+
+`--prompt`
+Guided setup mode.
+
+You will be asked a series of yes or no questions. (Not all options are available
+in this mode).
 
 `-i` or `--immediate`
 Do not wait for the next history file to be created, but use the most recent 

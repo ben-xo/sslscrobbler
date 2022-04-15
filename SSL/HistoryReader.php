@@ -241,6 +241,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         echo "Usage: {$appname} [OPTIONS] [session file]\n";
         echo "Session file is optional. If omitted, the most recent history file from {$this->historydir} will be used automatically\n";
         echo "    -h or --help:              This message.\n";
+        echo "          --prompt:            Guided setup mode.\n";
         echo "    -i or --immediate:         Do not wait for the next history file - use the current one. You want this if Serato is already running.\n";
         echo "    -p or --post-process:      Loop through the file after the fact. Use for scrobbling a set you played with no internet.\n";
         echo "          --dir:               Use the most recent history file from this directory.\n";
@@ -307,6 +308,10 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
     
     protected function parseOptions(array $argv)
     {
+        // in case of --prompt we need the original
+        $argv_copy = $argv;
+        $prompted = false;
+
         $this->appname = array_shift($argv);
         
         while($arg = array_shift($argv))
@@ -319,14 +324,41 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
 
             if($arg == '--prompt')
             {
-                $this->addPrompts($argv);
+                // we only want to do this once (in case of double --prompt or two prompt types)
+                if(!$prompted) {
+                    $prompted = true;
+                    $argv_before_length = sizeof($argv);
+
+                    $this->addPrompts($argv);
+
+                    // we want to show the equivalent output that --prompt generated.
+                    $argv_copy = array_merge($argv_copy, array_slice($argv, $argv_before_length));
+                      
+                    // remove --prompt
+                    $key = array_search($arg, $argv_copy);
+                    unset($argv_copy[$key]);
+                }
                 continue;
             }
 
             if($arg == '--prompt-osascript')
             {
                 Inject::map('PromptFactory', new OsascriptPromptFactory());
-                $this->addPrompts($argv);
+
+                // we only want to do this once (in case of double --prompt or two prompt types)
+                if(!$prompted) {
+                    $prompted = true;
+                    $argv_before_length = sizeof($argv);
+
+                    $this->addPrompts($argv);
+
+                    // we want to show the equivalent output that --prompt generated.
+                    $argv_copy = array_merge($argv_copy, array_slice($argv, $argv_before_length));
+                      
+                    // remove --prompt
+                    $key = array_search($arg, $argv_copy);
+                    unset($argv_copy[$key]);
+                }
                 continue;
             }
 
@@ -409,6 +441,15 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             }
             
             $this->filename = $arg;
+        }
+
+        if($prompted)
+        {
+            echo "\n";
+            echo "The equivalent command line for your prompt is:\n";
+            echo "\n";
+            echo "\t" . implode(" ", $argv_copy) . "\n";
+            echo "\n";
         }
     }
     
