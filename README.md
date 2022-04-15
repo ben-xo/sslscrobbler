@@ -326,7 +326,8 @@ the same track. (Later, when you shut Serato DJ down, it compacts the file to
 remove duplicate information).
 
 However, SSLScrobbler does not have access to the actual play time or play 
-position of the songs, so it has to guess this.
+position of the songs, so it has to guess this. See the FAQ section for more
+info about the heuristic used for this "best guess".
 
 
 # 3. ADVANCED USE
@@ -361,18 +362,20 @@ position of the songs, so it has to guess this.
   
     (`%USERPROFILE%` is usually e.g. `C:\Documents and Settings\<username>`)
   
-* make sure display_errors = On in your php.ini if you want more useful help, 
+* make sure `display_errors = On` in your `php.ini` if you want more useful help, 
   and before reporting bugs.
   
-* If the internet is down or drops out, Scrobbling to Last.fm may make the whole
-  app freeze until the scrobbling times out. This means that updates to Now 
-  Playing will not appear during this period, although no scrobbles will be 
-  lost.
+* If the internet is down or drops out, posting to any of the services (e.g.
+  Last FM, Twitter, Discord, etc) may make the whole app freeze until the
+  attempt times out. This means that updates to Now Playing will not appear 
+  during this period, and the message may not appear on the service (although 
+  in the case of the Last FM plugin, no scrobbles will be lost, they'll be
+  submitted later).
   
 * If you find Scrobbling, Tweeting etc to be particularly slowing down the app 
   (that is causing delays when Now Playing is not updated), try installing the 
   `PCNTL` extension to PHP. (Without the PCNTL extension, the app will be 
-  single-threaded).
+  single-threaded). However, I've found it doesn't really make much difference.
   
  
 # 5. FOR DEVELOPERS
@@ -720,13 +723,43 @@ Shouts:
 
 # 7. FAQ
 
+## Does it work with Traktor?
+
+No. I thought the clue was in the name.
+
+I'm sure there's already an app which does this, or at least some of this, for Traktor. To be honest, I'm out of touch with Traktor. 
+
+## Can you make it work with Traktor?
+
+No. I don't use Traktor, and I haven't used it in about 20 years. (That is quite a painful realisation to write down.)
+
+## Aww. Not even for me?
+
+_(This is not a frequently asked question)_
+
+## It seems to post Now Playing messages at weird times. How does it decide? How does it arrive at its "best guess"?
+
+The main limitation to this app is what information we can get out of Serato. The information we can get from Serato corresponds more or less to what is happening in the "History" tab. Most importantly, the app learns most about what's going on **when a track is loaded or ejected**.
+
+Once a track is loaded, a timer starts, and the track moves through three phases: 
+* first 30 seconds: "`loaded`" 
+* 30 seconds to half-the-song-length: "`playing`". (_eligible_ for a now playing message, if another deck isn't playing.)
+* half-the-song-length - full-song-length: "`scrobbleable`". This state is mainly for Last FM. the song will definitely be scrobbled.
+* any time after full-song-length: "`finished`". This song is treated as if it was ejected.
+
+The deck which is loaded first is considered first, and as long as it's still playing (not empty, not finished), we don't move on to the next eligible song. As soon as the track ends or is ejected, the next loaded deck is considered and that's when a Now Playing event is sent.
+
 ## It's posting the Now Playing message too early and giving the game away! How can I delay this?
 
-The main limitation to this app is what information we can get out of Serato. It has no idea when you actually start playing, it has to guess from the time you load the track. It will wait 30s or so after the track is loaded before deciding that you are playing it.
+The problem is really that the timer starts as soon as you load the song, even though it will take you some time to bring it into the mix. So the "now playing" event happens earlier than most people would like. It has no idea when you actually start playing, it has to guess from the time you load the track.
 
 Currently your best option is to only load a track right before you want to play it.
 
 A future version will provide more options to address this, as it's annoying I agree.
+
+## It's posting the Now Playing message way too late - not until I load the next song!
+
+Once you're done with a track, if you eject it off the deck, and that will make it obvious to the app which is the one that's playing.
 
 ## It has a lot of messages on the screen which say WARNING. How bad is that?
 
@@ -776,7 +809,9 @@ Sigh, not this question again. _*Walks out of interview*_
 
 Look, it was 2010, that's what I did in 2010. I'd never do such a ridiculous thing now, but I'm also done being embarrassed about it and have decided to lean into this monstrosity. It's really good code, go read it. Some of it's extremely over-engineered, and I hope it hurts your eyes.
 
-Please feel free to rewrite the whole thing in Python, I'll never get round to it.
+Please feel free to rewrite the whole thing, I'll never get round to it.
+
+Oh… although… having said that…
 
 # 8. CREDITS & LICENSE
 
