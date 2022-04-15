@@ -44,19 +44,28 @@ folder. It will follow from session to session, but use the `-i` option if you
 already have a session open.
 
 
-## 1.1 Installation
+## 1.1 Installation
 
 
 * OSX (Mac):
-  
-  SSLScrobbler needs no particular installation, although if it's not already, 
-  you might like to install terminal-notifier ("brew install terminal-notifier")
-  
+    
   There is an app you can download from https://github.com/ben-xo/sslscrobbler/releases
 
+  SSLScrobbler needs no particular installation, although if it's not already, 
+  you might like to install `terminal-notifier` ("`brew install terminal-notifier`" -
+  If you don't have the `brew` command, install Mac Homebrew from https://brew.sh/ )
+
   SSLScrobbler can also be started from Terminal, and has more options this way.
+
+  To start from Terminal you will need PHP installed (recommended version 7.4).
+  You can install PHP through Mac Homebrew https://brew.sh/. Once installed,
   
-* Windows Vista, 7, 8 or 10:
+        brew install php@7.4
+
+  See "Getting Started" for more.
+
+
+* Windows Vista, 7, 8, 10 or 11:
   
   I haven't tested this part in a while - try installing PHP from
   http://www.anindya.com/ or following the instructions on https://www.php.net/
@@ -71,11 +80,11 @@ already have a session open.
   (You probably want the 'Installer' nearest the top of the page, unless you
   know better.)
    
-  I strongly suggest you make the following change to your php.ini file (which 
-  can usually be found in C:\Program Files\PHP). Open the file in Notepad, and 
+  I strongly suggest you make the following change to your `php.ini` file (which 
+  can usually be found in `C:\Program Files\PHP`). Open the file in Notepad, and 
   then find the line which says...
   
-    display_errors = 
+        display_errors = 
     
   ...and change it to On if it is Off.  
   
@@ -102,7 +111,7 @@ The simplest way to get started is to use the macOS app.
  * Then start Serato DJ and watch what happens!
 
 
-*macOS (traditional method):*
+*macOS (traditional method / more options):*
 
 It is more flexible when used from Terminal.
 
@@ -160,6 +169,7 @@ TO TWEET AS YOU PLAY
 
     php historyreader.php -T twitterusername
 
+
 TO MESSAGE DISCORD AS YOU PLAY
 
     php historyreader.php --discord webhook-name
@@ -168,6 +178,11 @@ TO MESSAGE DISCORD AS YOU PLAY
 MAKE TRACK DATA AVAILABLE FOR OBS (OR WHATEVER)
 
     php historyreader.php -J 8080
+
+
+MAKE TRACK DATA FOR BUTT (OR WHATEVER)
+
+    php historyreader.php -ln nowplaying.txt
 
 
 ## 1.3 Options
@@ -203,6 +218,29 @@ screen)
 Immediately processes everything in the last history file. Ideal for
 scrobbling that set you played last night.
  
+**Now Playing text file options**
+All of these options output the current playing track to a file, but in different
+formats.
+
+`-ln` or `--log-track <file>`:
+log the current playing track to a file (e.g. for streaming)
+
+The file will contain the text `Artist Name - Song Title` when a song is playing,
+and the file will be empty the rest of the time.
+
+`-ls` or `--log-serialized <file>`:
+log the current playing track to a file in PHP serialized form. This contains more
+info, but is not human readable - it's useful if you want to build other PHP
+scripts for a web server.
+
+`-lt` or `--log-tostring <file>`: log the current playing track to a file in a
+fuller representation, like what comes out in the console log, e.g.:
+
+    PLAYED:1 - ADDED:1 - DECK:1 - Artist - Title - 0:0
+
+Most people want `-ln`
+
+
 **Last.fm options**:
 `-L` or `--lastfm <username>`: 
 Scrobble / send 'Now Playing' to Last.fm for user <username>. 
