@@ -84,7 +84,9 @@ class CLINowPlayingLoggerPlugin implements CLIPlugin
 
     public function addPrompts(array &$argv)
     {
-        // not worth it
+        // always go with a sensible default.
+        $argv[] = '-ln';
+        $argv[] = "nowplaying.txt";
     }
 
     public function addPluginsTo(SSLPluggable $sslpluggable)
