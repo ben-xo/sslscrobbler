@@ -23,12 +23,20 @@ The app works on OS X (Mac) and Windows.
 # 0. CONTENTS
 
 1. OPERATING SSLSCROBBLER
+  * Installation
+  * Getting Started
+  * Quick HOWTO
+  * Options
 2. HOW IT WORKS
 3. ADVANCED USE
 4. TROUBLESHOOTING
 5. FOR DEVELOPERS
-6. THANKS & SHOUTS 
-7. CREDITS & LICENSE
+  * Plugins
+  * Unit Tests
+  * Architecture
+6. THANKS & SHOUTS
+7. FAQ
+8. CREDITS & LICENSE
 
 
 # 1. OPERATING SSLSCROBBLER
@@ -192,7 +200,7 @@ MAKE TRACK DATA FOR BUTT (OR WHATEVER)
     php historyreader.php -ln nowplaying.txt
 
 
-## 1.3 Options
+## 1.4 Options
 
 
 Add the following options to the command when running from Terminal / DOS: 
@@ -710,7 +718,67 @@ Shouts:
 * Mike Louth at Digitally Imported (di.fm)
 
 
-# 7. CREDITS & LICENSE
+# 7. FAQ
+
+## It's posting the Now Playing message too early and giving the game away! How can I delay this?
+
+The main limitation to this app is what information we can get out of Serato. It has no idea when you actually start playing, it has to guess from the time you load the track. It will wait 30s or so after the track is loaded before deciding that you are playing it.
+
+Currently your best option is to only load a track right before you want to play it.
+
+A future version will provide more options to address this, as it's annoying I agree.
+
+## It has a lot of messages on the screen which say WARNING. How bad is that?
+
+Most of the time you can ignore the screen. It will be hidden behind Serato anyway. You should check that it is doing what you need - is it tweeting to twitter? Is it posting to your Discord? Can you find the nowplaying.txt file?
+
+Assuming it's all doing what you want, then you can basically ignore the messages entirely.
+
+Read the messages if it's not doing what you want and then we can troubleshoot from there. There are some troubleshooting tips in the eponymous section of this README.
+
+## Will it interfere with OBS? My stream overlay is resource hungry. 
+
+This doesn't run on your OBS machine, it runs on your Serato DJ machine. So, no.
+
+## How much resource does it need to run? Does it use much memory?
+
+It uses hardly any of either. About 4Mb of RAM (basically nothing) and a tiny amount of CPU.
+
+## I want to use it but I'm scared of Terminal/Command Prompt.
+
+That's not a question.
+
+## I want to use it but it looks too complicated.
+
+That's also not a question.
+
+## Ok fine - what I'm really asking is how will I possibly ever remember how to use it when I have to type commands in?
+
+First of, I'd like to thank you for not asking the two non-questions above and getting to the point.
+
+As of 2020, there is now a actual app (with a nice "vinyl" icon) for macOS. It's not pretty, but it will guide you through what to do.
+
+For Windows users, I mean, look. The first time you set it up there are maybe 5 steps, but every time you run it again in the future there's really only 2 steps: open `cmd`, and then find where you wrote down how you started it last time, and type it again. (Put it in a Notepad txt file and copy-paste it.) I believe in you!
+
+## It would be really great if you had a YouTube tutorial.
+
+I actually agree with you there. I should really do this some time, if only to make a soothing point to people who have asked the first 2 questions. 😇
+
+## Can you show me how to set it up?
+
+Sure!
+
+## Why on earth did you write it in PHP?
+
+Sigh, not this question again. _*Walks out of interview*_
+
+## _*Runs after you*_ but WHY?
+
+Look, it was 2010, that's what I did in 2010. I'd never do such a ridiculous thing now, but I'm also done being embarrassed about it and have decided to lean into this monstrosity. It's really good code, go read it. Some of it's extremely over-engineered, and I hope it hurts your eyes.
+
+Please feel free to rewrite the whole thing in Python, I'll never get round to it.
+
+# 8. CREDITS & LICENSE
 
 
 SSLScrobbler is Free Open Source Software by Ben XO.
