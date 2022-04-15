@@ -396,7 +396,7 @@ Run with phpunit:
 ## 5.3 Architecture
 
 
-### 5.3.1 Runtime Model
+### 5.3.1 Runtime Model
 
 
 While running, the `SSLScrobbler` engine is event driven (see 5.1 for the list
