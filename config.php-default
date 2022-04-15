@@ -52,9 +52,17 @@ $dbConfig = array(
 	'empty_string' => '<no track is currently playing>',
 );
 
-$nowplayingloggerConfig = array(
-    'filename' => dirname(__FILE__) . '/SSL/Plugins/NowPlaying/nowplaying.txt'
-);
+//// This example config is for a hosted PHP page which reads a serialized file, like the example in SSL/Plugins/NowPlayingLoggerPlugin
+// $nowplayingloggerConfig = array(
+//     'filename' => dirname(__FILE__) . '/SSL/Plugins/NowPlaying/nowplaying.txt',
+//     'transform' => 'serialize'
+// );
+
+//// This example will spit a file out in the current working dir
+// $nowplayingloggerConfig = array(
+//     'filename' => 'nowplaying.txt',
+//     'transform' => 'basic'
+// );
 
 $curlConfig = array(
   'url' => 'http://localhost/nowplaying',
@@ -64,21 +72,24 @@ $curlConfig = array(
 );
 
 $plugins = array(
-    // new GrowlPlugin($growlConfig),
-    new NowPlayingLoggerPlugin($nowplayingloggerConfig),
-
+ 
     // uncomment the Popup Notifier if you want Popup Notifications - but don't use
     // at the same time as TerminalNotifierPlugin() (below) as the notifications overlap on OSX.
     // best to use one or the other. (And turn off Growl… pointless these days!)
     new DmcaAlerter( /* new TerminalNotifierPopupNotifier() */ ),
 
     /* Disabled plugins */
+    // new GrowlPlugin($growlConfig),
     // new TerminalNotifierPlugin(),
     // new JSONServerPOC(),
     // new AnalyzerPlugin(array('db' => dirname(__FILE__) . '/analyze.db')),
+
+    /* This used to be enabled by default but it's now controlled by a CLI switch. */
+    // new NowPlayingLoggerPlugin($nowplayingloggerConfig),
 );
 
 $cli_plugins = array(
+    new CLINowPlayingLoggerPlugin(),
     new CLILastfmPlugin($lastfmConfig),
     new CLITwitterPlugin($twitterConfig),
     new CLIDiscordPlugin($discordConfig),

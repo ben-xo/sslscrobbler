@@ -24,6 +24,15 @@
  *  THE SOFTWARE.
  */
 
+
+/**
+ * Logs the track to a file every time there's a track change.
+ *
+ * Supports logging in natural string representation with config 'transform' => 'tostring' or
+ * logging a serialized track object for you to play with in a hosted PHP page with config 'transform' => 'serialize'
+ *
+ * Remember that there's nothing stopping you configuring two (or more) instances of NowPlayingLoggerPlugin if you want both.
+ */
 class NowPlayingLoggerPlugin implements SSLPlugin, NowPlayingObserver
 {
     protected $config;
@@ -36,8 +45,30 @@ class NowPlayingLoggerPlugin implements SSLPlugin, NowPlayingObserver
     public function setConfig(array $config)
     {
         $this->config = $config;
+
+        if(!isset($this->config['filename']))
+        {
+            L::level(L::WARNING) &&
+                L::log(L::WARNING, __CLASS__, '%s',
+                    array( 'I am configured with no filename. Defaulting to nowplaying.txt in your current dir' ));
+
+            $this->config['filename'] = 'nowplaying.txt';
+        }
+
+        if(!isset($this->config['transform']))
+        {
+            // warn people who used the old default config that they might want to make up their mind.
+
+            L::level(L::WARNING) &&
+                L::log(L::WARNING, __CLASS__, '%s',
+                    array( 'I am configured without a "transform" setting. Add "transform" => "tostring" or "transform" => "serialize" to silence this gripe.' ));
+
+            L::level(L::WARNING) &&
+                L::log(L::WARNING, __CLASS__, '%s',
+                    array( '("serialize" was the default before, but most people probably want "tostring", as that\'s the human readable one. Compare your config with config.php-default)' ));
+        }
     }
-        
+
     public function onSetup() 
     {
     }
@@ -57,9 +88,38 @@ class NowPlayingLoggerPlugin implements SSLPlugin, NowPlayingObserver
     {
         return array( $this );
     }
+
+    public function transform(SSLTrack $track=null)
+    {
+        if(isset($this->config['transform']))
+        {
+            switch($this->config['transform'])
+            {
+                // This format goes well with the "SevenDigital" example bundled in the NowPlaying plugin folder.
+                // If you want to customise the output on a PHP page, this format gives you everything.
+                case 'serialize':
+                    return serialize($track);
+
+                // Most people probably just want a plain text file with the artist - title.
+                case 'basic':
+                    if($track)
+                        return $track->getFullTitle();
+                    return '';
+
+                // log like in the logs
+                case 'tostring':
+                    return (string) $track;
+            }
+        }
+
+        // if 'transform' is not supplied, then you probably already had a config.php before upgrading to this
+        // version of SSLScrobbler and might be expecting the legacy behaviour. If this is the case you'll
+        // get a warning log message too
+        return serialize($track);
+    }
     
     public function notifyNowPlaying(SSLTrack $track=null)
     {
-        file_put_contents($this->getFilename(), serialize($track));
+        file_put_contents($this->getFilename(), $this->transform($track));
     }
 }

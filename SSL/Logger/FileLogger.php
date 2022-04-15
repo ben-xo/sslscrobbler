@@ -1,7 +1,7 @@
 <?php
 
 /**
- *  @author      Ben XO (me@ben-xo.com)
+ *  @author      Ben XO (me@ben-xo.com) & Nick Masi
  *  @copyright   Copyright (c) 2010 Ben XO
  *  @license     MIT License (http://www.opensource.org/licenses/mit-license.html)
  *  
@@ -26,8 +26,21 @@
 
 class FileLogger implements Logger
 {
-    public function log($timestamp, $level, $source, $message) 
-    {
-        throw new Exception("FileLogger not implemented yet. TODO / FIXME");
+
+    protected $log_file = '';
+
+    public function log($timestamp, $level, $source, $message) {
+        // logs log messages into the appropriate file rather than console.
+        // see NowPlayingLoggerPlugin for logging track titles.
+
+        // log everything sent into the file in append mode
+        $file = fopen($this->log_file, "a");
+        $level = L::getNameFor($level);
+        fwrite($file, date("Y-m-d H:i:s", $timestamp) . " {$level}: {$source} - {$message}\n");
+        fclose($file);
+    }
+
+    public function setLogFile($log_file_input) {
+        $this->log_file = $log_file_input;
     }
 }
