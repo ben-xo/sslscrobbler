@@ -688,6 +688,7 @@ Thanks:
   for beta testing, feedback and moral support
 * DJ NightLife for his support of the project!
 * Brian Tiger Chow for bug reports and patches
+* Nick Masi (N-Masi) for code contributions to logging
 
 Shouts:
 * Last.fm for letting me use the back room of the office to broadcast loud radio
