@@ -6,13 +6,15 @@ SSLScrobbler is a Scrobbler for Serato DJ and Serato ScratchLive (http://www.ser
 written in PHP. See https://www.last.fm/about/trackmymusic for an explanation 
 of Scrobbling.
 
-SSLScrobbler is designed to update Last.fm, Twitter and/or Discord when a track is 
-playing or played. 
+SSLScrobbler is designed to update Last.fm, Twitter and/or Discord when a track
+is playing or played. 
 
-It is so named because Serato DJ used to be called Serato Scratch Live (SSL) when I started this project.
+It is so named because Serato DJ used to be called Serato Scratch Live (SSL)
+when I started this project.
 
-SSLScrobbler can easily be customed to, for example, show what's currently playing on a projector, or
-send information to OBS (Open Broadcast Studio), or used to control other actions based on track listing.
+SSLScrobbler can easily be customed to, for example, show what's currently
+playing on a projector, or send information to OBS (Open Broadcast Studio), or
+used to control other actions based on track listing.
 
 Serato DJ itself logs plays to a binary history file during playback. This app
 reads the binary file and models what's going on.
@@ -116,7 +118,8 @@ The simplest way to get started is to use the macOS app.
  * Download the macOS.zip file from https://github.com/ben-xo/sslscrobbler/releases
  * unzip it to get `SSL Scrobbler.app` (with a nice vinyl record icon)
  * Option-click it and choose "Open", then confirm you are sure that it's okay
- * The app will ask you for permission to use `SystemUIServer`. Say yes. This is so we can pop up questions.
+ * The app will ask you for permission to use `SystemUIServer`. Say yes. This is 
+   so we can pop up questions.
  * It will then pop up some questions. Just follow the prompts.
  * Then start Serato DJ and watch what happens!
 
@@ -202,8 +205,16 @@ MAKE TRACK DATA FOR BUTT (OR WHATEVER)
 
 ## 1.4 Options
 
+Add the following options to the command when running from Terminal / DOS to
+control the behaviour.
 
-Add the following options to the command when running from Terminal / DOS: 
+If you supply no options, SSLScrobbler will show you that it's working, but the
+information won't be sent anywhere or available to use except by reading the
+output; so you will want to study the options (especially the options from
+`--plugin-help`)
+
+### 1.4.1 Basic options
+
 
 `-h` or `--help`
 A reminder of this information.
@@ -213,6 +224,10 @@ Guided setup mode.
 
 You will be asked a series of yes or no questions. (Not all options are available
 in this mode).
+
+`-l` or `--log-file <file>`:
+Write the output to a file. (If this option is omitted, output goes to the 
+screen)
 
 `-i` or `--immediate`
 Do not wait for the next history file to be created, but use the most recent 
@@ -231,9 +246,6 @@ see a lot about what's going on, try `-v 9` .
 You should try `-v 9` and save the output if you are having problems, before 
 reporting a bug to me, or contacting me for advice...
  
-`-l` or `--log-file <file>`:
-Write the output to a file. (If this option is omitted, output goes to the 
-screen)
 
 `-p` or `--post-process`
 Immediately processes everything in the last history file. Ideal for
@@ -319,8 +331,8 @@ SSLScrobbler monitors the current Serato DJ history file. The history file is
 a binary file containing information about all the tracks in the session. 
 Serato DJ updates this file every time you add a track to a deck or eject a 
 track from a deck (and in a few other situations). The history file actually 
-contains a lot of information - everything you see in the history pane, and then
-some. ScratchLive never removes or rewrites information in this file while 
+contains a lot of information - everything you see in the history pane, and
+then some. ScratchLive never removes or rewrites information in this file while
 you're performing, so it may append several chunks of information referring to 
 the same track. (Later, when you shut Serato DJ down, it compacts the file to 
 remove duplicate information).
@@ -338,8 +350,8 @@ info about the heuristic used for this "best guess".
   You can also change e.g. the Twitter template here.
 
 * If you're interested in exploring the Serato DJ binary file format, check 
-  out the `--dump` option. You can even use this to dump non-history files (such 
-  as the file `database v2`). 
+  out the `--dump` option. You can even use this to dump non-history files
+  (such as the file `database v2`). 
  
  
 # 4. TROUBLESHOOTING
@@ -727,11 +739,13 @@ Shouts:
 
 No. I thought the clue was in the name.
 
-I'm sure there's already an app which does this, or at least some of this, for Traktor. To be honest, I'm out of touch with Traktor. 
+I'm sure there's already an app which does this, or at least some of this,
+for Traktor. To be honest, I'm out of touch with Traktor. 
 
 ## Can you make it work with Traktor?
 
-No. I don't use Traktor, and I haven't used it in about 20 years. (That is quite a painful realisation to write down.)
+No. I don't use Traktor, and I haven't used it in about 20 years. (That is
+quite a painful realisation to write down.)
 
 ## Aww. Not even for me?
 
@@ -739,19 +753,31 @@ _(This is not a frequently asked question)_
 
 ## It seems to post Now Playing messages at weird times. How does it decide? How does it arrive at its "best guess"?
 
-The main limitation to this app is what information we can get out of Serato. The information we can get from Serato corresponds more or less to what is happening in the "History" tab. Most importantly, the app learns most about what's going on **when a track is loaded or ejected**.
+The main limitation to this app is what information we can get out of Serato. 
+The information we can get from Serato corresponds more or less to what is 
+happening in the "History" tab. Most importantly, the app learns most about 
+what's going on **when a track is loaded or ejected**.
 
-Once a track is loaded, a timer starts, and the track moves through three phases: 
+Once a track is loaded, a timer starts, and the track moves through three phases:
 * first 30 seconds: "`loaded`" 
-* 30 seconds to half-the-song-length: "`playing`". (_eligible_ for a now playing message, if another deck isn't playing.)
-* half-the-song-length - full-song-length: "`scrobbleable`". This state is mainly for Last FM. the song will definitely be scrobbled.
-* any time after full-song-length: "`finished`". This song is treated as if it was ejected.
+* 30 seconds to half-the-song-length: "`playing`". (_eligible_ for a now
+  playing message, if another deck isn't playing.)
+* half-the-song-length - full-song-length: "`scrobbleable`". This state is
+  mainly for Last FM. the song will definitely be scrobbled.
+* any time after full-song-length: "`finished`". This song is treated as if it
+  was ejected.
 
-The deck which is loaded first is considered first, and as long as it's still playing (not empty, not finished), we don't move on to the next eligible song. As soon as the track ends or is ejected, the next loaded deck is considered and that's when a Now Playing event is sent.
+The deck which is loaded first is considered first, and as long as it's still 
+playing (not empty, not finished), we don't move on to the next eligible song. 
+As soon as the track ends or is ejected, the next loaded deck is considered and
+that's when a Now Playing event is sent.
 
 ## It's posting the Now Playing message too early and giving the game away! How can I delay this?
 
-The problem is really that the timer starts as soon as you load the song, even though it will take you some time to bring it into the mix. So the "now playing" event happens earlier than most people would like. It has no idea when you actually start playing, it has to guess from the time you load the track.
+The problem is really that the timer starts as soon as you load the song, even
+though it will take you some time to bring it into the mix. So the "now playing"
+event happens earlier than most people would like. It has no idea when you 
+actually start playing, it has to guess from the time you load the track.
 
 Currently your best option is to only load a track right before you want to play it.
 
@@ -759,23 +785,31 @@ A future version will provide more options to address this, as it's annoying I a
 
 ## It's posting the Now Playing message way too late - not until I load the next song!
 
-Once you're done with a track, if you eject it off the deck, and that will make it obvious to the app which is the one that's playing.
+Once you're done with a track, if you eject it off the deck, and that will make
+it obvious to the app which is the one that's playing.
 
 ## It has a lot of messages on the screen which say WARNING. How bad is that?
 
-Most of the time you can ignore the screen. It will be hidden behind Serato anyway. You should check that it is doing what you need - is it tweeting to twitter? Is it posting to your Discord? Can you find the nowplaying.txt file?
+Most of the time you can ignore the screen. It will be hidden behind Serato
+anyway. You should check that it is doing what you need - is it tweeting to
+twitter? Is it posting to your Discord? Can you find the nowplaying.txt file?
 
-Assuming it's all doing what you want, then you can basically ignore the messages entirely.
+Assuming it's all doing what you want, then you can basically ignore the 
+messages entirely.
 
-Read the messages if it's not doing what you want and then we can troubleshoot from there. There are some troubleshooting tips in the eponymous section of this README.
+Read the messages if it's not doing what you want and then we can troubleshoot 
+from there. There are some troubleshooting tips in the eponymous section of 
+this README.
 
 ## Will it interfere with OBS? My stream overlay is resource hungry. 
 
-This doesn't run on your OBS machine, it runs on your Serato DJ machine. So, no.
+This doesn't run on your OBS machine, it runs on your Serato DJ machine. 
+So, no.
 
 ## How much resource does it need to run? Does it use much memory?
 
-It uses hardly any of either. About 4Mb of RAM (basically nothing) and a tiny amount of CPU.
+It uses hardly any of either. About 4Mb of RAM (basically nothing) and
+a tiny amount of CPU.
 
 ## I want to use it but I'm scared of Terminal/Command Prompt.
 
@@ -787,15 +821,22 @@ That's also not a question.
 
 ## Ok fine - what I'm really asking is how will I possibly ever remember how to use it when I have to type commands in?
 
-First of, I'd like to thank you for not asking the two non-questions above and getting to the point.
+First of, I'd like to thank you for not asking the two non-questions above and
+getting to the point.
 
-As of 2020, there is now a actual app (with a nice "vinyl" icon) for macOS. It's not pretty, but it will guide you through what to do.
+As of 2020, there is now a actual app (with a nice "vinyl" icon) for macOS.
+It's not pretty, but it will guide you through what to do.
 
-For Windows users, I mean, look. The first time you set it up there are maybe 5 steps, but every time you run it again in the future there's really only 2 steps: open `cmd`, and then find where you wrote down how you started it last time, and type it again. (Put it in a Notepad txt file and copy-paste it.) I believe in you!
+For Windows users, I mean, look. The first time you set it up there are maybe
+5 steps, but every time you run it again in the future there's really only
+2 steps: open `cmd`, and then find where you wrote down how you started it
+last time, and type it again. (Put it in a Notepad txt file and copy-paste
+it.) I believe in you!
 
 ## It would be really great if you had a YouTube tutorial.
 
-I actually agree with you there. I should really do this some time, if only to make a soothing point to people who have asked the first 2 questions. 😇
+I actually agree with you there. I should really do this some time, if only to
+make a soothing point to people who have asked the first 2 questions. 😇
 
 ## Can you show me how to set it up?
 
@@ -807,11 +848,17 @@ Sigh, not this question again. _*Walks out of interview*_
 
 ## _*Runs after you*_ but WHY?
 
-Look, it was 2010, that's what I did in 2010. I'd never do such a ridiculous thing now, but I'm also done being embarrassed about it and have decided to lean into this monstrosity. It's really good code, go read it. Some of it's extremely over-engineered, and I hope it hurts your eyes.
+Look, it was 2010, that's what I did in 2010. I'd never do such a ridiculous
+thing now, but I'm also done being embarrassed about it and have decided to
+lean into this monstrosity. It's really good code, go read it. Some of it's
+extremely over-engineered, and I hope it hurts your eyes.
 
 Please feel free to rewrite the whole thing, I'll never get round to it.
 
-Oh… although… having said that… I _am_ also the author of [CDJScrobbler](https://github.com/ben-xo/cdjscrobbler) which fundamentally works in a very similar way, but is written in Java. So, that's probably how I'd do it, as Java, I've heard, has optional clicky buttons.
+Oh… although… having said that… I _am_ also the author of
+[CDJScrobbler](https://github.com/ben-xo/cdjscrobbler) which fundamentally
+works in a very similar way, but is written in Java. So, that's probably how
+I'd do it, as Java, I've heard, has optional clicky buttons.
 
 # 8. CREDITS & LICENSE
 
@@ -848,7 +895,6 @@ SSLScrobbler includes the following external libraries:
 * vinyl.icns (https://findicons.com/icon/41917/vinyl)
   originally by Nando Design Studio (Fernando Albuquerque), license Freeware Non-commercial
 
-The "NowPlaying" plugin was originally, written for [Music Hack Day Boston](http://musichackdayboston.pbworks.com/w/page/31299401/sQRatchLive) but the demo
-functionality is years obsolete and was removed in 2022.
+The "NowPlaying" plugin was originally, written for [Music Hack Day Boston](http://musichackdayboston.pbworks.com/w/page/31299401/sQRatchLive) but the demo functionality is years obsolete and was removed in 2022.
 
 
