@@ -836,10 +836,10 @@ SSLScrobbler includes the following external libraries:
 * Twitter-PHP (https://github.com/dg/twitter-php)
   originally by David Grudl, licensed under the New BSD license.
   
-* getID3 (http://getid3.sourceforge.net/)
+* getID3 (https://github.com/JamesHeinrich/getID3/)
   originally by James Heinrich, licensed under the GPL license.
   
-* vgd.php (http://v.gd/developers.php)
+* vgd.php (https://v.gd/developers.php)
   originally by Richard West, released into the public domain.
 
 * php-discord-sdk (https://github.com/cubiclesoft/php-discord-sdk)
@@ -848,8 +848,7 @@ SSLScrobbler includes the following external libraries:
 * vinyl.icns (https://findicons.com/icon/41917/vinyl)
   originally by Nando Design Studio (Fernando Albuquerque), license Freeware Non-commercial
 
-The "NowPlaying" plugin was originally, written for Boston Music Hack Day 
-(http://musichackdayboston.pbworks.com/w/page/31299401/sQRatchLive) but the demo
+The "NowPlaying" plugin was originally, written for [Music Hack Day Boston](http://musichackdayboston.pbworks.com/w/page/31299401/sQRatchLive) but the demo
 functionality is years obsolete and was removed in 2022.
 
 
