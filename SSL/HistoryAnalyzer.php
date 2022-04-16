@@ -24,44 +24,14 @@
  *  THE SOFTWARE.
  */
 
-class HistoryAnalyzer
+class HistoryAnalyzer extends HistoryReader
 {
-    // command line switches
-    protected $verbosity = L::INFO;
-    
-    protected $plugins = array();
-    protected $override_verbosity = array();
-    
-    protected $appname;
-    protected $filename;
-    protected $historydir;
-    protected $log_file;
-    protected $help;
-    
     protected $db = 'analyze.db';
-    
+
     /**
      * @var SQLite3
      */
     protected $dbo;
-        
-    /**
-     * @var Logger
-     */
-    protected $logger;
-    
-    /**
-     * Takes an array of class names => log levels. Mainly
-     * you can use this to shut certain classes up that are too noisy
-     * at a particular log level, e.g. TickSource (which normally 
-     * sends a L::DEBUG message every 2 seconds).
-     * 
-     * @param array $override
-     */
-    public function setVerbosityOverride(array $override)
-    {
-        $this->override_verbosity = $override;
-    }
 
     /**
      * The main entry point to the application. Start here!
@@ -106,44 +76,19 @@ class HistoryAnalyzer
         }
     }
     
-    public function usage($appname, array $argv)
+    public function usage($appname, array $arg, $debug_help = false, $plugin_help = false)
     {
         echo "Usage: {$appname} [OPTIONS] [session file]\n";
         echo "Session file is optional. If omitted, the most recent history file from {$this->historydir} will be used automatically\n";
         echo "    -h or --help:              This message.\n";
         echo "\n";
-        foreach($this->plugins as $plugin)
+        foreach($this->cli_plugins as $plugin)
         {
+            /* @var $plugin CLIPlugin */
             $plugin->usage($appname, $argv);
         }
         echo "Debugging options:\n";
         echo "    -v or --verbosity <0-9>:   How much logging to output. (default: 0 (none))\n";
-    }
-    
-    protected function getDefaultHistoryDir()
-    {
-        // OSX
-        $dir = getenv('HOME') . '/Music/ScratchLIVE/History/Sessions';
-        if(is_dir($dir)) return $dir;
-
-        $dir = getenv('HOME') . '/Music/_Serato_/History/Sessions';
-        if(is_dir($dir)) return $dir;
-        
-        // Windows Vista / Windows 7 ?
-        $dir = getenv('USERPROFILE') . '\Music\ScratchLIVE\History\Sessions';
-        if(is_dir($dir)) return $dir;
-
-        $dir = getenv('USERPROFILE') . '\Music\_Serato_\History\Sessions';
-        if(is_dir($dir)) return $dir;
-        
-        // Windows XP
-        $dir = getenv('USERPROFILE') . '\My Documents\My Music\ScratchLIVE\History\Sessions';
-        if(is_dir($dir)) return $dir;
-
-        $dir = getenv('USERPROFILE') . '\My Documents\My Music\_Serato_\History\Sessions';
-        if(is_dir($dir)) return $dir;
-        
-        throw new RuntimeException("Could not find your ScratchLive History folder; it wasn't where I was expecting.");
     }
     
     protected function parseOptions(array $argv)
@@ -168,31 +113,13 @@ class HistoryAnalyzer
         }
     }
     
-    protected function setupLogging()
-    {
-        if($this->verbosity == 0)
-        {
-            L::setLogger(new NullLogger());
-            return;
-        }
-        
-        if($this->log_file)
-        {
-            $logger = new FileLogger();
-            $logger->setLogFile($this->log_file);
-        }
-        else
-        {
-            $logger = new ConsoleLogger();
-        }
-        
-        L::setLogger($logger);
-        L::setLevel($this->verbosity);
-        L::setOverrides($this->override_verbosity);
-    }
-    
     protected function analyzeDir($from_dir)
     {
+        // Use the caching version via Dependency Injection. This means that all 
+        // new SSLTracks created using a SSLTrackFactory will get a RuntimeCachingSSLTrack
+        // that knows how to ask the cache about expensive lookups (such as getID3 stuff). 
+        Inject::map('SSLTrackFactory', new SSLTrackCache());
+
         $newest_mtime = 0;
         $fps = array();
         
@@ -209,50 +136,59 @@ class HistoryAnalyzer
         
         natsort($fps);
 
+        $track_total = 0;
         foreach($fps as $fp)
         {
             $fn = basename($fp);
             echo "** Parsing {$fn}...\n";
             try {
                 $parser = new SSLParser($dom);
-                $dom = $parser->parse($fp);
+                $parsed_dom = $parser->parse($fp);
             } catch(Exception $e) {
                 echo "-- ignoring {$fn}.\n";
+                $parser->close();
+                continue;
             }
             $parser->close();
-        }
-        echo "++ Saw " . count($dom) . " chunks\n";
-        echo "** Extracting tracks...\n";
-        $tracks = $dom->getTracks();
-        echo "++ Saw " . count($tracks) . " tracks\n";
 
-        echo "** Importing to db";
-        foreach($tracks as $track)
-        {
-            /* @var $track SSLTrack */
-            echo ".";
-            $query = sprintf("INSERT INTO history (row, filename, title, artist, deck, starttime, endtime, played, updatedAt, playtime, length, album, fullpath)
-                         VALUES (%d, '%s', '%s', '%s', %d, %d, %d, %d, %d, %d, '%s', '%s', '%s')",
-                $track->getRow(),
-                sqlite_escape_string($track->getFilename()),
-                sqlite_escape_string($track->getTitle()),
-                sqlite_escape_string($track->getArtist()),
-                $track->getDeck(),
-                $track->getStartTime(),
-                $track->getEndTime(),
-                $track->getPlayed(),
-                $track->getUpdatedAt(),
-                $track->getPlayTime(),
-                $track->getLengthInSeconds(SSLTrack::TRY_HARD),
-                sqlite_escape_string($track->getAlbum()),
-                sqlite_escape_string($track->getFullpath())
-            );
-            
-            if(!$this->dbo->exec($query))
+            echo "++ Saw " . count($parsed_dom) . " chunks\n";
+            $tracks = $parsed_dom->getDedupedTracks();
+            $count = count($tracks);
+            echo "++ Extracted $count tracks\n";
+
+            echo "** Importing to db";
+            foreach($tracks as $track)
             {
-                throw new Exception($error);
+                /* @var $track SSLTrack */
+                $query = sprintf("INSERT INTO history (row, filename, title, artist, deck, starttime, endtime, played, updatedAt, playtime, length, album, fullpath)
+                            VALUES (%d, '%s', '%s', '%s', %d, %d, %d, %d, %d, %d, '%s', '%s', '%s')",
+                    $track->getRow(),
+                    SQLite3::escapeString($track->getFilename()),
+                    SQLite3::escapeString($track->getTitle()),
+                    SQLite3::escapeString($track->getArtist()),
+                    $track->getDeck(),
+                    $track->getStartTime(),
+                    $track->getEndTime(),
+                    $track->getPlayed(),
+                    $track->getUpdatedAt(),
+                    $track->getPlayTime(),
+                    $track->getLengthInSeconds(SSLTrack::TRY_HARD),
+                    SQLite3::escapeString($track->getAlbum()),
+                    SQLite3::escapeString($track->getFullpath())
+                );
+                
+                if(!$this->dbo->exec($query))
+                {
+                    echo "WARNING: '{$this->dbo->lastErrorMsg()} (code {$this->dbo->lastErrorCode()})' importing '{$track->getRow()}' - {(string)$track}\n";
+                }
+
+                $track_total++;
+                if($track_total % 100 == 0) {
+                    echo "Track {$track_total}…\n";
+                }
             }
         }
+        echo "++ Saw $track_total tracks overall.\n";
         echo "done\n";
         
     }
