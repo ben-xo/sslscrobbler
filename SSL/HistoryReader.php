@@ -245,7 +245,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         echo "    -i or --immediate:         Do not wait for the next history file - use the current one. You want this if Serato is already running.\n";
         echo "    -p or --post-process:      Loop through the file after the fact. Use for scrobbling a set you played with no internet.\n";
         echo "          --dir:               Use the most recent history file from this directory.\n";
-        echo "    -l or --log-file <file>:   Where to send logging output. (If this option is omitted, output goes to stdout)\n";
+        echo "    -l or --log-file <file>:   Where to send logging output instead of stdout.\n";
         if(!$this->has_now_playing_plugin) {
         echo "\n  **Note:** For options to log the current playing track title into a file for live streams etc., enable CLINowPlayingLoggerPlugin in config.php (see example on config.php-default).\n\n";
         }
