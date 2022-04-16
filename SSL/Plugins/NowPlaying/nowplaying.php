@@ -43,12 +43,8 @@ if(file_exists(dirname(__FILE__) . '/nowplaying.txt'))
     {
         $ssl_track = $track->toArray();
         
-//        $seven = new SevenDigital();
-//        $buylink = $seven->getBuyLink($track);
-//        if($buylink) {
-//        $short_buylink = $seven->shorten($buylink);
-//        $qr = $seven->getQRCodeUrl($short_buylink);
-//        }
+        // you could use this space to do things like pull in links to buy a song,
+        // bookmark the song on spotify or apple music, etc etc
         
         echo @json_encode(array('ssl' => $ssl_track, 'qr' => $qr));
     }

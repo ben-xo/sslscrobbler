@@ -811,7 +811,7 @@ Look, it was 2010, that's what I did in 2010. I'd never do such a ridiculous thi
 
 Please feel free to rewrite the whole thing, I'll never get round to it.
 
-Oh… although… having said that… I am also the author of [CDJScrobbler](https//github.com/ben-xo/cdjscrobbler) which fundamentally works in a very similar way, but is written in Java. So, that's probably how I'd do it, as Java, I've heard, has optional clicky buttons.
+Oh… although… having said that… I _am_ also the author of [CDJScrobbler](https//github.com/ben-xo/cdjscrobbler) which fundamentally works in a very similar way, but is written in Java. So, that's probably how I'd do it, as Java, I've heard, has optional clicky buttons.
 
 # 8. CREDITS & LICENSE
 
@@ -848,13 +848,8 @@ SSLScrobbler includes the following external libraries:
 * vinyl.icns (https://findicons.com/icon/41917/vinyl)
   originally by Nando Design Studio (Fernando Albuquerque), license Freeware Non-commercial
 
-The "NowPlaying" plugin, written for Boston Music Hack Day 
-(http://musichackdayboston.pbworks.com/w/page/31299401/sQRatchLive) also 
-comes bundled with the following:
+The "NowPlaying" plugin was originally, written for Boston Music Hack Day 
+(http://musichackdayboston.pbworks.com/w/page/31299401/sQRatchLive) but the demo
+functionality is years obsolete and was removed in 2022.
 
-* 7Digital PHP Wrapper (https://github.com/gregsochanik/api_php_example)
-  originally by Greg Sochanik, licensed under XXXXXXXX
-  (Includes JSON.php by Michal Migurski, licensed under the BSD license.)
-  
-* JQuery (http://jquery.com/)
-  originally by John Resig, licensed under the MIT license.
+
