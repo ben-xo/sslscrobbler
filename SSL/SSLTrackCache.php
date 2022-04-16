@@ -31,6 +31,7 @@ class SSLTrackCache extends SSLTrackFactory
      */
     protected $factory;
     protected $tracks = array();
+    protected $file_lengths = array();
     
     public function __construct()
     {
@@ -54,5 +55,18 @@ class SSLTrackCache extends SSLTrackFactory
     public function newTrack()
     {
         return $this->factory->newRuntimeCachingTrack($this);
+    }
+
+    public function setLengthByFullpath($fullpath, $length)
+    {
+        $this->file_lengths[$fullpath] = $length;
+    }
+
+    public function getLengthByFullpath($fullpath)
+    {
+        if(isset($this->file_lengths[$fullpath]))
+        {
+            return $this->file_lengths[$fullpath];
+        }
     }
 }

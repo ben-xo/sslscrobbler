@@ -70,15 +70,26 @@ class RuntimeCachingSSLTrack extends SSLTrack
             
             if($cached_track)
             {
-                $cached_length = $cached_track->getLength();
-                if(isset($cached_length)) 
-                {
-                    $this->setLength($cached_length);
-                }
+                $length = $cached_track->getLength();
             }
-            
+
+            if(!isset($length))
+            {
+                // either there's no cached track or it was cached without a length.
+                // it may also be cached by  file path.
+                $length = $this->track_cache->getLengthByFullpath($this->getFullpath());
+            }
+
+            if(isset($length)) 
+            {
+                $this->setLength($length);
+                return;
+            }
+        
+            // if we got here, we did not get the length from cache.
             parent::setLengthIfUnknown();
             
+            // we still may not have it, but we checked the file this time.
             $length = $this->getLength();
 
             // save in the cache, for next time.
@@ -92,6 +103,8 @@ class RuntimeCachingSSLTrack extends SSLTrack
                 {
                     $this->track_cache->register($this);
                 }
+
+                $this->track_cache->setLengthByFullpath($this->getFullpath(), $length);
             }
         }
     }
