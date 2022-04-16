@@ -92,7 +92,6 @@ class HistoryAnalyzer
             $this->dbo = new SQLite3($this->db);
             $this->initializeDb();
             
-            
             $this->analyzeDir($this->historydir);
                             
         }
@@ -244,7 +243,7 @@ class HistoryAnalyzer
                 $track->getPlayed(),
                 $track->getUpdatedAt(),
                 $track->getPlayTime(),
-                sqlite_escape_string($track->getLength()),
+                $track->getLengthInSeconds(SSLTrack::TRY_HARD),
                 sqlite_escape_string($track->getAlbum()),
                 sqlite_escape_string($track->getFullpath())
             );
@@ -260,6 +259,21 @@ class HistoryAnalyzer
     
     protected function initializeDb()
     {
-
+        $this->dbo->exec("DROP TABLE IF EXISTS history;");
+        $this->dbo->exec("CREATE TABLE history (
+            row INTEGER PRIMARY KEY,
+            filename VARCHAR,
+            title VARCHAR,
+            artist VARCHAR,
+            deck INTEGER,
+            starttime INTEGER,
+            endtime INTEGER,
+            played INTEGER,
+            updatedAt INTEGER,
+            playtime INTEGER,
+            length INTEGER,
+            album VARCHAR,
+            fullpath TEXT
+        );");
     }
 }
