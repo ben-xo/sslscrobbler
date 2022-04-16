@@ -397,11 +397,19 @@ info about the heuristic used for this "best guess".
 
 
 It's quite easy to write plugins for SSLScrobbler. Examine the examples in the 
-folder SSL/Plugins. 
+folder `SSL/Plugins`.
 
-A plugin is a class which implements `SSLPlugin`, and can provide zero-or-more 
-Observers for the different events (zero would be quite uninteresting, though) 
-from the `getObservers()` method.
+All plugins can be can be activated (or deactivated) by adding them into
+`config.php` (with a sensible default set provided in `config.php-default`).
+Most of them have options you can set too.
+
+Most plugins can be configured more than once, for example to tweet to two
+accounts.
+
+Any class which implements `SSLPlugin` can be configured as a plugin,
+and can provide zero-or-more Observers for the different events from
+the `getObservers()` method. The Observers are for reacting to the various
+signals which are generated throughout the session.
 
 The following observer types are currently provided:
 * `TickObserver` - triggered by a timer interrupt (usually every 2 seconds).
@@ -409,6 +417,19 @@ The following observer types are currently provided:
 * `TrackChangeObserver` - triggered when a track is loaded or removed from a deck.
 * `NowPlayingObserver` - triggered when a track becomes the 'Now Playing' track
 * `ScrobbleObserver` - triggered when a track is definitively scrobble-able. 
+
+Many plugins can also be configured through command line options. If a plugin
+which also implements the interface `CLIPlugin` is configured in `config.php`,
+it will present its options in `--plugin-help`. Most of the plugins useful
+for DJing work this way.
+
+`CLIPlugin`s may also provide prompts for the `--guided` setup mode.
+
+I choose to write my CLI plugin counterparts as separate plugins in their own
+right (plugins for adding more plugins, basically), and you can see that it's
+mostly the CLI versions which are in the default config. All you need to do is
+implement the right interfaces, however. You don't have to copy my style
+if you don't want to (but it's probably easiest if you do).
 
 ## 5.2 Unit Tests
 
