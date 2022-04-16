@@ -239,8 +239,20 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
     public function usage($appname, array $argv, $debug_help=false, $plugin_help=false)
     {
         echo "\n";
-        echo "Usage: {$appname} [OPTIONS] [session file]\n";
-        echo "Session file is optional. If omitted, the most recent history file from {$this->historydir} will be used automatically\n";
+        echo "Usage: {$appname} [OPTIONS] [session file]\n\n";
+
+        try
+        {
+            // if you supplied --dir as well as --help, this will fix the help message
+            $this->historydir = $this->getDefaultHistoryDir();
+            echo "Session file is optional. If omitted, the most recent history file from {$this->historydir} will be used\n\n";
+        }
+        catch(RuntimeException $e)
+        {
+            // don't error and quit - we're about to print help and quit.
+            echo "Session file is optional, but I can't seem to find where your session files live. Is Serato installed on this computer?\n\n";
+        }
+
         echo "    -h or --help:              This message. You probably want to read --plugin-help too.\n";
         echo "          --prompt:            Guided setup mode.\n";
         echo "    -l or --log-file <file>:   Where to send logging output instead of stdout.\n";
@@ -265,8 +277,8 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
                 /* @var $plugin CLIPlugin */
                 $plugin->usage($appname, $argv);
             }
+            echo "\n";
         }
-        echo "\n";
 
         if($debug_help)
         {
@@ -278,8 +290,8 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             echo "          --manual:            Replay the session file, one batch per tick. (Tick by pressing enter at the console)\n";
             echo "          --multiply-time <N>: Speed up time by a factor of N whilst in --manual mode.\n";
             echo "          --csv:               Parse the session file as a CSV, not a binary file, for testing purposes. Best used with --manual\n";
+            echo "\n";
         }
-        echo "\n";
     }
     
     public function getNewFilename()
