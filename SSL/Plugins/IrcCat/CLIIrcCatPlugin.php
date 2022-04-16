@@ -45,9 +45,10 @@ class CLIIrcCatPlugin implements CLIPlugin
     
     public function usage($appname, array $argv)
     {
-        echo "IRCCat options:\n";
-        echo "    -I or --irccat <host:port#channel>: Post tracklists to IRCCat on <host:port> into channel <#channel>.\n";
-        echo "\n";
+        echo "IRCCat options:\n\n"
+           . "    -I or --irccat <host:port#channel>:\n"
+           . "            Post tracklists to IRCCat on <host:port> into channel <#channel>.\n\n"
+           . "\n";
     }
     
     /**

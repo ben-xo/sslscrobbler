@@ -33,11 +33,16 @@ class CLINowPlayingLoggerPlugin implements CLIPlugin
    
     public function usage($appname, array $argv)
     {
-        echo "Log 'Now Playing' Track options:\n";
-        echo "    -ln or --log-track <file>: log the current playing track to a file (e.g. for streaming)\n";
-        echo "    -ls or --log-serialized <file>: log the current playing track to a file in PHP serialized form (contains more info, but not human readable)\n";
-        echo "    -lt or --log-tostring <file>: log the current playing track to a file in a fuller representation like in the logs\n";
-        echo "\n";
+        echo "Log 'Now Playing' Track options:\n\n"
+           . "    -ln or --log-track <file>:\n"
+           . "            log the current playing track to a file (e.g. for streaming)\n\n"
+           . "    -ls or --log-serialized <file>:\n"
+           . "            log the current playing track to a file in PHP serialized form.\n"
+           . "            (contains more info, but not human readable)\n\n"
+           . "    -lt or --log-tostring <file>: \n"
+           . "            log the current playing track to a file in the same, fuller\n"
+           . "            representation used in the console output.\n\n"
+           . "\n";
     }
 
     /**

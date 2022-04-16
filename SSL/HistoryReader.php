@@ -34,6 +34,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
     protected $dir_provided = false;
     protected $help = false;
     protected $debug_help = false;
+    protected $plugin_help = false;
     protected $manual_tick = false;
     protected $time_multiplier = 1.0;
     protected $csv = false;
@@ -137,7 +138,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
 
             if($this->help)
             {
-                $this->usage($this->appname, $argv, $this->debug_help);
+                $this->usage($this->appname, $argv, $this->debug_help, $this->plugin_help);
                 return;
             }
 
@@ -235,41 +236,48 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         }
     }
     
-    public function usage($appname, array $argv, $debug_help=false)
+    public function usage($appname, array $argv, $debug_help=false, $plugin_help=false)
     {
         echo "\n";
         echo "Usage: {$appname} [OPTIONS] [session file]\n";
         echo "Session file is optional. If omitted, the most recent history file from {$this->historydir} will be used automatically\n";
-        echo "    -h or --help:              This message.\n";
+        echo "    -h or --help:              This message. You probably want to read --plugin-help too.\n";
         echo "          --prompt:            Guided setup mode.\n";
-        echo "    -i or --immediate:         Do not wait for the next history file - use the current one. You want this if Serato is already running.\n";
-        echo "    -p or --post-process:      Loop through the file after the fact. Use for scrobbling a set you played with no internet.\n";
-        echo "          --dir:               Use the most recent history file from this directory.\n";
         echo "    -l or --log-file <file>:   Where to send logging output instead of stdout.\n";
         if(!$this->has_now_playing_plugin) {
         echo "\n  **Note:** For options to log the current playing track title into a file for live streams etc., enable CLINowPlayingLoggerPlugin in config.php (see example on config.php-default).\n\n";
         }
+        echo "    -p or --post-process:      Loop through the session file after your DJ set is finished. \n";
+        echo "                               You can use this to e.g. scrobble a set you played whilst offline.\n\n";
+        echo "    -i or --immediate:         Do not wait for a session file to be created - use the current one. \n";
+        echo "                               You want this if Serato is already running.\n\n";
+        echo "          --dir:               Use the most recent session file from this here instead.\n";
+        echo "                               This is the option for you if we couldn't correctly guess where your Serato data lives.\n\n";
+        echo "          --plugin-help:       Show help for for all of the activated plugins\n";
+        echo "                               e.g. Twitter, Last FM, Discord, etc - all the good stuff.\n\n";
+        echo "          --debug-help:        Show help for options not usually used during a DJ set.\n";
         echo "\n";
 
-        foreach($this->cli_plugins as $plugin)
+        if($plugin_help)
         {
-            /* @var $plugin CLIPlugin */
-            $plugin->usage($appname, $argv);
+            foreach($this->cli_plugins as $plugin)
+            {
+                /* @var $plugin CLIPlugin */
+                $plugin->usage($appname, $argv);
+            }
         }
+        echo "\n";
 
         if($debug_help)
         {
             echo "Debugging options:\n";
-            echo "    -d or --dump:              Dump the file's complete structure and exit\n";
+            echo "    Note that whenever the help mentions a session file, it will be the most recent found unless you specified a specific file.\n\n";
+            echo "    -d or --dump:              Dump the file's complete structure, then exit.\n";
             echo "          --dump-type <x>:     Use a specific parser. Options are: sessionfile, sessionindex\n";
-            echo "    -v or --verbosity <0-9>:   How much logging to output. (default: 0 (none))\n";
+            echo "    -v or --verbosity <0-9>:   How much logging to output. default: " . (string)L::INFO . " (INFO)\n";
             echo "          --manual:            Replay the session file, one batch per tick. (Tick by pressing enter at the console)\n";
-            echo "          --multiply-time <n>: Speed up time by a factor of n\n";
+            echo "          --multiply-time <N>: Speed up time by a factor of N whilst in --manual mode.\n";
             echo "          --csv:               Parse the session file as a CSV, not a binary file, for testing purposes. Best used with --manual\n";
-        }
-        else
-        {
-            echo "    --debug-help:              Show help about debugging options.\n";
         }
         echo "\n";
     }
@@ -366,6 +374,13 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             {
                 $this->help = true;
                 $this->debug_help = true;
+                continue;
+            }
+
+            if($arg == '--plugin-help')
+            {
+                $this->help = true;
+                $this->plugin_help = true;
                 continue;
             }
             

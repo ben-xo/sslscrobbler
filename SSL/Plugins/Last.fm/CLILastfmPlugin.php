@@ -45,9 +45,11 @@ class CLILastfmPlugin implements CLIPlugin
     
     public function usage($appname, array $argv)
     {
-        echo "Last.fm options:\n";
-        echo "    -L or --lastfm <username>: Scrobble / send 'Now Playing' to Last.fm for user <username>. (Will ask you to authorize if you have not already)\n";
-        echo "\n";
+        echo "Last.fm options:\n\n"
+           . "    -L or --lastfm <username>:"
+           . "            Scrobble / send 'Now Playing' to Last.fm for user <username>.\n"
+           . "            (Will ask you to authorize if you have not already)\n\n"
+           . "\n";
     }
     
     /**

@@ -45,12 +45,13 @@ class CLIDBPlugin implements CLIPlugin
     
     public function usage($appname, array $argv)
     {
-        echo "DB options:\n";
-        echo "    -D or --db <key>:          run an SQL statement based on <key> and the track name (edit config.php for the SQL)\n";
-        echo "                               Current configured statement is:\n";
-        echo "                               ";
+        echo "DB options:\n\n"
+           . "    -D or --db <key>:\n"
+           . "            run an SQL statement based on <key> and the track name (edit config.php for the SQL)\n"
+           . "            Current configured statement is:\n\n"
+           . "            ";
         printf($this->config['sql'], '<trackname>', '<key>');
-        echo "\n";
+        echo "\n\n\n";
     }
     
     /**

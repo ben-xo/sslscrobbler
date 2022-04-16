@@ -45,10 +45,13 @@ class CLITwitterPlugin implements CLIPlugin
     
     public function usage($appname, array $argv)
     {
-        echo "Twitter options:\n";
-        echo "    -T or --twitter <session>: Post tracklists to Twitter. <session> is a 'save name' for the session. (Will ask you to authorize if you have not already)\n";
-        echo "          --twitter-thread <session>: Post as replies, so they appear in a single thread.\n";
-        echo "\n";
+        echo "Twitter options:\n\n"
+           . "    -T or --twitter <session>:\n"
+           . "            Post tracklists to Twitter. <session> is a 'save name' for the session.\n"
+           . "            (Will ask you to authorize if you have not already done so)\n\n"
+           . "          --twitter-thread <session>:\n"
+           . "            Post as replies, so they appear in a single thread.\n\n"
+           . "\n";
     }
     
     /**
