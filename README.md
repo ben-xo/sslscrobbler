@@ -811,7 +811,7 @@ Look, it was 2010, that's what I did in 2010. I'd never do such a ridiculous thi
 
 Please feel free to rewrite the whole thing, I'll never get round to it.
 
-Oh… although… having said that…
+Oh… although… having said that… I am also the author of [CDJScrobbler](https//github.com/ben-xo/cdjscrobbler) which fundamentally works in a very similar way, but is written in Java. So, that's probably how I'd do it, as Java, I've heard, has optional clicky buttons.
 
 # 8. CREDITS & LICENSE
 
