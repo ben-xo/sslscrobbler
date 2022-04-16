@@ -15,8 +15,6 @@ SSL/Plugins/Analyzer/analyze.db
 config.php
 
 # Demo files
-SSL/Plugins/NowPlaying/SevenDigital.key
-template.html
 Demo
 
 # XOUP compiled files
