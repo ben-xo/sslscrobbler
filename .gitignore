@@ -8,13 +8,12 @@ lastfm-*
 discord-*
 
 # output files
-*nowplaying.txt
+**nowplaying.txt
 
 # Usually copy this file from config.php-default
 config.php
 
 # Demo files
-SSL/Plugins/NowPlaying/nowplaying.txt
 SSL/Plugins/NowPlaying/SevenDigital.key
 template.html
 Demo
