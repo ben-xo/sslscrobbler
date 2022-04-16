@@ -27,18 +27,21 @@
 
 error_reporting(E_ALL | E_STRICT);
 
-chdir(dirname(dirname(dirname(dirname(__FILE__)))));
+chdir(dirname(dirname(dirname(__DIR__))));
+require_once 'External/getID3/getid3.php';
 require_once 'SSL/Autoloader.php';
-chdir(dirname(__FILE__));
+chdir(__DIR__);
 
 //define('SCROBBLER_LOG', '/tmp/scrobbler.log');
 //define('SINGLE_THREADED', true);
 
-function __autoload($class)
+function ___autoload($class)
 {
     $a = new Autoloader();
     return $a->load($class);
 }
+
+spl_autoload_register("___autoload");
 
 
 // set max log levels for various internal components. (The default is unlimited.)
@@ -50,6 +53,5 @@ $log_levels = array(
 );
 
 $h = new HistoryAnalyzer();
-$h->setVerbosityOverride($log_levels);
-//$h->addPlugin(new JSONServerPOC());
+$h->setVerbosityOverride($log_levels, L::INFO);
 $h->main($argc, $argv);
