@@ -9,7 +9,7 @@ discord-*
 
 # output files
 **nowplaying.txt
-SSL/Plugins/Analyzer/analyze.db
+analyze.db
 
 # Usually copy this file from config.php-default
 config.php
