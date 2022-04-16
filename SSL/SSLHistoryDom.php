@@ -51,7 +51,42 @@ class SSLHistoryDom extends SSLDom
         }
         return $tracks;
     }
-    
+
+    /**
+     * @return array of SSLTrack
+     */
+    public function getDedupedTracks()
+    {
+        $tracks = $this->getTracks();
+
+        // raw session files are append-only when in use, and often contain multiple entries
+        // for the same track written at different points in the lifecycle (e.g. deck load / 
+        // deck eject). Newer versions of Serato clean these up when you end the session,
+        // but it can still happen if you crash etc.
+        
+        $seen_ids = array();
+        $positions_to_filter = array();
+
+        $ptr = count($tracks);
+        while($ptr > 0)
+        {
+            // work backward through the array removing younger dupes
+
+            $ptr--;
+            $row_id = $tracks[$ptr]->getRow();
+            if(isset($seen_ids[$row_id]))
+            {
+                $tracks[$ptr] = null;
+            }
+            else
+            {
+                $seen_ids[$row_id] = true;
+            }
+        }
+
+        return array_filter($tracks);
+    }
+
     /**
      * @return array of SSLAdatChunk
      */
