@@ -156,7 +156,7 @@ class HistoryAnalyzer extends HistoryReader
             $count = count($tracks);
             echo "++ Extracted $count tracks\n";
 
-            echo "** Importing to db";
+            echo "** Importing to db\n";
             foreach($tracks as $track)
             {
                 /* @var $track SSLTrack */
