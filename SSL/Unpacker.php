@@ -82,7 +82,7 @@ abstract class Unpacker
                 {
                     if($vals['upper'])
                     {
-                        L::level(L::WARNING) &&
+                        L::level(L::WARNING, __CLASS__) &&
                             L::log(L::WARNING, __CLASS__, "Encountered 64-bit integer > PHP_INT_MAX on a 32-bit PHP. Throwing away upper bytes. Original value was 0x%08X%08X",
                                 array(dechex($vals['upper']), dechex($vals['lower'])));
                     }
@@ -151,7 +151,7 @@ abstract class Unpacker
                             ( $vals['upper'] == 0xFFFFFFFF && $vals['lower'] & 0x80000000 == 0 ) || 
                             ( $vals['upper'] == 0 && $vals['lower'] & 0x80000000 == 0x80000000 )
                         ) {
-                            L::level(L::WARNING) &&
+                            L::level(L::WARNING, __CLASS__) &&
                                 L::log(L::WARNING, __CLASS__, "Encountered signed 64-bit integer > PHP_INT_MAX on a 32-bit PHP. Throwing away upper bytes. Original value was 0x%08X%08X",
                                     array(dechex($vals['upper']), dechex($vals['lower'])));
                         }

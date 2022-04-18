@@ -90,7 +90,7 @@ class SSLDiscordAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
 
         try
         {
-            L::level(L::DEBUG) &&
+            L::level(L::DEBUG, __CLASS__) &&
                 L::log(L::DEBUG, __CLASS__, 'Sending Now Playing to Discord: %s',
                     array( $message ));
 
@@ -105,7 +105,7 @@ class SSLDiscordAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
         }
         catch(Exception $e)
         {
-            L::level(L::WARNING) &&
+            L::level(L::WARNING, __CLASS__) &&
                 L::log(L::WARNING, __CLASS__, 'Could not send Now Playing to Discord: %s',
                     array( $e->getMessage() ));
         }

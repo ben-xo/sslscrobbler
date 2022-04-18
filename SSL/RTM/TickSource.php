@@ -50,7 +50,7 @@ class TickSource implements TickObservable, ExitObserver
     
     public function startClock($interval, SignalHandler $sh = null, InputHandler $ih = null)
     {        
-        L::level(L::DEBUG) && 
+        L::level(L::DEBUG, __CLASS__) && 
             L::log(L::DEBUG, __CLASS__, "Clock Started, interval %s", 
                 array($interval));
         
@@ -63,7 +63,7 @@ class TickSource implements TickObservable, ExitObserver
             // debugging option --multiply-time
             $elapsed *= $this->time_multiplier;
 
-            L::level(L::DEBUG) && 
+            L::level(L::DEBUG, __CLASS__) && 
                 L::log(L::DEBUG, __CLASS__, "Tick %s seconds", 
                     array($elapsed));
                     
@@ -73,7 +73,7 @@ class TickSource implements TickObservable, ExitObserver
 
             if($processing_time > $interval)
             {
-                L::level(L::WARNING) && 
+                L::level(L::WARNING, __CLASS__) && 
                     L::log(L::WARNING, __CLASS__, "Notification took %s, which is longer than interval %s",
                         array($processing_time, $interval));
             }
@@ -111,7 +111,7 @@ class TickSource implements TickObservable, ExitObserver
     
     public function notifyExit()
     {
-        L::level(L::DEBUG) && 
+        L::level(L::DEBUG, __CLASS__) && 
             L::log(L::DEBUG, __CLASS__, "Exit caught.", 
                 array());
 

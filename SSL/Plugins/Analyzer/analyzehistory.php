@@ -54,5 +54,5 @@ $log_levels = array(
 );
 
 $h = new HistoryAnalyzer();
-$h->setVerbosityOverride($log_levels, L::INFO);
+$h->setVerbosityOverride($log_levels, L::ERROR);
 $h->main($argc, $argv);

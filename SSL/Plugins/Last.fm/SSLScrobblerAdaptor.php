@@ -42,7 +42,7 @@ class SSLScrobblerAdaptor implements NowPlayingObserver, ScrobbleObserver
         {
             try
             {
-                L::level(L::DEBUG) &&
+                L::level(L::DEBUG, __CLASS__) &&
                     L::log(L::DEBUG, __CLASS__, 'Sending Now Playing to Last.fm',
                         array( ));
                     
@@ -55,7 +55,7 @@ class SSLScrobblerAdaptor implements NowPlayingObserver, ScrobbleObserver
             }
             catch(Exception $e)
             {
-                L::level(L::WARNING) &&
+                L::level(L::WARNING, __CLASS__) &&
                     L::log(L::WARNING, __CLASS__, 'Could not send Now Playing to Last.fm: %s',
                         array( $e->getMessage() ));
             }
@@ -70,7 +70,7 @@ class SSLScrobblerAdaptor implements NowPlayingObserver, ScrobbleObserver
         {
             // Perhaps this entry was added manually.
             
-            L::level(L::WARNING) &&
+            L::level(L::WARNING, __CLASS__) &&
                 L::log(L::WARNING, __CLASS__, 'Could not guess length. Last.fm will silently ignore the scrobble.',
                     array( ));
         }
@@ -85,7 +85,7 @@ class SSLScrobblerAdaptor implements NowPlayingObserver, ScrobbleObserver
                 $track->getStartTime()
             );
             
-            L::level(L::DEBUG) &&
+            L::level(L::DEBUG, __CLASS__) &&
                 L::log(L::DEBUG, __CLASS__, 'Sending %d scrobble(s) to Last.fm',
                     array( $this->scrobbler->getQueueSize() ));
                     
@@ -95,7 +95,7 @@ class SSLScrobblerAdaptor implements NowPlayingObserver, ScrobbleObserver
         }
         catch(Exception $e)
         {
-            L::level(L::WARNING) &&
+            L::level(L::WARNING, __CLASS__) &&
                 L::log(L::WARNING, __CLASS__, 'Could not send %d scrobble(s) to Last.fm: %s',
                     array( $this->scrobbler->getQueueSize(), $e->getMessage() ));
         }

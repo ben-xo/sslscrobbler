@@ -81,7 +81,7 @@ class XoupParser
             throw new RuntimeException("Parse error: no 'main' sub found.");
         }
 
-        L::level(L::DEBUG) && 
+        L::level(L::DEBUG, __CLASS__) && 
             L::log(L::DEBUG, __CLASS__, 'parsed %d subs and %d literals', 
                 array(count($subs), count($this->data)));
         
@@ -104,5 +104,3 @@ class XoupParser
         $this->data = $data;
     }
 }
-
-

@@ -71,7 +71,7 @@ class DiffMonitor extends SSLFileReader implements TickObserver
             if($got_new_file)
             {
                 $this->filename = $new_filename;
-                L::level(L::INFO) && 
+                L::level(L::INFO, __CLASS__) && 
                     L::log(L::INFO, __CLASS__, "Changed to new file %s", 
                         array($this->filename));
             }
@@ -100,7 +100,7 @@ class DiffMonitor extends SSLFileReader implements TickObserver
             // don't spam
             if($new_filename != $this->last_ignored_filename)
             {
-                L::level(L::INFO) &&
+                L::level(L::INFO, __CLASS__) &&
                     L::log(L::INFO, __CLASS__, "Ignoring update to older session file %s",
                         array($new_filename));
 

@@ -86,7 +86,7 @@ class CLIIrcCatPlugin implements CLIPlugin
 
     public function addPluginsTo(SSLPluggable $sslpluggable)
     {
-        L::level(L::DEBUG) && 
+        L::level(L::DEBUG, __CLASS__) && 
             L::log(L::DEBUG, __CLASS__, "yielding %d plugins", 
                 array(count($this->plugins)));
         

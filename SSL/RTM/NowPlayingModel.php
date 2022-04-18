@@ -126,11 +126,11 @@ class NowPlayingModel implements TickObserver, TrackChangeObserver, NowPlayingOb
         // reindex the queue
         $this->now_playing_queue = array_merge($this->now_playing_queue);
         
-        L::level(L::INFO) && 
+        L::level(L::INFO, __CLASS__) && 
             L::log(L::INFO,  __CLASS__, 'dequeued track %s', 
                 array($stopped_track->getFullTitle()) );
                 
-        L::level(L::DEBUG) && 
+        L::level(L::DEBUG, __CLASS__) && 
             L::log(L::DEBUG, __CLASS__, 'queue length is now %d', 
                 array(count($this->now_playing_queue)) );
     }
@@ -159,11 +159,11 @@ class NowPlayingModel implements TickObserver, TrackChangeObserver, NowPlayingOb
         }
         $this->now_playing_queue[] = $scrobble_model;
         
-        L::level(L::INFO) && 
+        L::level(L::INFO, __CLASS__) && 
             L::log(L::INFO,  __CLASS__, 'enqueued track %s', 
                 array($started_track->getFullTitle()) );
                 
-        L::level(L::DEBUG) && 
+        L::level(L::DEBUG, __CLASS__) && 
             L::log(L::DEBUG, __CLASS__, 'queue length is now %d', 
                 array( count($this->now_playing_queue)) );
     }
@@ -176,11 +176,11 @@ class NowPlayingModel implements TickObserver, TrackChangeObserver, NowPlayingOb
             $scrobble_model->update($updated_track);
         }
         
-        L::level(L::INFO) && 
+        L::level(L::INFO, __CLASS__) && 
             L::log(L::INFO,  __CLASS__, 'updated track %s', 
                 array($updated_track->getFullTitle()) );
                 
-        L::level(L::DEBUG) && 
+        L::level(L::DEBUG, __CLASS__) && 
             L::log(L::DEBUG, __CLASS__, 'queue length is now %d', 
                 array( count($this->now_playing_queue)) );
     }

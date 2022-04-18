@@ -48,7 +48,7 @@ class NowPlayingLoggerPlugin implements SSLPlugin, NowPlayingObserver
 
         if(!isset($this->config['filename']))
         {
-            L::level(L::WARNING) &&
+            L::level(L::WARNING, __CLASS__) &&
                 L::log(L::WARNING, __CLASS__, '%s',
                     array( 'I am configured with no filename. Defaulting to nowplaying.txt in your current dir' ));
 
@@ -59,11 +59,11 @@ class NowPlayingLoggerPlugin implements SSLPlugin, NowPlayingObserver
         {
             // warn people who used the old default config that they might want to make up their mind.
 
-            L::level(L::WARNING) &&
+            L::level(L::WARNING, __CLASS__) &&
                 L::log(L::WARNING, __CLASS__, '%s',
                     array( 'I am configured without a "transform" setting. Add "transform" => "tostring" or "transform" => "serialize" to silence this gripe.' ));
 
-            L::level(L::WARNING) &&
+            L::level(L::WARNING, __CLASS__) &&
                 L::log(L::WARNING, __CLASS__, '%s',
                     array( '("serialize" was the default before, but most people probably want "tostring", as that\'s the human readable one. Compare your config with config.php-default)' ));
         }

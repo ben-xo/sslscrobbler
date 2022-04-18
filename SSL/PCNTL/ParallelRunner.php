@@ -30,7 +30,7 @@ class ParallelRunner
     {
         if(function_exists('pcntl_fork') && !defined('SINGLE_THREADED'))
         { 
-            L::level(L::DEBUG) && 
+            L::level(L::DEBUG, __CLASS__) && 
                 L::log(L::DEBUG, __CLASS__, "Forking %s...", 
                     array($task));
                     
@@ -40,7 +40,7 @@ class ParallelRunner
                 // parent
                 if($pid == -1)
                 {            
-                    L::level(L::WARNING) && 
+                    L::level(L::WARNING, __CLASS__) && 
                         L::log(L::WARNING, __CLASS__, "Fork failed! Running %s single-threaded...", 
                             array($task));
                 
@@ -60,7 +60,7 @@ class ParallelRunner
         }
         else
         {
-            L::level(L::DEBUG) && 
+            L::level(L::DEBUG, __CLASS__) && 
                 L::log(L::DEBUG, __CLASS__, "PCNTL not supported. Running %s single-threaded. If %s is slow, it will block the app until it is finished.", 
                     array($task, $task));
                     

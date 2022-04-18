@@ -47,7 +47,12 @@ class HistoryAnalyzer extends HistoryReader
                 
         try
         {
+            // do this now so that we can still use defailt logging during parsing options
+            $this->setupLogging();
+
             $this->parseOptions($argv);
+
+            // do it again, as parsing options may have altered the logging setup
             $this->setupLogging();
                         
             // guess history file (always go for the most recently modified)

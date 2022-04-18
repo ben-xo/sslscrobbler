@@ -86,21 +86,21 @@ class ScrobblerTrackModel
         
         if($this->passed_now_playing_point && !$was_passed_now_playing_point)
         {
-            L::level(L::INFO) &&
+            L::level(L::INFO, __CLASS__) &&
                 L::log(L::INFO, __CLASS__, '%s passed now playing point', 
                     array($this->track->getFullTitle()));
         }
 
         if($this->passed_scrobble_point && !$was_passed_scrobble_point)
         {
-            L::level(L::INFO) &&
+            L::level(L::INFO, __CLASS__) &&
                 L::log(L::INFO, __CLASS__, '%s passed scrobble point', 
                     array($this->track->getFullTitle()));
         }
 
         if($this->passed_end && !$was_ended)
         {
-            L::level(L::INFO) &&
+            L::level(L::INFO, __CLASS__) &&
                 L::log(L::INFO, __CLASS__, '%s passed end point', 
                     array($this->track->getFullTitle()));
         }

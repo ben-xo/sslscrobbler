@@ -76,7 +76,7 @@ class BeatportTrackMessageFilter implements ITrackMessageFilter
             $bp_track_string = implode(', ', $bp_artist_names) . ' - ' . $bp_track_title;
             $ssl_track_string = $track->getFullTitle();
             
-            L::level(L::INFO) && 
+            L::level(L::INFO, __CLASS__) && 
                 L::log(L::INFO, __CLASS__, "Found %s at %s", 
                     array($bp_track_string, $bp_url));
 
@@ -86,14 +86,14 @@ class BeatportTrackMessageFilter implements ITrackMessageFilter
             }
             else
             {
-                L::level(L::INFO) && 
+                L::level(L::INFO, __CLASS__) && 
                     L::log(L::INFO, __CLASS__, "Rejected %s as a match for %s", 
                         array($bp_track_string, $ssl_track_string));
             }
         }
         else
         {
-            L::level(L::INFO) && 
+            L::level(L::INFO, __CLASS__) && 
                 L::log(L::INFO, __CLASS__, "No track found.", 
                     array());
         }

@@ -30,7 +30,7 @@ class VgdURLShortener implements IURLShortener
 {
     public function shorten($url)
     {
-        L::level(L::INFO) && 
+        L::level(L::INFO, __CLASS__) && 
             L::log(L::INFO, __CLASS__, "Shortening %s", 
                 array($url));
         
@@ -38,14 +38,14 @@ class VgdURLShortener implements IURLShortener
         
         if($result['shortURL'])
         {
-            L::level(L::INFO) && 
+            L::level(L::INFO, __CLASS__) && 
                 L::log(L::INFO, __CLASS__, "Shortened to %s", 
                     array($result['shortURL']));
                     
             return $result['shortURL'];
         }
         
-        L::level(L::WARNING) && 
+        L::level(L::WARNING, __CLASS__) && 
             L::log(L::WARNING, __CLASS__, "Shorten failed: %s", 
                 array($result['errorMessage']));
         

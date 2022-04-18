@@ -102,11 +102,11 @@ class CLIJsonServerPlugin implements CLIPlugin
 
             $this->config['template_fields'] = $matches[1];
 
-            L::level(L::INFO) &&
+            L::level(L::INFO, __CLASS__) &&
                 L::log(L::INFO, __CLASS__, "loaded HTML template from %s with %d templated fields",
                     array($template_filename, $match_count));
 
-            L::level(L::DEBUG) &&
+            L::level(L::DEBUG, __CLASS__) &&
                 L::log(L::DEBUG, __CLASS__, "Fields in this template: %s",
                     array(implode(', ', $matches[1])));
 
@@ -126,7 +126,7 @@ class CLIJsonServerPlugin implements CLIPlugin
 
     public function addPluginsTo(SSLPluggable $sslpluggable)
     {
-        L::level(L::DEBUG) && 
+        L::level(L::DEBUG, __CLASS__) && 
             L::log(L::DEBUG, __CLASS__, "yielding %d plugins", 
                 array(count($this->plugins)));
 

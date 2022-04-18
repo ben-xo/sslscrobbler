@@ -53,7 +53,7 @@ class SSLChunkReader
         }
         while($chunk !== false);
         
-        L::level(L::DEBUG) &&
+        L::level(L::DEBUG, __CLASS__) &&
             L::log(L::DEBUG, __CLASS__, "Read %d chunks", 
                 array( count($chunks)));
                 

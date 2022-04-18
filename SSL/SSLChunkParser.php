@@ -95,7 +95,7 @@ class SSLChunkParser
 
             if(strlen($next_four) < 4)
             {
-                L::level(L::DEBUG) &&
+                L::level(L::DEBUG, __CLASS__) &&
                     L::log(L::DEBUG, __CLASS__, "Reached EOF whilst resyncing; no more to read after %d bytes junk",
                         array($junk_size));
 
@@ -109,7 +109,7 @@ class SSLChunkParser
                 // rewind by the length of 'oent'
                 fseek($fp, -4, SEEK_CUR);
 
-                L::level(L::DEBUG) &&
+                L::level(L::DEBUG, __CLASS__) &&
                     L::log(L::DEBUG, __CLASS__, "Skipped %d bytes junk",
                         array($junk_size));
 
@@ -120,7 +120,7 @@ class SSLChunkParser
         }
         while(!feof($fp));
 
-        L::level(L::DEBUG) &&
+        L::level(L::DEBUG, __CLASS__) &&
             L::log(L::DEBUG, __CLASS__, "Reached EOF condition whilst resyncing; no more to read after %d bytes junk",
                 array($junk_size));
 
@@ -143,7 +143,7 @@ class SSLChunkParser
 
             if($length_read == 0)
             {
-                L::level(L::DEBUG) &&
+                L::level(L::DEBUG, __CLASS__) &&
                     L::log(L::DEBUG, __CLASS__, "Reached EOF; no more to read",
                         array());
 
@@ -153,7 +153,7 @@ class SSLChunkParser
             $just_blank_bytes = (str_pad($header_bin, 8, "\0") == "\0\0\0\0\0\0\0\0");
             if($just_blank_bytes)
             {
-                L::level(L::WARNING) &&
+                L::level(L::WARNING, __CLASS__) &&
                     L::log(L::WARNING, __CLASS__, "Hit unallocated blank space in file.",
                         array());
 
@@ -188,7 +188,7 @@ class SSLChunkParser
             $body_bin = fread($fp, $chunk_size);
             $chunk = $this->chunk_factory->newChunk($chunk_type, $body_bin);
 
-            L::level(L::DEBUG) &&
+            L::level(L::DEBUG, __CLASS__) &&
                 L::log(L::DEBUG, __CLASS__, "Read %s chunk from file (size: %d)",
                     array($chunk_type, $chunk_size));
         }
@@ -196,7 +196,7 @@ class SSLChunkParser
         {
             $chunk = '';
 
-            L::level(L::WARNING) &&
+            L::level(L::WARNING, __CLASS__) &&
                 L::log(L::WARNING, __CLASS__, "Read 0-byte %s chunk from file. This is unusual.",
                     array($chunk_type));
         }

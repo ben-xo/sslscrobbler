@@ -181,7 +181,7 @@ class SSLTrack extends SSLStruct
 
         if(isset($fullpath) && strlen($fullpath) == 0)
         {
-            L::level(L::WARNING) &&
+            L::level(L::WARNING, __CLASS__) &&
                 L::log(L::WARNING, __CLASS__, 'Guessing MP3 length from file failed: full path was empty. Perhaps this entry was manually added?',
                     array( ));
 
@@ -190,7 +190,7 @@ class SSLTrack extends SSLStruct
 
         if(!$this->file_exists($fullpath))
         {
-            L::level(L::WARNING) &&
+            L::level(L::WARNING, __CLASS__) &&
                 L::log(L::WARNING, __CLASS__, 'Guessing MP3 length from file failed: file not found (%s)',
                     array( $fullpath ));
 
@@ -213,7 +213,7 @@ class SSLTrack extends SSLStruct
             $playtime = $info['playtime_seconds'];
             if($playtime)
             {
-                L::level(L::WARNING) &&
+                L::level(L::WARNING, __CLASS__) &&
                     L::log(L::WARNING, __CLASS__, 'Guessed MP3 length %d seconds from file.',
                         array( $playtime ));
 
@@ -222,7 +222,7 @@ class SSLTrack extends SSLStruct
                 return sprintf("%d:%02d", $minutes, $seconds);
             }
 
-            L::level(L::WARNING) &&
+            L::level(L::WARNING, __CLASS__) &&
                 L::log(L::WARNING, __CLASS__, 'Guessing MP3 length from file failed for an unknown reason. Hmmph.',
                     array( ));
             
@@ -230,7 +230,7 @@ class SSLTrack extends SSLStruct
         catch(getid3_exception $e)
         {
             // MP3 couldn't be analyzed.
-            L::level(L::WARNING) &&
+            L::level(L::WARNING, __CLASS__) &&
                 L::log(L::WARNING, __CLASS__, 'Guessing MP3 length from file failed: %s',
                     array( $e->getMessage() ));
         }

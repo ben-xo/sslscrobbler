@@ -63,7 +63,7 @@ class SSLLibraryDom extends SSLDom
             
             $chunk_count++;
             
-            L::level(L::DEBUG) && !($chunk_count % 1000) &&
+            L::level(L::DEBUG, __CLASS__) && !($chunk_count % 1000) &&
                 L::log(L::DEBUG, __CLASS__, "Parsed %d chunks...", 
                     array( $chunk_count ));        
         }

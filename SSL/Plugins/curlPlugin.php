@@ -65,12 +65,12 @@ class curlPlugin implements SSLPlugin, NowPlayingObserver
   {
       if($track)
       {
-        L::level(L::INFO) && L::log(L::INFO, __CLASS__, 'Sending %s to an API via cURL.', array($track->getFullTitle()));
+        L::level(L::INFO, __CLASS__) && L::log(L::INFO, __CLASS__, 'Sending %s to an API via cURL.', array($track->getFullTitle()));
         $this->sendRequest($track);
       }
       else
       {
-        L::level(L::INFO) && L::log(L::INFO, __CLASS__, 'No track data available. Not Sending via cURL.');
+        L::level(L::INFO, __CLASS__) && L::log(L::INFO, __CLASS__, 'No track data available. Not Sending via cURL.');
       }
   }
 

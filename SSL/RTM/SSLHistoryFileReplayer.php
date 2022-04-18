@@ -98,13 +98,13 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObs
     
     protected function notifyTickObservers($seconds)
     {
-        L::level(L::DEBUG) &&
+        L::level(L::DEBUG, __CLASS__) &&
             L::log(L::DEBUG, __CLASS__, 'Pseudo tick %d seconds', 
                 array($seconds));
                 
         foreach($this->tick_observers as $observer)
         {
-            L::level(L::DEBUG) &&
+            L::level(L::DEBUG, __CLASS__) &&
                 L::log(L::DEBUG, __CLASS__, 'Sending tick to %s',
                  array(get_class($observer)));
             
@@ -130,7 +130,7 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObs
         foreach($this->payloads as $payload)
         {
             $payload_timestamp = $payload->getFirstTimestamp();
-            L::level(L::DEBUG) &&
+            L::level(L::DEBUG, __CLASS__) &&
                 L::log(L::DEBUG, __CLASS__, 'Yielding payload for timestamp %s (%s)', 
                     array( 
                         $payload_timestamp, 
@@ -189,7 +189,7 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObs
         $last_updated_at = 0;
         $group = array();
         
-        L::level(L::DEBUG) &&
+        L::level(L::DEBUG, __CLASS__) &&
             L::log(L::DEBUG, __CLASS__, 'Found %d tracks in file', 
                 array(count($tracks)));
         
@@ -204,7 +204,7 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObs
             {
                 if(!empty($group)) 
                 {
-                    L::level(L::DEBUG) &&
+                    L::level(L::DEBUG, __CLASS__) &&
                         L::log(L::DEBUG, __CLASS__, 'Entries found at %s', 
                             array(date('Y-m-d H:i:s', $last_updated_at)));
                         
@@ -219,14 +219,14 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObs
                 
         if(!empty($group)) 
         {
-            L::level(L::DEBUG) &&
+            L::level(L::DEBUG, __CLASS__) &&
                 L::log(L::DEBUG, __CLASS__, 'Entries found at %s', 
                     array(date('Y-m-d H:i:s', $last_updated_at)));
 
             $this->payloads[$last_updated_at] = new SSLHistoryDiffDom($group);
         }
         
-        L::level(L::DEBUG) &&
+        L::level(L::DEBUG, __CLASS__) &&
             L::log(L::DEBUG, __CLASS__, 'Divided tracks in %d groups', 
                 array(count($this->payloads)));        
     }
@@ -250,7 +250,7 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObs
             // which is a big clue that the history was bulk-rewritten (as
             // it often is when you quit Serato).
             if($updated_at < $last_updated_at) {
-                L::level(L::DEBUG) &&
+                L::level(L::DEBUG, __CLASS__) &&
                     L::log(L::DEBUG, __CLASS__, 'UpdatedAt not meaningful: row %d updated before row %d',
                         array($row, $last_row));
                 return false;
@@ -265,7 +265,7 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObs
         }
         
         if($group_count < count($tracks)/2) {
-            L::level(L::DEBUG) &&
+            L::level(L::DEBUG, __CLASS__) &&
             L::log(L::DEBUG, __CLASS__, 'UpdatedAt not meaningful: %d tracks but only %d groups',
                 array(count($tracks), $group_count));
             return false;

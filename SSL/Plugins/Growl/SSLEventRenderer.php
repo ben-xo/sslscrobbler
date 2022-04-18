@@ -45,7 +45,7 @@ class SSLEventRenderer implements TrackChangeObserver, NowPlayingObserver, Scrob
             // Commented out as this is actually quite noisy
             // $this->popup_notifier->notify('alert', 'Track Change', $event);
             
-            L::level(L::INFO) &&
+            L::level(L::INFO, __CLASS__) &&
                 L::log(L::INFO, __CLASS__, '>> Track change: >> %s', 
                     array($event));
         }
@@ -57,7 +57,7 @@ class SSLEventRenderer implements TrackChangeObserver, NowPlayingObserver, Scrob
         {
             $this->popup_notifier->notify('alert', 'Now Playing', $track->getFullTitle());
 
-            L::level(L::INFO) &&
+            L::level(L::INFO, __CLASS__) &&
                 L::log(L::INFO, __CLASS__, '>> Now Playing: >> %s', 
                     array($track->getFullTitle()));
         }
@@ -65,7 +65,7 @@ class SSLEventRenderer implements TrackChangeObserver, NowPlayingObserver, Scrob
         {
             $this->popup_notifier->notify('alert', 'Now Playing', '<Playback Stopped>');
 
-            L::level(L::INFO) &&
+            L::level(L::INFO, __CLASS__) &&
                 L::log(L::INFO, __CLASS__, '>> Now Playing: >> <Playback Stopped>', 
                     array());
         }
@@ -75,7 +75,7 @@ class SSLEventRenderer implements TrackChangeObserver, NowPlayingObserver, Scrob
     {
         $this->popup_notifier->notify('alert', 'Scrobbling', $track->getFullTitle());
         
-        L::level(L::INFO) &&
+        L::level(L::INFO, __CLASS__) &&
             L::log(L::INFO, __CLASS__, '>> Scrobbling: >> %s', 
                 array($track->getFullTitle()));        
     }

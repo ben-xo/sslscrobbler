@@ -228,7 +228,7 @@ class SSLRealtimeModelDeck
             {
                 // track notification for this deck!
                 $my_tracks[$track->getRow()] = $track;
-                L::level(L::DEBUG) && 
+                L::level(L::DEBUG, __CLASS__) && 
                     L::log(L::DEBUG, __CLASS__, "Saw %s in diff (row %s @ %s)", 
                         array( $track->getTitle(), $track->getRow(), $track->getFullStartTime()));
             }
@@ -245,7 +245,7 @@ class SSLRealtimeModelDeck
             } 
             catch(SSLInvalidTransitionException $e)
             {
-                L::level(L::WARNING) && 
+                L::level(L::WARNING, __CLASS__) && 
                     L::log(L::WARNING, __CLASS__, "Invalid Transition: %s", 
                         array($e->getMessage()) );
             }
@@ -300,7 +300,7 @@ class SSLRealtimeModelDeck
         $from = $this->getStatus();
         $to = $track->getStatus();
         
-        L::level(L::DEBUG) && 
+        L::level(L::DEBUG, __CLASS__) && 
             L::log(L::DEBUG, __CLASS__, "deck %d transitioned from %s to %s with track %s", 
                 array( $this->deck_number, $from, $to, $track->getTitle()) );
         

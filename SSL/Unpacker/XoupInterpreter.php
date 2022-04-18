@@ -372,7 +372,7 @@ class XoupInterpreter extends Unpacker
     
     protected function flushBuffer()
     {
-        L::level(L::INFO) &&
+        L::level(L::INFO, __CLASS__) &&
             L::log(L::INFO, __CLASS__, $this->out_buffer,
                 array());
                 

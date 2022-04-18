@@ -55,7 +55,7 @@ class XoupCompiler
     
     public function compile($filename)
     {
-        L::level(L::INFO) && 
+        L::level(L::INFO, __CLASS__) && 
             L::log(L::INFO, __CLASS__, 'compiling %s', 
                 array($filename));
         
@@ -88,7 +88,7 @@ class XoupCompiler
         $output .= "    }\n\n";
         $output .= "    public function flushBuffer()\n";
         $output .= "    {\n";
-        $output .= "        L::level(L::INFO) &&\n";
+        $output .= "        L::level(L::INFO, __CLASS__) &&\n";
         $output .= "            L::log(L::INFO, __CLASS__, \$this->out_buffer,\n";
         $output .= "                array());\n\n";
         $output .= "        \$this->out_buffer = '';\n";

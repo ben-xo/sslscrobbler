@@ -59,11 +59,11 @@ class JsonServerPlugin implements SSLPlugin, NowPlayingObserver, TickObserver, P
         
         socket_set_nonblock($this->socket);
         
-        L::level(L::DEBUG) && 
+        L::level(L::DEBUG, __CLASS__) && 
             L::log(L::DEBUG, __CLASS__, "Installed JSON / HTML listener...", 
                 array());
 
-        if(L::level(L::INFO))
+        if(L::level(L::INFO, __CLASS__))
         {
             L::log(L::INFO, __CLASS__, "now playing info will be available at:", 
                 array());
@@ -251,7 +251,7 @@ class JsonServerPlugin implements SSLPlugin, NowPlayingObserver, TickObserver, P
         $bytes = socket_recv($conn, $request, 16384, 0);
         if($bytes === false)
         {
-            L::level(L::DEBUG) && 
+            L::level(L::DEBUG, __CLASS__) && 
                 L::log(L::DEBUG, __CLASS__, "Problem reading from socket: %s", 
                     array(socket_last_error($conn)));
                        
@@ -294,7 +294,7 @@ class JsonServerPlugin implements SSLPlugin, NowPlayingObserver, TickObserver, P
 
         socket_write($conn, implode("\n", $lines));
         socket_close($conn);
-        L::level(L::DEBUG) && 
+        L::level(L::DEBUG, __CLASS__) && 
             L::log(L::DEBUG, __CLASS__, "Finished handling %s request.", 
                 array($route_name));
     }
