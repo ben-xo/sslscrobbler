@@ -50,6 +50,7 @@ $log_levels = array(
 //    'SSLHistoryFileMonitor' => L::DEBUG,
 //    'SSLRealtimeModel' => L::DEBUG,
 //    'NowPlayingModel' => L::DEBUG,
+    'RuntimeCachingSSLTrack' => L::DEBUG,
 );
 
 $h = new HistoryAnalyzer();
