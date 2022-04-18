@@ -140,7 +140,6 @@ class HistoryAnalyzer extends HistoryReader
         foreach($fps as $fp)
         {
             $fn = basename($fp);
-            echo "** Parsing {$fn}...\n";
             try {
                 $parser = new SSLParser($dom);
                 $parsed_dom = $parser->parse($fp);
@@ -151,12 +150,11 @@ class HistoryAnalyzer extends HistoryReader
             }
             $parser->close();
 
-            echo "++ Saw " . count($parsed_dom) . " chunks\n";
             $tracks = $parsed_dom->getDedupedTracks();
             $count = count($tracks);
-            echo "++ Extracted $count tracks\n";
 
-            echo "** Importing to db\n";
+            echo "++ session $fn: " . count($parsed_dom) . " chunks yielded $count tracks to add to the DB\n";
+
             foreach($tracks as $track)
             {
                 /* @var $track SSLTrack */
