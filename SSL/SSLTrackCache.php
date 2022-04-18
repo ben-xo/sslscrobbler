@@ -40,7 +40,22 @@ class SSLTrackCache extends SSLTrackFactory
     
     public function register(SSLTrack $track)
     {
-        $this->tracks[$track->getRow()] = $track;    
+        $this->tracks[$track->getRow()] = $track;
+        $length = $track->getLength();
+        if($length)
+        {
+            // know the length? cache it by path too
+            $this->setLengthByFullpath($track->getFullpath(), $length);
+        }
+        else
+        {
+            // don't know the length? check if it's cached by path
+            $length = $this->getLengthByFullpath($track->getFullpath());
+            if($length)
+            {
+                $track->setLength($length);
+            }
+        }
     }
     
     public function getByRow($row)
