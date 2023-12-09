@@ -56,20 +56,20 @@ abstract class SSLFileReader
     
     public function dump()
     {
-        L::level(L::INFO) && 
+        L::level(L::INFO, __CLASS__) && 
             L::log(L::INFO, __CLASS__, 'reading structure of %s...', 
                 array($this->filename));
                 
         $tree = $this->read($this->filename);
                 
-        L::level(L::INFO) && 
+        L::level(L::INFO, __CLASS__) && 
             L::log(L::INFO, __CLASS__, 'asking structure DOM to parse %s...', 
                 array($this->filename));
         
         // Without this line you'll just get hexdumps, which is not very exciting.
         $tree->getData();
          
-        L::level(L::INFO) && 
+        L::level(L::INFO, __CLASS__) && 
             L::log(L::INFO, __CLASS__, 'printing structure of %s...', 
                 array($this->filename));
         

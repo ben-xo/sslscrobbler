@@ -260,11 +260,11 @@ class PluginWrapper implements TickObservable, TickObserver,
                 }
             }
             
-            L::level(L::INFO) && 
+            L::level(L::INFO, __CLASS__) && 
                 L::log(L::INFO, __CLASS__, "%d: %s installed", 
                     array($id, get_class($plugin)));
                     
-            L::level(L::DEBUG) && 
+            L::level(L::DEBUG, __CLASS__) && 
                 L::log(L::DEBUG, __CLASS__, "%s brought %d observers to the table", 
                     array(get_class($plugin), $oc));
         }         

@@ -81,7 +81,7 @@ class PluginManager implements SSLPluggable, SSLPlugin, TickObserver, SSLOptiona
 
         $this->plugin_wrapper->addPlugin($this->max_plugin_id, $plugin);
 
-        L::level(L::DEBUG) && 
+        L::level(L::DEBUG, __CLASS__) && 
             L::log(L::DEBUG, __CLASS__, "added %s plugin with id %d", 
                 array(get_class($plugin), $this->max_plugin_id));
 

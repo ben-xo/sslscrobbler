@@ -66,7 +66,7 @@ class XoupLoader
             throw new RuntimeException("Could not load {$filename}");
         }
 
-        L::level(L::DEBUG) && 
+        L::level(L::DEBUG, __CLASS__) && 
             L::log(L::DEBUG, __CLASS__, 'selecting XOUP interpreter for %s', 
                 array($filename));
         
@@ -93,7 +93,7 @@ class XoupLoader
 
                 if($compiled_ts < $source_ts)
                 {
-                    L::level(L::DEBUG) &&
+                    L::level(L::DEBUG, __CLASS__) &&
                         L::log(L::DEBUG, __CLASS__, 'source modified since last compilation',
                             array());
 
@@ -102,7 +102,7 @@ class XoupLoader
 
                 if($compiled_ts < $compiler_ts)
                 {
-                    L::level(L::DEBUG) &&
+                    L::level(L::DEBUG, __CLASS__) &&
                         L::log(L::DEBUG, __CLASS__, 'compiler modified since last compilation',
                             array());
 
@@ -116,7 +116,7 @@ class XoupLoader
                     throw new RuntimeException("{$class} not present in {$compiled_name}");
                 }
 
-                L::level(L::DEBUG) && 
+                L::level(L::DEBUG, __CLASS__) && 
                     L::log(L::DEBUG, __CLASS__, 'loaded compiled XOUP class %s from file %s', 
                         array($class, $compiled_name));                
             }
@@ -124,7 +124,7 @@ class XoupLoader
             {
                 // no compiled file exists
 
-                L::level(L::DEBUG) && 
+                L::level(L::DEBUG, __CLASS__) && 
                     L::log(L::DEBUG, __CLASS__, 'compiled XOUP file %s does not (yet) exist', 
                         array($compiled_name));                
                 

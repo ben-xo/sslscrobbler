@@ -75,7 +75,7 @@ class MixcloudSuggestor implements SSLPlugin, TrackChangeObserver
                         'track' => $this->getNextTrackFor($mixcloud_track_key, $cloudcast['key'])
                     );
                 } catch (Exception $e) {
-                    L::level(L::WARNING) &&
+                    L::level(L::WARNING, __CLASS__) &&
                         L::log(L::WARNING, __CLASS__, '%s',
                             array( $e->getMessage() ));
                     // continue
@@ -97,7 +97,7 @@ class MixcloudSuggestor implements SSLPlugin, TrackChangeObserver
             }
             
         } catch(Exception $e) {
-            L::level(L::WARNING) &&
+            L::level(L::WARNING, __CLASS__) &&
                 L::log(L::WARNING, __CLASS__, 'No suggestions: %s',
                     array( $e->getMessage() ));
             
@@ -137,7 +137,7 @@ class MixcloudSuggestor implements SSLPlugin, TrackChangeObserver
             ksort($potential_tracks);
             $best_track = array_shift($potential_tracks);
 
-            L::level(L::INFO) &&
+            L::level(L::INFO, __CLASS__) &&
                 L::log(L::INFO, __CLASS__, 'Best track match: %s',
                     array( $best_track ));
                     
@@ -166,7 +166,7 @@ class MixcloudSuggestor implements SSLPlugin, TrackChangeObserver
             $cloudcasts[] = $result;
         }
         
-        L::level(L::INFO) &&
+        L::level(L::INFO, __CLASS__) &&
             L::log(L::INFO, __CLASS__, 'Found %d mixes for track %s',
                 array( count($cloudcasts), $key ));
                 

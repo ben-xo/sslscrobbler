@@ -27,7 +27,7 @@
 
 error_reporting(E_ALL | E_STRICT);
 
-chdir(dirname(__FILE__));
+chdir(__DIR__);
 
 require_once 'External/getID3/getid3.php';
 require_once 'SSL/Autoloader.php';
@@ -74,3 +74,6 @@ unset($plugin);
 
 // GO!
 $h->main($argc, $argv);
+
+// N.B. if you make changes to this file be sure to reflect them in other "main" files such as
+// * Plugins/Analyzer/analyzehistory.php

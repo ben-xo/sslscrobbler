@@ -68,7 +68,7 @@ class IrcCatPlugin implements SSLPlugin, NowPlayingObserver
 	    $sock = fsockopen($this->host, $this->port, $errno, $errstr, $timeout=1);
 	    if($sock===false)
 	    {
-	        L::level(L::ERROR) &&
+	        L::level(L::ERROR, __CLASS__) &&
 	            L::log(L::ERROR, __CLASS__, "couldn't connect to IRCCat: (%d) %s",
 	                array($errno, $errstr));
 	        
@@ -77,7 +77,7 @@ class IrcCatPlugin implements SSLPlugin, NowPlayingObserver
 	    
 	    $message = sprintf($this->config['message'], $track->getFullTitle());
 	    
-	    L::level(L::INFO) &&
+	    L::level(L::INFO, __CLASS__) &&
 	        L::log(L::INFO, __CLASS__, "sending '%s' -> %s:%d#%s",
 	            array($message, $this->host, $this->port, $this->channel));
 	     

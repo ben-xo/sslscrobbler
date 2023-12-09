@@ -106,7 +106,7 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
 
         try
         {
-            L::level(L::DEBUG) &&
+            L::level(L::DEBUG, __CLASS__) &&
                 L::log(L::DEBUG, __CLASS__, 'Sending Now Playing to Twitter: %s',
                     array( $status ));
 
@@ -117,7 +117,7 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
         }
         catch(Exception $e)
         {
-            L::level(L::WARNING) &&
+            L::level(L::WARNING, __CLASS__) &&
                 L::log(L::WARNING, __CLASS__, 'Could not send Now Playing to Twitter: %s',
                     array( $e->getMessage() ));
         }
@@ -149,7 +149,7 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
     protected function getReplyId() {
         $reply_file = 'twitter-' . $this->sessionname . '-last-reply.txt';
         if (! file_exists($reply_file)) {
-            L::level(L::INFO) &&
+            L::level(L::INFO, __CLASS__) &&
                 L::log(L::INFO, __CLASS__, 'No reply file - starting new Twitter thread.',
                     array( ));
             return false;
@@ -159,7 +159,7 @@ class SSLTwitterAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
 
         if($reply_file_age > 3600 /* 1 hour */) {
             unlink($reply_file);
-            L::level(L::INFO) &&
+            L::level(L::INFO, __CLASS__) &&
                  L::log(L::INFO, __CLASS__, 'Reply file too old - starting new Twitter thread.',
                     array( ));
             return false;

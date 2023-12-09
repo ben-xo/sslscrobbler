@@ -68,7 +68,7 @@ class ScrobbleModel implements ScrobbleObservable, TrackChangeObserver
         $stm = $this->factory->newScrobblerTrackModel($track);
         if($stm->isScrobblable())
         {
-            L::level(L::INFO) &&
+            L::level(L::INFO, __CLASS__) &&
                 L::log(L::INFO, __CLASS__, 'I reckon it\'s time to submit a scrobble for %s!', 
                     array($track->getFullTitle()));
                     

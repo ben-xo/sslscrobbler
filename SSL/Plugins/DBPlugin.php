@@ -105,7 +105,7 @@ class DBPlugin implements SSLPlugin, NowPlayingObserver
             $placeholders = $this->getPlaceholdersForNoTrack($this->placeholder_map);
         }
         
-        L::level(L::INFO) &&
+        L::level(L::INFO, __CLASS__) &&
             L::log(L::INFO, __CLASS__, 'Sending %s to DB',
                 array($track ? $track->getFullTitle() : $this->config['empty_string']));
         
@@ -188,7 +188,7 @@ class DBPlugin implements SSLPlugin, NowPlayingObserver
     {
         if($retry_count > self::RETRY_LIMIT)
         {
-            L::level(L::ERROR) &&
+            L::level(L::ERROR, __CLASS__) &&
                 L::log(L::ERROR, __CLASS__, 'Failed to execute database statement; tried %d times',
                     array(self::RETRY_LIMIT + 1));
             
@@ -197,7 +197,7 @@ class DBPlugin implements SSLPlugin, NowPlayingObserver
         
         if($retry_count > 0)
         {
-            L::level(L::INFO) &&
+            L::level(L::INFO, __CLASS__) &&
                 L::log(L::INFO, __CLASS__, 'Retrying database statement. Attempt number %d',
                     array($retry_count + 1));
         }
@@ -211,7 +211,7 @@ class DBPlugin implements SSLPlugin, NowPlayingObserver
         {
             $this->close();
             
-            L::level(L::WARNING) &&
+            L::level(L::WARNING, __CLASS__) &&
                 L::log(L::WARNING, __CLASS__, 'Statement failed: %s',
                     array($e->getMessage()));
             

@@ -9,13 +9,12 @@ discord-*
 
 # output files
 **nowplaying.txt
+analyze.db
 
 # Usually copy this file from config.php-default
 config.php
 
 # Demo files
-SSL/Plugins/NowPlaying/SevenDigital.key
-template.html
 Demo
 
 # XOUP compiled files

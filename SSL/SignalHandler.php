@@ -36,7 +36,7 @@ class SignalHandler
         }
         else
         {
-            L::level(L::WARNING) &&
+            L::level(L::WARNING, __CLASS__) &&
                 L::log(L::WARNING, __CLASS__, 'PCNTL extension not installed! Cannot trap Ctrl-C / SIGKILL',
                     array());           
         }
@@ -76,7 +76,7 @@ class SignalHandler
         switch ($signal)
         {          
             case SIGINT:
-                L::level(L::INFO) &&
+                L::level(L::INFO, __CLASS__) &&
                     L::log(L::INFO, __CLASS__, 'Caught SIGINT',
                         array());
                         

@@ -72,12 +72,7 @@ class L
         self::$overrides = $overrides;
     }
     
-    public static function level($log_at_level)
-    {
-        return $log_at_level <= self::$threshold;
-    }
-    
-    public static function log($log_at_level, $source, $message, array $args=array())
+    public static function level($log_at_level, $source)
     {
         if(isset(self::$overrides[$source]))
         {
@@ -87,8 +82,13 @@ class L
         {
             $threshold = self::$threshold;
         }
-        
-        if($log_at_level <= $threshold)
+
+        return $log_at_level <= $threshold;
+    }
+
+    public static function log($log_at_level, $source, $message, array $args=array())
+    {
+        if(self::level($log_at_level, $source))
         {
             self::$logger->log(time(), $log_at_level, $source, vsprintf($message, $args));
         }

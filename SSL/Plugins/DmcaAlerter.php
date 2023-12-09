@@ -68,7 +68,7 @@ class DmcaAlerter implements SSLPlugin, TrackChangeObserver, ScrobbleObserver
                 $track = $event->getTrack();
                 if($track)
                 {
-                    L::level(L::INFO) &&
+                    L::level(L::INFO, __CLASS__) &&
                         L::log(L::INFO, __CLASS__, "Checking if track would break any Mixcloud DMCA limits",
                             array( ));
 
@@ -82,7 +82,7 @@ class DmcaAlerter implements SSLPlugin, TrackChangeObserver, ScrobbleObserver
     {
         if($track)
         {
-            L::level(L::INFO) &&
+            L::level(L::INFO, __CLASS__) &&
                 L::log(L::INFO, __CLASS__, "Recording track as played for Mixcloud DMCA accounting",
                     array( ));
 
@@ -123,7 +123,7 @@ class DmcaAlerter implements SSLPlugin, TrackChangeObserver, ScrobbleObserver
         if(count($this->last_two_albums) > 2)
             array_shift($this->last_two_albums);
 
-        L::level(L::DEBUG) &&
+        L::level(L::DEBUG, __CLASS__) &&
             L::log(L::DEBUG, __CLASS__, "Last 3 artists: '%s'; Last 2 albums: '%s'",
                 array( implode("', '", $this->last_three_artists),
                        implode("', '", $this->last_two_albums) ));
@@ -161,7 +161,7 @@ class DmcaAlerter implements SSLPlugin, TrackChangeObserver, ScrobbleObserver
 
         else
         {
-            L::level(L::INFO) &&
+            L::level(L::INFO, __CLASS__) &&
                 L::log(L::INFO, __CLASS__, "Nah, we're fine!",
                     array( ));
         }
@@ -200,7 +200,7 @@ class DmcaAlerter implements SSLPlugin, TrackChangeObserver, ScrobbleObserver
             $this->notifier->notify(__CLASS__, "⚠️ Don't play it!", sprintf($message, $offending_item));
         }
 
-        L::level(L::WARNING) &&
+        L::level(L::WARNING, __CLASS__) &&
             L::log(L::WARNING, __CLASS__, "⚠️  Don't play it! :- " . $message,
                 array( $offending_item ));
     }
