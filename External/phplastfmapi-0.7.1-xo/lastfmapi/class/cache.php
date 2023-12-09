@@ -93,7 +93,7 @@ class lastfmApiCache {
 	 * @return void
 	 */
 	private function check_if_enabled() {
-		if ( $this->config['enabled'] == true && function_exists('sqlite_open') ) {
+		if ( isset($this->config['enabled']) && $this->config['enabled'] == true && function_exists('sqlite_open') ) {
 			$this->enabled = true;
 		}
 		else {

@@ -33,6 +33,7 @@ class XoupCompiler
     private $debug = true;
     private $oobcheck = false;
     private $data = array();
+    private $subs = array();
     
     public function setDebug($debug)
     {
