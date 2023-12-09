@@ -110,7 +110,7 @@ class RuntimeCachingSSLTrack extends SSLTrack
             {
                 if(isset($cached_track))
                 {
-                    $cached_track->length = $length;
+                    $cached_track->setLength($length);
                 }
                 else
                 {
