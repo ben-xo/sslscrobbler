@@ -1,4 +1,4 @@
-# SSLScrobbler v0.29
+# SSLScrobbler v0.30
 
 [![Testing sslscrobbler](https://github.com/ben-xo/sslscrobbler/actions/workflows/testing.yml/badge.svg)](https://github.com/ben-xo/sslscrobbler/actions/workflows/testing.yml)
 
