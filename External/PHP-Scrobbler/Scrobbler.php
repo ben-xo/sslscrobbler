@@ -373,7 +373,7 @@ class md_Scrobbler
 			. 'o[' . $i . ']=' . $item['source'] . '&'
 			. 'r[' . $i . ']=' . $item['rating'] . '&'
 			. 'l[' . $i . ']=' . $item['trackDuration'] . '&'
-			. 'b[' . $i . ']=' . rawurlencode($item['album']) . '&'
+			. 'b[' . $i . ']=' . rawurlencode((string)$item['album']) . '&'
 			. 'n[' . $i . ']=' . $item['trackNumber'] . '&'
 			. 'm[' . $i . ']=' . $item['mbTrackId'] . '&';
 			$i++;
@@ -393,7 +393,7 @@ class md_Scrobbler
 		$body = 'a=' . rawurlencode((string)$artist) . '&'
 		. 't=' . rawurlencode((string)$track) . '&'
 		. 'l=' . $trackDuration . '&'
-		. 'b=' . rawurlencode($album) . '&'
+		. 'b=' . rawurlencode((string)$album) . '&'
 		. 'n=' . $trackNumber . '&'
 		. 'm=' . $mbTrackId;
 		return $body;
