@@ -26,5 +26,5 @@
 
 interface NowPlayingObserver extends Observer
 {
-    public function notifyNowPlaying(SSLTrack $track=null);
+    public function notifyNowPlaying(?SSLTrack $track=null);
 }

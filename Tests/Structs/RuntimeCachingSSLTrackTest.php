@@ -45,7 +45,7 @@ class RuntimeCachingSSLTrackTest extends SSLTrackTest
     {
         $mock = $this->getMockBuilder('RuntimeCachingSSLTrack')
                     ->disableOriginalConstructor()
-                    ->setMethods($methods)
+                    ->onlyMethods($methods)
                     ->getMock();
         $mock->__construct($this->cache);
         return $mock;
@@ -57,13 +57,13 @@ class RuntimeCachingSSLTrackTest extends SSLTrackTest
         $this->mock_getid3
              ->expects($this->once())
              ->method('Analyze')
-             ->will( $this->returnValue( array('playtime_seconds' => 83.123) ) )
+             ->willReturn( array('playtime_seconds' => 83.123) )
         ;
         
         $t = $this->mockSSLTrack(array('file_exists'));
         $t->expects($this->once())
           ->method('file_exists')
-          ->will($this->returnValue(true))
+          ->willReturn(true)
         ;
         
         $t->populateFrom(array('row' => 9, 'fullpath' => '/file.mp3'));
@@ -87,7 +87,7 @@ class RuntimeCachingSSLTrackTest extends SSLTrackTest
         $t = $this->mockSSLTrack(array('file_exists'));
         $t->expects($this->never()) // never gets into the meaty bit of getID3 guessing
           ->method('file_exists')
-          ->will($this->returnValue(true))
+          ->willReturn(true)
         ;
         
         // same row, so should pull from the cached copy

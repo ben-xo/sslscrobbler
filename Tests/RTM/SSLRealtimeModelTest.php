@@ -90,9 +90,9 @@ class SSLRealtimeModelTest extends PHPUnit\Framework\TestCase implements TrackCh
         $t->expects($this->never()) ->method('getLengthInSeconds');
         $t->expects($this->never()) ->method('getPlayed');
         $t->expects($this->never()) ->method('getPlaytime');
-        
-        $t->expects($this->any()) ->method('getRow') ->will($this->returnValue($id));
-        $t->expects($this->any()) ->method('getDeck')->will($this->returnValue($deck));
+
+        $t->expects($this->any()) ->method('getRow') ->willReturn($id);
+        $t->expects($this->any()) ->method('getDeck')->willReturn($deck);
         return $t;
     }    
     
@@ -123,12 +123,12 @@ class SSLRealtimeModelTest extends PHPUnit\Framework\TestCase implements TrackCh
         
         $this->decks[0]->expects($this->once())
                        ->method('notify')
-                       ->will($this->returnValue(null));
+                       ->willReturn(null);
                   
         $this->decks[0]->expects($this->once())
                        ->method('trackStarted')
-                       ->will($this->returnValue($track0));
-                       
+                       ->willReturn($track0);
+
         $this->rtm->notifyDiff( new SSLHistoryDiffDom( array(
             $track0
         )));
@@ -146,12 +146,12 @@ class SSLRealtimeModelTest extends PHPUnit\Framework\TestCase implements TrackCh
         
         $this->decks[1]->expects($this->once())
                        ->method('notify')
-                       ->will($this->returnValue(null));
+                       ->willReturn(null);
                   
         $this->decks[1]->expects($this->once())
                        ->method('trackStarted')
-                       ->will($this->returnValue($track0));
-                       
+                       ->willReturn($track0);
+
         $this->rtm->notifyDiff( new SSLHistoryDiffDom( array(
             $track0
         )));
@@ -176,11 +176,11 @@ class SSLRealtimeModelTest extends PHPUnit\Framework\TestCase implements TrackCh
                                   
             $this->decks[$i]->expects($this->once())
                            ->method('notify')
-                           ->will($this->returnValue(null));
+                           ->willReturn(null);
                       
             $this->decks[$i]->expects($this->once())
                            ->method('trackStarted')
-                           ->will($this->returnValue($track));
+                           ->willReturn($track);
 
             array_unshift($tracks, $track); // populate it backwards on purpose
         }

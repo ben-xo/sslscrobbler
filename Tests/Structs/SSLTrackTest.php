@@ -50,7 +50,7 @@ class SSLTrackTest extends PHPUnit\Framework\TestCase
     {
         return $this->getMockBuilder('SSLTrack')
                     ->disableOriginalConstructor()
-                    ->setMethods($methods)
+                    ->onlyMethods($methods)
                     ->getMock();
         // return $this->createMock('SSLTrack', $methods);
     }
@@ -110,13 +110,13 @@ class SSLTrackTest extends PHPUnit\Framework\TestCase
         $this->mock_getid3
              ->expects($this->once())
              ->method('Analyze')
-             ->will( $this->returnValue( array('playtime_seconds' => 83.123) ) )
+             ->willReturn(  array('playtime_seconds' => 83.123) )
         ;
         
         $t = $this->mockSSLTrack(array('file_exists'));
         $t->expects($this->once())
           ->method('file_exists')
-          ->will($this->returnValue(true))
+          ->willReturn(true)
         ;
         
         $t->populateFrom(array('row' => 5, 'fullpath' => '/file.mp3'));
@@ -143,7 +143,7 @@ class SSLTrackTest extends PHPUnit\Framework\TestCase
         $t = $this->mockSSLTrack(array('file_exists'));
         $t->expects($this->once())
           ->method('file_exists')
-          ->will($this->returnValue(false))
+          ->willReturn(false)
         ;
         
         $t->populateFrom(array('row' => 7, 'fullpath' => '/file.mp3'));
@@ -156,13 +156,13 @@ class SSLTrackTest extends PHPUnit\Framework\TestCase
         $this->mock_getid3
              ->expects($this->once())
              ->method('Analyze')
-             ->will( $this->returnValue( array('playtime_seconds' => 83.123) ) )
+             ->willReturn( array('playtime_seconds' => 83.123) )
         ;
         
         $t = $this->mockSSLTrack(array('file_exists'));
         $t->expects($this->once())
           ->method('file_exists')
-          ->will($this->returnValue(true))
+          ->willReturn(true)
         ;
         
         $t->populateFrom(array('row' => 8, 'fullpath' => '/file.mp3'));

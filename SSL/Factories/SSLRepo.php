@@ -72,7 +72,7 @@ class SSLRepo implements Factory
     /**
      * @return SSLParser
      */
-    public function newParser(SSLDom $dom = null)
+    public function newParser(?SSLDom $dom = null)
     {
         return new SSLParser($dom);
     }

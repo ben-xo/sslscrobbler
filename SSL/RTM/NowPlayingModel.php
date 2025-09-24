@@ -329,7 +329,7 @@ class NowPlayingModel implements TickObserver, TrackChangeObserver, NowPlayingOb
         }
     }
     
-    protected function notifyNowPlayingObservers(SSLTrack $track=null)
+    protected function notifyNowPlayingObservers(?SSLTrack $track=null)
     {
         /* @var $observer NowPlayingObserver */
         foreach($this->now_playing_observers as $observer)

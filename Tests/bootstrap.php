@@ -28,7 +28,7 @@
  * *** Run tests with PHPUnit: 'phpunit --verbose --bootstrap Tests/bootstrap.php Tests'
  */
 
-error_reporting(E_ALL | E_STRICT);
+error_reporting(E_ALL);
 
 require_once 'External/getID3/getid3.php';
 require_once 'SSL/Autoloader.php';

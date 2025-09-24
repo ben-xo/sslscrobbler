@@ -24,7 +24,10 @@
  *  THE SOFTWARE.
  */
 
-class ScrobblerTrackModelTest extends PHPUnit\Framework\TestCase
+use PHPUnit\Framework\Attributes\Depends;
+use PHPUnit\Framework\TestCase;
+
+class ScrobblerTrackModelTest extends TestCase
 {
     protected $stm;
     protected $track;
@@ -44,10 +47,10 @@ class ScrobblerTrackModelTest extends PHPUnit\Framework\TestCase
     public function trackMock($id, $length=300, $played=false, $playtime=null)
     {
         $t = $this->createMock('SSLTrack');
-        $t->expects($this->any()) ->method('getRow')             ->will($this->returnValue($id));
-        $t->expects($this->any()) ->method('getLengthInSeconds') ->will($this->returnValue($length));
-        $t->expects($this->any()) ->method('getPlayed')          ->will($this->returnValue($played));
-        $t->expects($this->any()) ->method('getPlaytime')        ->will($this->returnValue($playtime));
+        $t->expects($this->any()) ->method('getRow')             ->willReturn($id);
+        $t->expects($this->any()) ->method('getLengthInSeconds') ->willReturn($length);
+        $t->expects($this->any()) ->method('getPlayed')          ->willReturn($played);
+        $t->expects($this->any()) ->method('getPlaytime')        ->willReturn($playtime);
         return $t;
     }
     
@@ -81,7 +84,7 @@ class ScrobblerTrackModelTest extends PHPUnit\Framework\TestCase
         $this->assertSame($this->stm->getTrack(), $this->track);
     }
     
-    public function test_default_state()
+    public function test_default_state(): ScrobblerTrackModel
     {
         $this->assertFalse($this->stm->isNowPlaying());
         $this->assertFalse($this->stm->isScrobblable());
@@ -119,7 +122,8 @@ class ScrobblerTrackModelTest extends PHPUnit\Framework\TestCase
     /**
      * @depends test_default_state
      */
-    public function test_small_elapse_does_not_change_state(ScrobblerTrackModel $stm)
+    #[Depends('test_default_state')]
+    public function test_small_elapse_does_not_change_state(ScrobblerTrackModel $stm): ScrobblerTrackModel
     {
         $stm->elapse( 1 );
         $this->assertFalse($stm->isNowPlaying());
@@ -131,7 +135,8 @@ class ScrobblerTrackModelTest extends PHPUnit\Framework\TestCase
     /**
      * @depends test_small_elapse_does_not_change_state
      */
-    public function test_elapse_past_now_playing_point_is_now_playing(ScrobblerTrackModel $stm)
+    #[Depends('test_small_elapse_does_not_change_state')]
+    public function test_elapse_past_now_playing_point_is_now_playing(ScrobblerTrackModel $stm): ScrobblerTrackModel
     {
         $stm->elapse( $this->now_playing_time );
         $this->assertTrue($stm->isNowPlaying());
@@ -143,7 +148,8 @@ class ScrobblerTrackModelTest extends PHPUnit\Framework\TestCase
     /**
      * @depends test_elapse_past_now_playing_point_is_now_playing
      */
-    public function test_further_elapse_is_still_now_playing(ScrobblerTrackModel $stm)
+    #[Depends('test_elapse_past_now_playing_point_is_now_playing')]
+    public function test_further_elapse_is_still_now_playing(ScrobblerTrackModel $stm): ScrobblerTrackModel
     {
         $stm->elapse(1);
         $this->assertTrue($stm->isNowPlaying());
@@ -155,7 +161,8 @@ class ScrobblerTrackModelTest extends PHPUnit\Framework\TestCase
     /**
      * @depends test_further_elapse_is_still_now_playing
      */
-    public function test_elapse_past_scrobble_point_is_not_scrobblable_yet(ScrobblerTrackModel $stm)
+    #[Depends('test_further_elapse_is_still_now_playing')]
+    public function test_elapse_past_scrobble_point_is_not_scrobblable_yet(ScrobblerTrackModel $stm): ScrobblerTrackModel
     {
         $this->assertEquals(150, $this->scrobble_time);
         $this->assertTrue($stm->isNowPlaying());

@@ -125,7 +125,7 @@ class NowPlayingModelTest extends PHPUnit\Framework\TestCase implements NowPlayi
     public function setUp(): void
     {
         // tracks
-        $stm_test = new ScrobblerTrackModelTest();
+        $stm_test = new ScrobblerTrackModelTest('NowPlayingModelTest');
         $this->track123_PLAYING = $stm_test->trackMock(123, 300, true, 125);
         $this->track456_PLAYING = $stm_test->trackMock(456, 300, true, 125);
         $this->track789_PLAYING = $stm_test->trackMock(789, 300, true, 125);
@@ -219,7 +219,7 @@ class NowPlayingModelTest extends PHPUnit\Framework\TestCase implements NowPlayi
     
     // self-shunt methods
     
-    public function notifyNowPlaying(SSLTrack $track = null)
+    public function notifyNowPlaying(?SSLTrack $track = null)
     {
         $this->now_playing_called = true;
         $this->now_playing_called_with = $track;

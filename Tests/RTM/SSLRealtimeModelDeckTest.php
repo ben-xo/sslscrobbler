@@ -45,8 +45,8 @@ class SSLRealtimeModelDeckTest extends PHPUnit\Framework\TestCase
         $t->expects($this->never()) ->method('getPlayed');
         $t->expects($this->never()) ->method('getPlaytime');
         
-        $t->expects($this->any()) ->method('getRow')   ->will($this->returnValue($id));
-        $t->expects($this->any()) ->method('getStatus')->will($this->returnValue($state));
+        $t->expects($this->any()) ->method('getRow')   ->willReturn($id);
+        $t->expects($this->any()) ->method('getStatus')->willReturn($state);
         return $t;
     }
     
