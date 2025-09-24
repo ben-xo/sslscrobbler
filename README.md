@@ -22,6 +22,16 @@ reads the binary file and models what's going on.
 The app works on OS X (Mac) and Windows.
 
 
+# -1. A NOTE ON REPORTING BUGS
+
+It may not do everything you want, and I certainly haven't tried every function of Serato to see what happens.
+
+If you encounter bugs 🐛 🐜 🐞, please copy-paste the entire output from the program into a new ticket for me
+on my GitHub, along with a description of what you expected to happen as well as what actually happened 👍
+
+https://github.com/ben-xo/sslscrobbler/issues
+
+
 # 0. CONTENTS
 
 1. OPERATING SSLSCROBBLER
@@ -67,24 +77,27 @@ already have a session open.
 
   SSLScrobbler can also be started from Terminal, and has more options this way.
 
-  To start from Terminal you will need PHP installed (recommended version 7.4).
+  To start from Terminal you will need PHP installed (recommended version 8.4).
   You can install PHP through Mac Homebrew https://brew.sh/. Once installed,
   
-        brew install php@7.4
+        brew install php@8.4
+        # (or just brew install php)
 
   See "Getting Started" for more.
 
 
 ### 1.1.2 Windows
   
-  I haven't tested this part in a while - try installing PHP from
-  http://www.anindya.com/ or following the instructions on https://www.php.net/
+  I haven't tested this part in a long time. I have never owned a Windows 10 or
+  Windows 11 machine as a primary machine. I welcome any feedback.
+  
+  Try installing PHP by following the instructions on https://www.php.net/
    
   You should install PHP 8 and Growl. You must reboot after installing these, 
   even if it doesn't ask!
   
   If you're on Windows XP, 32-bit Vista or 32-bit Windows 7, you can download 
-  and install PHP from http://windows.php.net/download/
+  and install PHP from https://windows.php.net/download/
   (You probably want the 'Installer' nearest the top of the page, unless you
   know better.)
    
@@ -889,16 +902,16 @@ SSLScrobbler is licensed under the MIT license.
 
 SSLScrobbler includes the following external libraries:
 
-* php-growl (http://github.com/tylerhall/php-growl/)
+* php-growl (https://github.com/tylerhall/php-growl/)
   originally by Tyler Hall, licensed under the MIT license.
 
-* PHP-Scrobbler (http://github.com/ben-xo/PHP-Scrobbler/)
+* PHP-Scrobbler (https://github.com/ben-xo/PHP-Scrobbler/)
   originally by Mickael Desfrenes, licensed under the LGPL license.
   
-* PHP Lastfm API (http://www.matto1990.com/projects/phplastfmapi/)
+* PHP Lastfm API (https://github.com/matt-oakes/PHP-Last.fm-API/)
   originally by Matt Oakes, licensed under the MIT license.
   
-* Twitter OAuth (http://github.com/abraham/twitteroauth/)
+* Twitter OAuth (https://github.com/abraham/twitteroauth/)
   originally by Abraham Williams, licensed under the MIT license.
   
 * Twitter-PHP (https://github.com/dg/twitter-php)
