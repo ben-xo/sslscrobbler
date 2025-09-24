@@ -113,7 +113,7 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObs
         }
     }    
     
-    public function startClock($interval, SignalHandler $sh = null, InputHandler $ih = null)
+    public function startClock($interval, ?SignalHandler $sh = null, ?InputHandler $ih = null)
     {
         // doesn't do anything on the file replayer
         $this->notifyTickObservers(0);        

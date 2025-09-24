@@ -52,7 +52,7 @@ class SSLParser
      * 
      * @param SSLDom $dom
      */
-    public function __construct(SSLDom $dom = null)
+    public function __construct(?SSLDom $dom = null)
     {
         $this->factory = Inject::the(new SSLRepo());
         

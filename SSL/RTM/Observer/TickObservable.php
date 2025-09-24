@@ -27,5 +27,5 @@
 interface TickObservable extends Observable
 {
     public function addTickObserver(TickObserver $o);
-    public function startClock($interval, SignalHandler $sh = null, InputHandler $ih = null);
+    public function startClock($interval, ?SignalHandler $sh = null, ?InputHandler $ih = null);
 }

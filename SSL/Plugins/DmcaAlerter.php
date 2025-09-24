@@ -41,7 +41,7 @@ class DmcaAlerter implements SSLPlugin, TrackChangeObserver, ScrobbleObserver
 {
     protected $notifier;
 
-    public function __construct(PopupNotifier $notifier = null)
+    public function __construct(?PopupNotifier $notifier = null)
     {
         $this->notifier = $notifier;
     }
@@ -78,7 +78,7 @@ class DmcaAlerter implements SSLPlugin, TrackChangeObserver, ScrobbleObserver
         }
     }
 
-    public function notifyScrobble(SSLTrack $track=null)
+    public function notifyScrobble(?SSLTrack $track = null)
     {
         if($track)
         {

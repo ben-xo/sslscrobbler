@@ -182,7 +182,7 @@ class PluginWrapper implements TickObservable, TickObserver,
         }
     }
     
-    public function notifyNowPlaying(SSLTrack $track=null)
+    public function notifyNowPlaying(?SSLTrack $track=null)
     {
         foreach($this->npo as $t) // target
         {
@@ -197,8 +197,8 @@ class PluginWrapper implements TickObservable, TickObserver,
             $t->notifyScrobble($track);
         }
     }
-    
-    public function startClock($interval, SignalHandler $sh = null, InputHandler $ih = null)
+
+    public function startClock($interval, ?SignalHandler $sh = null, ?InputHandler $ih = null)
     {
         foreach($this->to as $t) // target
         {

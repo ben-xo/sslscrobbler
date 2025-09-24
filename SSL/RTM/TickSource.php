@@ -47,8 +47,8 @@ class TickSource implements TickObservable, ExitObserver
             $observer->notifyTick($seconds);
         }
     }
-    
-    public function startClock($interval, SignalHandler $sh = null, InputHandler $ih = null)
+
+    public function startClock($interval, ?SignalHandler $sh = null, ?InputHandler $ih = null)
     {        
         L::level(L::DEBUG, __CLASS__) && 
             L::log(L::DEBUG, __CLASS__, "Clock Started, interval %s", 
