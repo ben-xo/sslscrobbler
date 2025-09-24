@@ -115,8 +115,6 @@ field59: hex. c>rUNKNOWN59
 field60: hex. c>rUNKNOWN60
 field61: hex. c>rUNKNOWN61
 field62: hex. c>rUNKNOWN62
-field63: hex. c>rUNKNOWN63
-field64: hex. c>rUNKNOWN64
 
 field63: string. c>rplayername
 field64: string. c>rcommentname
@@ -126,7 +124,7 @@ field66: hex. c>rUNKNOWN66
 field67: hex. c>rUNKNOWN67
 field68: hex. c>rUNKNOWN68
 field69: hex. c>rUNKNOWN69
-field70: int. c>rejected
+field70: int. c>rejected   # that's "ejected"
 field71: hex. c>rUNKNOWN71
 field72: hex. c>rUNKNOWN72
 field73: hex. c>rUNKNOWN73
@@ -135,6 +133,8 @@ field75: hex. c>rUNKNOWN75
 field76: hex. c>rUNKNOWN76
 field77: hex. c>rUNKNOWN77
 field78: hex. c>rUNKNOWN78
+
+field81: hex. c>rUNKNOWN81
 
 # literal data
 .EOS ""
