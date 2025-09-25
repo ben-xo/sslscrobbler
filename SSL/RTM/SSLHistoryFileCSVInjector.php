@@ -39,10 +39,14 @@ class SSLHistoryFileCSVInjector extends SSLHistoryFileReplayer
     {
         $fp = fopen($filename, 'r');
         if($fp === false) throw new RuntimeException("Could not open CSV file {$filename}");
-        
+
+        L::level(L::DEBUG, __CLASS__) &&
+            L::log(L::DEBUG, __CLASS__, 'Opened %s for reading',
+                array($filename));
+
         $tracks = array();
         $field_order = array('row', 'deck', 'artist', 'title', 'starttime', 'endtime', 'played', 'added', 'updatedAt', 'playtime', 'length');
-        while(false !== ($fs = fgetcsv($fp)))
+        while(false !== ($fs = fgetcsv($fp, null, ',', '"', '\\')))
         {
             if($fs)
             {

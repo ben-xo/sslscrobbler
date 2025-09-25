@@ -74,7 +74,7 @@ class ScrobblerTrackModel
     
     public function elapse($seconds)
     {
-        $this->playtime += $seconds;
+        $this->playtime = intval($this->playtime) + intval($seconds);
 
         $was_passed_now_playing_point = $this->passed_now_playing_point;
         $was_passed_scrobble_point = $this->passed_scrobble_point;
