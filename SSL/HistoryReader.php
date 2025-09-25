@@ -617,13 +617,13 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         // that knows how to ask the cache about expensive lookups (such as getID3 stuff). 
         Inject::map('SSLTrackFactory', new SSLTrackCache());
         
-        $ts = new InstantTickSource();
+        $real_ts = new InstantTickSource();
         $hfm = new SSLHistoryFileReplayer($filename);
         $ism = new ImmediateScrobbleModel(); // deal with PLAYED tracks one by one
         $inp = new ImmediateNowPlayingModel(); // deal with PLAYED tracks one by one
-        
-        $ts->addTickObserver($hfm);
-        $hfm->addExitObserver($ts);
+
+        $real_ts->addTickObserver($hfm);
+        $hfm->addExitObserver($real_ts);
 
         $hfm->addDiffObserver($ism);
         $hfm->addDiffObserver($inp);
@@ -632,7 +632,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         $pw = $this->plugin_manager->getObservers();
         
         // add all of the PluginWrappers to the various places.
-        $ts->addTickObserver($pw[0]);
+        $real_ts->addTickObserver($pw[0]);
         $hfm->addDiffObserver($pw[0]);
         $ism->addScrobbleObserver($pw[0]);
         $inp->addNowPlayingObserver($pw[0]);
@@ -640,7 +640,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         $this->plugin_manager->onStart();
 
         // Tick tick tick. This only returns if a signal is caught
-        $ts->startClock($this->sleep);
+        $real_ts->startClock($this->sleep);
         
         $this->plugin_manager->onStop();
     }    
