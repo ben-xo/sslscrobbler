@@ -759,6 +759,7 @@ Thanks:
 * DJ NightLife for his support of the project!
 * Brian Tiger Chow for bug reports and patches
 * Nick Masi (N-Masi) for code contributions to logging
+* Steve Jenkin (stevej098) for help with debugging the CSV feature
 
 Shouts:
 * Last.fm for letting me use the back room of the office to broadcast loud radio
