@@ -217,10 +217,13 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             if($this->post_process)
             {
                 $this->plugin_manager->setOptions(array('post_process' => true));
+                $this->post_process($filename);
             }
-
-            // start monitoring.
-            $this->monitor($filename);
+            else
+            {
+                // start monitoring.
+                $this->monitor($filename);
+            }
         }
         catch(Exception $e)
         {   
@@ -350,7 +353,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
 
                     // we want to show the equivalent output that --prompt generated.
                     $argv_copy = array_merge($argv_copy, array_slice($argv, $argv_before_length));
-                      
+
                     // remove --prompt
                     $key = array_search($arg, $argv_copy);
                     unset($argv_copy[$key]);
@@ -371,7 +374,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
 
                     // we want to show the equivalent output that --prompt generated.
                     $argv_copy = array_merge($argv_copy, array_slice($argv, $argv_before_length));
-                      
+
                     // remove --prompt
                     $key = array_search($arg, $argv_copy);
                     unset($argv_copy[$key]);
@@ -527,14 +530,10 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         Inject::map('SSLTrackFactory', new SSLTrackCache());
         
         
-        if($this->manual_tick) 
+        if($this->manual_tick)
         {
             // tick when the user presses enter
             $pseudo_ts = $real_ts = new CrankHandle();
-        }
-        elseif($this->post_process)
-        {
-            $pseudo_ts = $real_ts = new InstantTickSource();
         }
         else
         {
@@ -542,28 +541,9 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             $pseudo_ts = $real_ts = new TickSource($this->time_multiplier);
         }
         
-        if($this->post_process)
-        {
-            // $mon is TickObservable
-            // $hfm is DiffObservable
-            if($this->csv)
-            {
-                $mon = $hfm = new SSLHistoryFileCSVInjector($filename);
-            }
-            else
-            {
-                $mon = $hfm = new SSLHistoryFileReplayer($filename);
-            }
-            
-            $pseudo_ts = $mon;
-            $hfm->addExitObserver($real_ts);
-        }
-        else
-        {
-            $mon = new TailMonitor();
-            $mon->setFilenameSource($this);
-            $hfm = new SSLHistoryFileMonitor($filename, $mon);
-        }
+        $mon = new TailMonitor();
+        $mon->setFilenameSource($this);
+        $hfm = new SSLHistoryFileMonitor($filename, $mon);
 
         $sh = new SignalHandler();
         //$ih = new InputHandler();
@@ -608,19 +588,42 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
     protected function post_process($filename)
     {
         echo "post processing {$filename}...\n";
+
+        // Use a dependency injection factory which returns TitleFilteredRuntimeCachingSSLTracks
+        // instead of regular RuntimeCachingSSLTracks in order to get nicer titles which scrobble better
+        // TODO: this doesn't feel like the right architecture as it's inheritance based, but title filtering is a behaviour.
+        Inject::map('SSLRepo', new TitleFilteredSSLRepo());
         
         // Use the caching version via Dependency Injection. This means that all 
         // new SSLTracks created using a SSLTrackFactory will get a RuntimeCachingSSLTrack
         // that knows how to ask the cache about expensive lookups (such as getID3 stuff). 
         Inject::map('SSLTrackFactory', new SSLTrackCache());
         
-        $real_ts = new InstantTickSource();
-        $hfm = new SSLHistoryFileReplayer($filename);
+        if($this->manual_tick) 
+        {
+            // tick when the user presses enter
+            $ts = new CrankHandle();
+        }
+        else
+        {
+            // no-delay ticks
+            $ts = new InstantTickSource();
+        }
+
+        if($this->csv)
+        {
+            $hfm = new SSLHistoryFileCSVInjector($filename);
+        }
+        else
+        {
+            $hfm = new SSLHistoryFileReplayer($filename);
+        }
+
         $ism = new ImmediateScrobbleModel(); // deal with PLAYED tracks one by one
         $inp = new ImmediateNowPlayingModel(); // deal with PLAYED tracks one by one
 
-        $real_ts->addTickObserver($hfm);
-        $hfm->addExitObserver($real_ts);
+        $ts->addTickObserver($hfm);
+        $hfm->addExitObserver($ts);
 
         $hfm->addDiffObserver($ism);
         $hfm->addDiffObserver($inp);
@@ -629,7 +632,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         $pw = $this->plugin_manager->getObservers();
         
         // add all of the PluginWrappers to the various places.
-        $real_ts->addTickObserver($pw[0]);
+        $ts->addTickObserver($pw[0]);
         $hfm->addDiffObserver($pw[0]);
         $ism->addScrobbleObserver($pw[0]);
         $inp->addNowPlayingObserver($pw[0]);
@@ -637,7 +640,7 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         $this->plugin_manager->onStart();
 
         // Tick tick tick. This only returns if a signal is caught
-        $real_ts->startClock($this->sleep);
+        $ts->startClock($this->sleep);
         
         $this->plugin_manager->onStop();
     }    

@@ -57,6 +57,9 @@ class TickSource implements TickObservable, ExitObserver
         $elapsed = 0.0;
         $start_time = microtime(true);
         
+        // initial sleep to allow observers to initialize
+        $this->sleep(0);
+
         $continue = true;
         while($continue)
         {

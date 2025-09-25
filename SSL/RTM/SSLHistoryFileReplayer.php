@@ -52,10 +52,14 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObs
      * @var SSLHistoryDiffDom[]
      */
     protected $payloads = array();
-    
+
     protected $initialized = false;
     
     protected $pointer = 0;
+
+    // loop state for notifying diffs on each tick
+    protected $last_timestamp = 0;
+    protected $last_payload = 0;
 
     public function __construct($filename)
     {
@@ -106,8 +110,9 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObs
         {
             L::level(L::DEBUG, __CLASS__) &&
                 L::log(L::DEBUG, __CLASS__, 'Sending tick to %s',
-                 array(get_class($observer)));
+                    array(get_class($observer)));
             
+
             /* @var $observer TickObserver */
             $observer->notifyTick($seconds);
         }
@@ -122,34 +127,30 @@ class SSLHistoryFileReplayer implements SSLDiffObservable, TickObserver, ExitObs
     public function notifyTick($seconds)
     {
         if(!$this->initialized) $this->initialize();
-        
-        $last_timestamp = 0;
-        $last_payload = count($this->payloads) - 1;
-        $pointer = 0;
-        
-        foreach($this->payloads as $payload)
-        {
-            $payload_timestamp = $payload->getFirstTimestamp();
-            L::level(L::DEBUG, __CLASS__) &&
-                L::log(L::DEBUG, __CLASS__, 'Yielding payload for timestamp %s (%s)', 
-                    array( 
-                        $payload_timestamp, 
-                        date("Y-m-d H:i:s", $payload_timestamp) 
-                        ));
-            
-            $this->notifyTickObservers($payload_timestamp - $last_timestamp);
-            $this->notifyDiffObservers($payload);
-            $last_timestamp = $payload_timestamp;
-            $pointer++;
-        }
-        
-        $this->notifyTickObservers(300);
-        
-        if($pointer >= $last_payload)
+        $this->last_payload = count($this->payloads) - 1;
+
+        if($this->pointer >= $this->last_payload)
         {
             // exit app on EOF.
             $this->notifyExitObservers();
+            return;
         }
+
+        $payload = $this->payloads[$this->pointer];
+        $payload_timestamp = $payload->getFirstTimestamp();
+        L::level(L::DEBUG, __CLASS__) &&
+            L::log(L::DEBUG, __CLASS__, 'Yielding payload for timestamp %s (%s)',
+                array(
+                    $payload_timestamp,
+                    date("Y-m-d H:i:s", $payload_timestamp)
+                    ));
+
+        $this->notifyTickObservers($payload_timestamp - $this->last_timestamp);
+        $this->notifyDiffObservers($payload);
+        $this->last_timestamp = $payload_timestamp;
+        $this->pointer++;
+
+        $this->notifyTickObservers(300);
     }
 
     /**
