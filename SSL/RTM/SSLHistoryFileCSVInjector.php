@@ -46,7 +46,7 @@ class SSLHistoryFileCSVInjector extends SSLHistoryFileReplayer
 
         $tracks = array();
         $field_order = array('row', 'deck', 'artist', 'title', 'starttime', 'endtime', 'played', 'added', 'updatedAt', 'playtime', 'length');
-        while(false !== ($fs = fgetcsv($fp)))
+        while(false !== ($fs = fgetcsv($fp, null, ',', '"', '\\')))
         {
             if($fs)
             {
