@@ -106,7 +106,7 @@ class TickSource implements TickObservable, ExitObserver
     
     protected function sleep($seconds)
     {
-        return usleep(floor($seconds) * 1000000);
+        return usleep(floor($seconds * 1000000));
     }
     
     public function notifyExit()
