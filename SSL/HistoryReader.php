@@ -217,13 +217,10 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             if($this->post_process)
             {
                 $this->plugin_manager->setOptions(array('post_process' => true));
-                $this->post_process($filename);
             }
-            else
-            {
-                // start monitoring.
-                $this->monitor($filename);
-            }            
+
+            // start monitoring.
+            $this->monitor($filename);
         }
         catch(Exception $e)
         {   
