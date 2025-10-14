@@ -92,7 +92,7 @@ class JsonServerPlugin implements SSLPlugin, NowPlayingObserver, TickObserver, P
         return array( $this );
     }
         
-    public function notifyNowPlaying(SSLTrack $track=null)
+    public function notifyNowPlaying(?SSLTrack $track=null)
     {
         $this->most_recent_track = $track;
     }

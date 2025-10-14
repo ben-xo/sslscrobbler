@@ -37,7 +37,7 @@ class NowPlayingObserverWithId extends PluginWithId implements NowPlayingObserve
         $this->o = $o;    
     }
     
-    public function notifyNowPlaying(SSLTrack $track=null)
+    public function notifyNowPlaying(?SSLTrack $track=null)
     {
         $this->o->notifyNowPlaying($track);
     }

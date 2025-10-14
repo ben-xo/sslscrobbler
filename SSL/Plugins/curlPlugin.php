@@ -61,7 +61,7 @@ class curlPlugin implements SSLPlugin, NowPlayingObserver
       );
   }
 
-  public function notifyNowPlaying(SSLTrack $track=null)
+  public function notifyNowPlaying(?SSLTrack $track=null)
   {
       if($track)
       {

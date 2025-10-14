@@ -61,7 +61,7 @@ class NicecastLoggerPlugin implements SSLPlugin, NowPlayingObserver
 		return array( $this );
 	}
 
-	public function notifyNowPlaying(SSLTrack $track=null)
+	public function notifyNowPlaying(?SSLTrack $track=null)
 	{
 		$nicecastOutput = <<<EOF
 Title: {$track->getTitle()}

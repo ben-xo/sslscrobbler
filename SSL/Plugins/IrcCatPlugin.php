@@ -61,7 +61,7 @@ class IrcCatPlugin implements SSLPlugin, NowPlayingObserver
 		return array( $this );
 	}
 
-	public function notifyNowPlaying(SSLTrack $track=null)
+	public function notifyNowPlaying(?SSLTrack $track=null)
 	{
 	    if(!$track) return;
 	    
