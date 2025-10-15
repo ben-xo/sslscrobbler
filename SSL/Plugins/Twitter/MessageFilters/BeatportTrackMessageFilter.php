@@ -33,7 +33,7 @@ class BeatportTrackMessageFilter implements ITrackMessageFilter
      */
     protected $url_shortener;
     
-    public function __construct(IURLShortener $url_shortener=null)
+    public function __construct(?IURLShortener $url_shortener=null)
     {
         $this->url_shortener = $url_shortener;
     }
