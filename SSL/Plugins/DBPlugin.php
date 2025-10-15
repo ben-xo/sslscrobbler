@@ -94,7 +94,7 @@ class DBPlugin implements SSLPlugin, NowPlayingObserver
     /**
      * Executes a prepared statement based on the now playing track.
      */
-    public function notifyNowPlaying(SSLTrack $track=null)
+    public function notifyNowPlaying(?SSLTrack $track=null)
     {
         if($track) 
         {

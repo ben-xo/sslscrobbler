@@ -118,7 +118,7 @@ class NowPlayingLoggerPlugin implements SSLPlugin, NowPlayingObserver
         return serialize($track);
     }
     
-    public function notifyNowPlaying(SSLTrack $track=null)
+    public function notifyNowPlaying(?SSLTrack $track=null)
     {
         file_put_contents($this->getFilename(), $this->transform($track));
     }

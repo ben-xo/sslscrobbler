@@ -56,7 +56,7 @@ class SSLDiscordAdaptor implements ParallelTask, NowPlayingObserver, ScrobbleObs
         $this->webhook_url = $webhook_url;
     }
     
-    public function notifyNowPlaying(SSLTrack $track=null)
+    public function notifyNowPlaying(?SSLTrack $track=null)
     {
         if($track)
         {

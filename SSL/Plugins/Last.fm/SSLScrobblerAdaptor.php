@@ -36,7 +36,7 @@ class SSLScrobblerAdaptor implements NowPlayingObserver, ScrobbleObserver
         $this->scrobbler = $scrobbler;
     }
     
-    public function notifyNowPlaying(SSLTrack $track=null)
+    public function notifyNowPlaying(?SSLTrack $track=null)
     {
         if($track)
         {
