@@ -263,7 +263,9 @@ class md_Scrobbler
 
 		if($this->debug) print "Response: $data\n";
 
-		curl_close ($curl);
+		if(version_compare(PHP_VERSION, '8.0.0', '<'))
+			curl_close($curl);
+
 		return $data;
 	}
 	
@@ -282,7 +284,9 @@ class md_Scrobbler
 
 		if($this->debug) print "Handshake Response: $data\n";
 
-		curl_close($curl);
+		if(version_compare(PHP_VERSION, '8.0.0', '<'))
+			curl_close($curl);
+
 		$data = explode("\n", $data);
 		if($data[0] != 'OK')
 		{

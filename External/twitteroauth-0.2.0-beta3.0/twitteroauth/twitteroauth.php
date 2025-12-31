@@ -233,7 +233,8 @@ class TwitterOAuth {
     }
     $this->http_info = array_merge($this->http_info, curl_getinfo($ci));
     $this->url = $url;
-    curl_close ($ci);
+    if(version_compare(PHP_VERSION, '8.0.0', '<'))
+      curl_close($ci);
     return $response;
   }
 

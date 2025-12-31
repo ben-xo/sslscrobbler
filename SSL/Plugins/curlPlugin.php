@@ -96,6 +96,8 @@ class curlPlugin implements SSLPlugin, NowPlayingObserver
     curl_setopt($curl, CURLOPT_POSTFIELDS, $params);
 
     curl_exec($curl);
-    curl_close($curl);
+
+    if(version_compare(PHP_VERSION, '8.0.0', '<'))
+      curl_close($curl);
   }
 }
