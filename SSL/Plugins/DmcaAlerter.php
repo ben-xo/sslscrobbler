@@ -108,14 +108,18 @@ class DmcaAlerter implements SSLPlugin, TrackChangeObserver, ScrobbleObserver
         if(!isset($this->artist_playcounts[$artist]))
             $this->artist_playcounts[$artist] = 0;
 
-        if(!isset($this->album_playcounts[$album]))
+        if($album !== null && !isset($this->album_playcounts[$album]))
             $this->album_playcounts[$album] = 0;
 
         $this->artist_playcounts[$artist]++;
-        $this->album_playcounts[$album]++;
+
+        if($album !== null)
+            $this->album_playcounts[$album]++;
 
         $this->last_three_artists[] = $artist;
-        $this->last_two_albums[] = $album;
+
+        if($album !== null)
+            $this->last_two_albums[] = $album;
 
         if(count($this->last_three_artists) > 3)
             array_shift($this->last_three_artists);
@@ -144,7 +148,7 @@ class DmcaAlerter implements SSLPlugin, TrackChangeObserver, ScrobbleObserver
             $this->alert("You have already played artist '%s' 4 times this show.", $artist);
         }
 
-        elseif(isset($this->album_playcounts[$album]) && $this->album_playcounts[$album] > 3)
+        elseif($album !== null && isset($this->album_playcounts[$album]) && $this->album_playcounts[$album] > 3)
         {
             $this->alert("You have already played album '%s' 3 times this show.", $album);
         }
