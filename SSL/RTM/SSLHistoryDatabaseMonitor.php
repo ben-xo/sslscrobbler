@@ -236,10 +236,15 @@ class SSLHistoryDatabaseMonitor implements TickObserver, SSLDiffObservable, Exit
      */
     protected function findCurrentSessionId()
     {
-        // Serato writes end_time = NULL while a session is in progress, and a
-        // real unix timestamp when the session closes cleanly. We've also
-        // observed end_time = 0 after an unclean shutdown (e.g. Serato was
-        // force-quit) — treat that as "not cleanly closed" too.
+        // Serato writes end_time = 0 on an active session (that's the value
+        // the "Start Session" UI button commits) and a real unix timestamp
+        // when the session is closed — either by the user pressing "End
+        // Session", or implicitly when a subsequent "Start Session" rolls
+        // it over. The NULL case is a belt-and-braces defensive fallback:
+        // the schema allows it (no default), but in practice we've only ever
+        // observed 0 or a real timestamp. Either way, treat "<= 0 or NULL"
+        // as "not closed yet" so the live-mode polling picks up the right
+        // session.
         $stmt = $this->pdo->query(
             'SELECT id FROM history_session
              WHERE end_time IS NULL OR end_time <= 0
