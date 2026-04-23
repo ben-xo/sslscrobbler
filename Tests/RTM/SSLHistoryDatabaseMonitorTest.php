@@ -25,10 +25,12 @@ use PHPUnit\Framework\TestCase;
  */
 class DatabaseMonitorTest_CapturingObserver implements SSLDiffObserver
 {
-    /** @var SSLDom[] */
+    /** @var SSLHistoryDiffDom[] */
     public $notifications = array();
 
-    public function notifyDiff(SSLDom $changes)
+    // Parameter type must match SSLDiffObserver::notifyDiff exactly; PHP < 7.4
+    // doesn't permit widening to the SSLDom base class here.
+    public function notifyDiff(SSLHistoryDiffDom $changes)
     {
         $this->notifications[] = $changes;
     }
