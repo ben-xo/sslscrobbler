@@ -33,10 +33,19 @@ class OsascriptPrompt implements Prompt
     {
 
         $prompt_text = escapeshellarg($prompt_text);
-        $command = "osascript -e 'try\ntell app \"SystemUIServer\"\n"
+        // `answer` is pre-initialised to "" so that if the display dialog
+        // throws (e.g. the user presses Cancel, or the SystemUIServer
+        // tell block fails), the outer `try` silently swallows the error
+        // and the final `answer` reference below still resolves to a
+        // defined variable. Previously that path produced both an
+        // AppleScript "variable answer is not defined" error *and* a
+        // null return to trim() (deprecated in PHP 8.1+).
+        $command = "osascript -e 'set answer to \"\"\ntry\ntell app \"SystemUIServer\"\n"
                  . "set answer to text returned of (display dialog \"'$prompt_text'\" default answer \"\")\n"
                  . "end\nend\nactivate app (path to frontmost application as text)\nanswer'";
 
-        return trim(shell_exec($command));
+        // shell_exec returns null on failure; cast so trim doesn't trip
+        // the PHP 8.1+ "passing null to string parameter" deprecation.
+        return trim((string) shell_exec($command));
     }
 }

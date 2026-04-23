@@ -89,7 +89,7 @@ class NowPlayingLoggerPlugin implements SSLPlugin, NowPlayingObserver
         return array( $this );
     }
 
-    public function transform(SSLTrack $track=null)
+    public function transform(?SSLTrack $track=null)
     {
         if(isset($this->config['transform']))
         {
