@@ -40,6 +40,15 @@ class DatabaseMonitorTest_CapturingObserver implements SSLDiffObserver
     }
 }
 
+class DatabaseMonitorTest_ExitCapture implements ExitObserver
+{
+    public $calls = 0;
+    public function notifyExit()
+    {
+        $this->calls++;
+    }
+}
+
 class SSLHistoryDatabaseMonitorTest extends TestCase
 {
     /** @var PDO */
@@ -314,6 +323,77 @@ class SSLHistoryDatabaseMonitorTest extends TestCase
 
         $this->assertSame(1, $count);
         $this->assertSame('Old track', $this->getLastDiffTracks()[1]->getTitle());
+    }
+
+    // ------------------------------------------------------------------
+    // Stepped replay (--post-process --manual)
+    // ------------------------------------------------------------------
+
+    public function test_prepareSteppedReplay_queues_rows_without_emitting()
+    {
+        $this->insertSession(1, 1700000000, null);
+        $this->insertEntry(1, 1, array('artist' => 'A', 'name' => 'T1'));
+        $this->insertEntry(2, 1, array('artist' => 'B', 'name' => 'T2'));
+
+        $count = $this->monitor->prepareSteppedReplay();
+
+        $this->assertSame(2, $count);
+        $this->assertCount(0, $this->obs->notifications,
+            'prepareSteppedReplay only queues; emission happens on tick');
+    }
+
+    public function test_stepped_replay_emits_one_row_per_tick_then_exits()
+    {
+        $this->insertSession(1, 1700000000, null);
+        $this->insertEntry(1, 1, array('artist' => 'A', 'name' => 'T1'));
+        $this->insertEntry(2, 1, array('artist' => 'B', 'name' => 'T2'));
+        $this->insertEntry(3, 1, array('artist' => 'C', 'name' => 'T3'));
+
+        $this->monitor->prepareSteppedReplay();
+
+        // Each tick should emit exactly one SSLTrack, in id order.
+        $this->monitor->notifyTick(0);
+        $this->assertCount(1, $this->obs->notifications);
+        $this->assertSame('T1', $this->onlyTrack($this->obs->last())->getTitle());
+
+        $this->monitor->notifyTick(0);
+        $this->assertCount(2, $this->obs->notifications);
+        $this->assertSame('T2', $this->onlyTrack($this->obs->last())->getTitle());
+
+        $this->monitor->notifyTick(0);
+        $this->assertCount(3, $this->obs->notifications);
+        $this->assertSame('T3', $this->onlyTrack($this->obs->last())->getTitle());
+
+        // Queue is drained — next tick should notify exit observers, not emit.
+        $exit = new DatabaseMonitorTest_ExitCapture();
+        $this->monitor->addExitObserver($exit);
+        $this->monitor->notifyTick(0);
+
+        $this->assertCount(3, $this->obs->notifications,
+            'No further diffs once the queue is empty');
+        $this->assertSame(1, $exit->calls, 'Exit observer should fire exactly once on drain');
+    }
+
+    public function test_stepped_replay_on_empty_session_exits_immediately()
+    {
+        $this->insertSession(1, 1700000000, null);  // no entries
+
+        $count = $this->monitor->prepareSteppedReplay();
+        $this->assertSame(0, $count);
+
+        $exit = new DatabaseMonitorTest_ExitCapture();
+        $this->monitor->addExitObserver($exit);
+        $this->monitor->notifyTick(0);
+
+        $this->assertCount(0, $this->obs->notifications);
+        $this->assertSame(1, $exit->calls);
+    }
+
+    protected function onlyTrack(SSLHistoryDiffDom $dom)
+    {
+        $tracks = $dom->getTracks();
+        $this->assertCount(1, $tracks);
+        return array_shift($tracks);
     }
 
     // ------------------------------------------------------------------

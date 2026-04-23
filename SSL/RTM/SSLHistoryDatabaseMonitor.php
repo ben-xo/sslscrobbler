@@ -42,7 +42,7 @@
  * (typically tens to low hundreds of rows), so re-reading every tick is
  * cheap.
  */
-class SSLHistoryDatabaseMonitor implements TickObserver, SSLDiffObservable
+class SSLHistoryDatabaseMonitor implements TickObserver, SSLDiffObservable, ExitObservable
 {
     /**
      * Columns whose changes warrant emitting a diff event. Covers play
@@ -64,6 +64,15 @@ class SSLHistoryDatabaseMonitor implements TickObserver, SSLDiffObservable
     protected $pdo;
 
     protected $diff_observers = array();
+    protected $exit_observers = array();
+
+    /**
+     * When non-null, notifyTick() is in stepped-replay mode: each tick shifts
+     * one row off the queue and emits it as a single-track diff. When the
+     * queue empties, exit observers are notified so the tick source can stop.
+     * @var array<int, array<string, mixed>>|null
+     */
+    protected $replay_queue = null;
 
     /**
      * Snapshot of the active session's rows from the previous tick,
@@ -103,8 +112,18 @@ class SSLHistoryDatabaseMonitor implements TickObserver, SSLDiffObservable
         $this->diff_observers[] = $observer;
     }
 
+    public function addExitObserver(ExitObserver $observer)
+    {
+        $this->exit_observers[] = $observer;
+    }
+
     public function notifyTick($seconds)
     {
+        if ($this->replay_queue !== null) {
+            $this->notifyTickStepped();
+            return;
+        }
+
         $session_id = $this->findCurrentSessionId();
         if ($session_id === null) {
             return;
@@ -123,6 +142,56 @@ class SSLHistoryDatabaseMonitor implements TickObserver, SSLDiffObservable
         if (!empty($changed)) {
             $this->notifyObservers(new SSLHistoryDiffDom($changed));
         }
+    }
+
+    /**
+     * Tick handler used when stepped replay is armed. Emits one track per
+     * tick (ordered by history_entry.id — the same order Serato wrote the
+     * rows), then signals the tick source to stop when the queue empties.
+     * This is the DB analogue of SSLHistoryFileReplayer driven by a
+     * CrankHandle — press enter, see one event, repeat.
+     *
+     * Unlike the legacy replayer's group-by-updatedAt batching, the DB has
+     * no equivalent grouping key (edits update rows in place, so there's
+     * never "multiple rows written in the same write"), so one row per tick
+     * is the natural unit.
+     */
+    protected function notifyTickStepped()
+    {
+        if (empty($this->replay_queue)) {
+            foreach ($this->exit_observers as $observer) {
+                /* @var $observer ExitObserver */
+                $observer->notifyExit();
+            }
+            return;
+        }
+
+        $row = array_shift($this->replay_queue);
+        $track = $this->rowToTrack($row);
+        $this->notifyObservers(new SSLHistoryDiffDom(array($track->getRow() => $track)));
+    }
+
+    /**
+     * Arm stepped-replay mode: pre-fetch the current session's rows (in id
+     * order) so subsequent notifyTick() calls each emit one row as a
+     * single-track diff, and signal exit once the queue empties. Intended
+     * for --post-process combined with --manual.
+     *
+     * @return int number of rows queued
+     */
+    public function prepareSteppedReplay()
+    {
+        $session_id = $this->findCurrentSessionId();
+        if ($session_id === null) {
+            $this->replay_queue = array();
+            return 0;
+        }
+
+        L::level(L::INFO, __CLASS__) &&
+            L::log(L::INFO, __CLASS__, 'Stepped replay of session %d armed', array($session_id));
+
+        $this->replay_queue = $this->fetchSessionEntries($session_id);
+        return count($this->replay_queue);
     }
 
     /**

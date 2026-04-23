@@ -748,8 +748,22 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
 
         $this->plugin_manager->onStart();
 
-        $count = $hfm->runOnce();
-        echo "Processed {$count} entries from the most recent session.\n";
+        if ($this->manual_tick) {
+            // Stepped replay: press enter to emit the next row, loop exits
+            // when the queue empties. Analogous to the legacy file replayer
+            // driven by a CrankHandle, but one row per press (see the
+            // SSLHistoryDatabaseMonitor::notifyTickStepped docblock).
+            $ts = new CrankHandle();
+            $count = $hfm->prepareSteppedReplay();
+            echo "Stepped replay: {$count} entries queued. Press Enter to advance.\n";
+            $ts->addTickObserver($hfm);
+            $hfm->addExitObserver($ts);
+            $ts->addTickObserver($pw[0]);
+            $ts->startClock(0);
+        } else {
+            $count = $hfm->runOnce();
+            echo "Processed {$count} entries from the most recent session.\n";
+        }
 
         $this->plugin_manager->onStop();
     }
