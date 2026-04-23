@@ -288,4 +288,21 @@ class SSLTrack extends SSLStruct
     {
         return parent::getDeck();
     }
+
+    // The XOUP parser stores 'starttime' and 'endtime' as lowercase field keys
+    // (see SSLTrackAdat.xoup fields 28 and 29). GetterSetter::__call would
+    // otherwise look them up as 'startTime' / 'endTime' (camelCase after
+    // lcfirst) and silently return null. These explicit getters fix that and
+    // are the only two field names in SSLTrackAdat.xoup whose natural
+    // get<Xxx>() accessor doesn't round-trip through the __call magic.
+
+    public function getStartTime()
+    {
+        return isset($this->fields['starttime']) ? $this->fields['starttime'] : null;
+    }
+
+    public function getEndTime()
+    {
+        return isset($this->fields['endtime']) ? $this->fields['endtime'] : null;
+    }
 }
