@@ -81,7 +81,10 @@ already have a session open.
   You can install PHP through Mac Homebrew https://brew.sh/. Once installed,
   
         brew install php@8.4
-        # (or just brew install php)
+        # (or just brew install php)
+
+  The Homebrew PHP formula bundles the `pdo_sqlite` extension, which is
+  required for Serato DJ 4.x support (see section 1.1.3).
 
   See "Getting Started" for more.
 
@@ -107,9 +110,41 @@ already have a session open.
   
         display_errors = 
     
-  ...and change it to `On` if it is `Off`.  
-  
+  ...and change it to `On` if it is `Off`.
+
+  While you're editing `php.ini`, also enable the `pdo_sqlite` extension
+  (required for Serato DJ 4.x support — see section 1.1.3) by finding:
+
+        ;extension=pdo_sqlite
+
+  and removing the leading `;`. If you skip this, SSLScrobbler will still
+  work for Serato DJ 3.x and earlier via the legacy `.session` file path,
+  but won't see any new sessions on a Serato 4.x install.
+
   SSLScrobbler is best started from a DOS box / Command prompt (see below)
+
+
+### 1.1.3 Serato DJ 4.x and the `pdo_sqlite` extension
+
+  Serato DJ 4 changed how it stores its session history. Earlier versions
+  wrote binary `.session` files that SSLScrobbler tailed directly; Serato 4
+  now writes a SQLite database at:
+
+  * macOS: `~/Library/Application Support/Serato/Library/master.sqlite`
+  * Windows: `%USERPROFILE%\AppData\Roaming\Serato\Library\master.sqlite`
+
+  SSLScrobbler auto-detects this file and switches to DB mode transparently.
+  To read it, PHP needs the **`pdo_sqlite`** extension. It's bundled with
+  Homebrew PHP on macOS and most Linux distros; on Windows, uncomment
+  `extension=pdo_sqlite` in `php.ini` (see section 1.1.2).
+
+  If the extension isn't available, SSLScrobbler falls back to the legacy
+  `.session` file path automatically — which is correct for pre-Serato-4
+  users, but means Serato 4+ sessions won't be seen until `pdo_sqlite` is
+  enabled.
+
+  You can force the legacy path with `--legacy`, or point at a specific DB
+  with `--database <path>`.
 
 
 ## 1.2 Getting Started

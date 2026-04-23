@@ -98,6 +98,15 @@ class SSLHistoryDatabaseMonitor implements TickObserver, SSLDiffObservable, Exit
      */
     public static function openReadOnly($db_path)
     {
+        if (!extension_loaded('pdo_sqlite')) {
+            throw new RuntimeException(
+                'The pdo_sqlite PHP extension is required for Serato DJ 4.x support. '
+                . 'On macOS Homebrew and most Linux distros it is bundled with PHP. '
+                . 'On Windows, enable it by uncommenting "extension=pdo_sqlite" in php.ini. '
+                . 'Alternatively, pass --legacy to use the .session-file tail-monitoring path.'
+            );
+        }
+
         // The 'file:' URI form lets us request read-only mode without the
         // pdo_sqlite driver version caring about the PDO::SQLITE_* flags,
         // which aren't available on all PHP builds.

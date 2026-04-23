@@ -343,6 +343,15 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
      */
     protected function getDefaultDatabasePath()
     {
+        // If pdo_sqlite isn't available we can't use the DB path anyway;
+        // skip auto-detection so we fall through to legacy mode transparently.
+        // Users who want DB mode without the extension get a helpful error
+        // via SSLHistoryDatabaseMonitor::openReadOnly() if they pass
+        // --database explicitly.
+        if (!extension_loaded('pdo_sqlite')) {
+            return null;
+        }
+
         // macOS
         $home = getenv('HOME');
         if ($home) {
