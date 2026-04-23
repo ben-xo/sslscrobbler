@@ -578,46 +578,45 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
     }
     
     /**
-     * Sets up and couples the event-driven history monitoring components, 
-     * and then starts the clock.
-     * 
-     *  A signal handler is installed to catch Ctrl-C, although it's still
-     *  safer to shutdown ScratchLive! first if you want everything scrobbled
-     *  correctly.
-     *  
-     * --post-process can be used to replay a file. 
-     * --manual to ticks on user input (for debugging. Overrides --post-process for ticks).
-     * --csv can be used to replay from a CSV fake-file.
-     * These options can be combined.
-     * 
+     * Common event-graph wiring for live monitoring. Both the legacy
+     * file-tail path (monitor) and the Serato 4.x DB path (monitor_database)
+     * reduce to: build an event source, plug it into the same downstream
+     * graph (SSLRealtimeModel → NowPlayingModel / ScrobbleModel / printer /
+     * plugins), then tick. Only the event source construction and the
+     * mode-specific tick observer differ.
+     *
+     * A signal handler is installed to catch Ctrl-C, although it's still
+     * safer to shutdown Serato first if you want everything scrobbled
+     * correctly.
+     *
+     * @param SSLDiffObservable $hfm The event source.
+     * @param callable $register_source_tick fn(TickSource $real_ts): void.
+     *     Called so the caller can add whatever mode-specific tick observer
+     *     drives its source — the legacy path registers its TailMonitor; the
+     *     DB path registers the SSLHistoryDatabaseMonitor itself (which is
+     *     its own TickObserver).
+     *
+     * --manual to tick on user input (for debugging).
      */
-    protected function monitor($filename)
+    protected function runLiveEventLoop(SSLDiffObservable $hfm, callable $register_source_tick)
     {
         // Use a dependency injection factory which returns TitleFilteredRuntimeCachingSSLTracks
-        // instead of regular RuntimeCachingSSLTracks in order to get nicer titles which scrobble better
+        // instead of regular RuntimeCachingSSLTracks in order to get nicer titles which scrobble better.
         // TODO: this doesn't feel like the right architecture as it's inheritance based, but title filtering is a behaviour.
         Inject::map('SSLRepo', new TitleFilteredSSLRepo());
-        
-        // Use the caching version via Dependency Injection. This means that all 
+
+        // Use the caching version via Dependency Injection. This means that all
         // new SSLTracks created using a SSLTrackFactory will get a RuntimeCachingSSLTrack
-        // that knows how to ask the cache about expensive lookups (such as getID3 stuff). 
+        // that knows how to ask the cache about expensive lookups (such as getID3 stuff).
         Inject::map('SSLTrackFactory', new SSLTrackCache());
-        
-        
-        if($this->manual_tick)
-        {
+
+        if ($this->manual_tick) {
             // tick when the user presses enter
             $pseudo_ts = $real_ts = new CrankHandle();
-        }
-        else
-        {
+        } else {
             // tick based on the clock
             $pseudo_ts = $real_ts = new TickSource($this->time_multiplier);
         }
-        
-        $mon = new TailMonitor();
-        $mon->setFilenameSource($this);
-        $hfm = new SSLHistoryFileMonitor($filename, $mon);
 
         $sh = new SignalHandler();
         //$ih = new InputHandler();
@@ -626,10 +625,10 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         $rtm_printer = new SSLRealtimeModelPrinter($rtm);
         $npm = new NowPlayingModel();
         $sm = new ScrobbleModel();
-        
+
         // the ordering here is important. See the README.txt for a collaboration diagram.
         $pseudo_ts->addTickObserver($this->plugin_manager);
-        $real_ts->addTickObserver($mon);
+        $register_source_tick($real_ts);
         $pseudo_ts->addTickObserver($npm);
         $hfm->addDiffObserver($rtm);
         $rtm->addTrackChangeObserver($rtm_printer);
@@ -638,14 +637,14 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
 
         // get the PluginWrapper that wraps all other plugins.
         $pw = $this->plugin_manager->getObservers();
-        
+
         // add all of the PluginWrappers to the various places.
         $pseudo_ts->addTickObserver($pw[0]);
         $hfm->addDiffObserver($pw[0]);
         $rtm->addTrackChangeObserver($pw[0]);
         $npm->addNowPlayingObserver($pw[0]);
         $sm->addScrobbleObserver($pw[0]);
-        
+
         $sh->install();
         //$ih->install();
 
@@ -653,180 +652,138 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
 
         // Tick tick tick. This only returns if a signal is caught
         $real_ts->startClock($this->sleep, $sh/*, $ih*/);
-        
+
         $rtm->shutdown();
-        
+
         $this->plugin_manager->onStop();
     }
-    
+
+    protected function monitor($filename)
+    {
+        $mon = new TailMonitor();
+        $mon->setFilenameSource($this);
+        $hfm = new SSLHistoryFileMonitor($filename, $mon);
+
+        $this->runLiveEventLoop($hfm, function ($real_ts) use ($mon) {
+            // TailMonitor is the tick observer — it's what actually re-reads
+            // the file on each tick; SSLHistoryFileMonitor is just a diff
+            // adapter between TailMonitor and the observers.
+            $real_ts->addTickObserver($mon);
+        });
+    }
+
     /**
      * DB-mode equivalent of monitor(). Serato 4.x writes history to a SQLite
      * database instead of appending binary chunks to a .session file, so we
-     * swap the file-tailing SSLHistoryFileMonitor + DiffMonitor pair for a
+     * swap the file-tailing SSLHistoryFileMonitor + TailMonitor pair for a
      * single SSLHistoryDatabaseMonitor that polls the active session on each
      * tick. Everything downstream of the SSLDiffObservable seam (realtime
      * model, plugins, scrobble / now-playing models) is untouched.
      */
     protected function monitor_database($db_path)
     {
-        // Same title-filtering and caching setup as monitor().
-        Inject::map('SSLRepo', new TitleFilteredSSLRepo());
-        Inject::map('SSLTrackFactory', new SSLTrackCache());
-
-        if($this->manual_tick)
-        {
-            $pseudo_ts = $real_ts = new CrankHandle();
-        }
-        else
-        {
-            $pseudo_ts = $real_ts = new TickSource($this->time_multiplier);
-        }
-
         $pdo = SSLHistoryDatabaseMonitor::openReadOnly($db_path);
         $hfm = new SSLHistoryDatabaseMonitor($pdo);
 
-        $sh = new SignalHandler();
-
-        $rtm = new SSLRealtimeModel();
-        $rtm_printer = new SSLRealtimeModelPrinter($rtm);
-        $npm = new NowPlayingModel();
-        $sm = new ScrobbleModel();
-
-        // Ordering mirrors monitor() — see README collaboration diagram.
-        $pseudo_ts->addTickObserver($this->plugin_manager);
-        $real_ts->addTickObserver($hfm);
-        $pseudo_ts->addTickObserver($npm);
-        $hfm->addDiffObserver($rtm);
-        $rtm->addTrackChangeObserver($rtm_printer);
-        $rtm->addTrackChangeObserver($npm);
-        $rtm->addTrackChangeObserver($sm);
-
-        $pw = $this->plugin_manager->getObservers();
-        $pseudo_ts->addTickObserver($pw[0]);
-        $hfm->addDiffObserver($pw[0]);
-        $rtm->addTrackChangeObserver($pw[0]);
-        $npm->addNowPlayingObserver($pw[0]);
-        $sm->addScrobbleObserver($pw[0]);
-
-        $sh->install();
-
-        $this->plugin_manager->onStart();
-
-        $real_ts->startClock($this->sleep, $sh);
-
-        $rtm->shutdown();
-
-        $this->plugin_manager->onStop();
+        $this->runLiveEventLoop($hfm, function ($real_ts) use ($hfm) {
+            // The DB monitor *is* the tick observer (it polls on tick and
+            // emits diffs), so we register it directly.
+            $real_ts->addTickObserver($hfm);
+        });
     }
 
     /**
-     * DB-mode equivalent of post_process(). Replays the active (or most-recent)
-     * session's rows once through the ImmediateScrobbleModel /
-     * ImmediateNowPlayingModel path, so a set played offline or captured
-     * after-the-fact can be scrobbled without needing Serato to re-emit events.
+     * Common setup for replay-mode post-processing. Legacy and DB paths
+     * both pump their source through ImmediateScrobbleModel /
+     * ImmediateNowPlayingModel and the plugin wrapper; they differ only
+     * in (a) how they construct $hfm, and (b) how they actually drive
+     * the replay (tick-based for legacy, tick-based OR one-shot for DB).
+     *
+     * @param SSLDiffObservable $hfm event source
+     * @param callable $driver fn(array $plugin_wrappers): void. Called
+     *     once all observers are wired. The driver is responsible for
+     *     actually pumping events out of $hfm (startClock, runOnce, etc.)
+     *     and for registering itself on any tick source it creates.
      */
-    protected function post_process_database($db_path)
+    protected function runPostProcessLoop(SSLDiffObservable $hfm, callable $driver)
     {
-        echo "post processing {$db_path}...\n";
-
         Inject::map('SSLRepo', new TitleFilteredSSLRepo());
         Inject::map('SSLTrackFactory', new SSLTrackCache());
 
-        $pdo = SSLHistoryDatabaseMonitor::openReadOnly($db_path);
-        $hfm = new SSLHistoryDatabaseMonitor($pdo);
-
-        $ism = new ImmediateScrobbleModel();
-        $inp = new ImmediateNowPlayingModel();
+        $ism = new ImmediateScrobbleModel(); // deal with PLAYED tracks one by one
+        $inp = new ImmediateNowPlayingModel(); // deal with PLAYED tracks one by one
 
         $hfm->addDiffObserver($ism);
         $hfm->addDiffObserver($inp);
 
+        // get the PluginWrapper that wraps all other plugins.
         $pw = $this->plugin_manager->getObservers();
+
+        // add all of the PluginWrappers to the various places.
         $hfm->addDiffObserver($pw[0]);
         $ism->addScrobbleObserver($pw[0]);
         $inp->addNowPlayingObserver($pw[0]);
 
         $this->plugin_manager->onStart();
 
-        if ($this->manual_tick) {
-            // Stepped replay: press enter to emit the next row, loop exits
-            // when the queue empties. Analogous to the legacy file replayer
-            // driven by a CrankHandle, but one row per press (see the
-            // SSLHistoryDatabaseMonitor::notifyTickStepped docblock).
-            $ts = new CrankHandle();
-            $count = $hfm->prepareSteppedReplay();
-            echo "Stepped replay: {$count} entries queued. Press Enter to advance.\n";
-            $ts->addTickObserver($hfm);
-            $hfm->addExitObserver($ts);
-            $ts->addTickObserver($pw[0]);
-            $ts->startClock(0);
-        } else {
-            $count = $hfm->runOnce();
-            echo "Processed {$count} entries from the most recent session.\n";
-        }
+        $driver($pw);
 
         $this->plugin_manager->onStop();
+    }
+
+    /**
+     * DB-mode equivalent of post_process(). Replays the active (or
+     * most-recent) session's rows through the Immediate* models so a set
+     * played offline or captured after-the-fact can be scrobbled without
+     * needing Serato to re-emit events.
+     *
+     * Without --manual this is a one-shot: every row goes out in a single
+     * diff and we're done. With --manual, we do a stepped replay — one row
+     * per enter press, analogous to the legacy SSLHistoryFileReplayer.
+     */
+    protected function post_process_database($db_path)
+    {
+        echo "post processing {$db_path}...\n";
+
+        $pdo = SSLHistoryDatabaseMonitor::openReadOnly($db_path);
+        $hfm = new SSLHistoryDatabaseMonitor($pdo);
+
+        if ($this->manual_tick) {
+            $this->runPostProcessLoop($hfm, function ($pw) use ($hfm) {
+                $ts = new CrankHandle();
+                $count = $hfm->prepareSteppedReplay();
+                echo "Stepped replay: {$count} entries queued. Press Enter to advance.\n";
+                $ts->addTickObserver($hfm);
+                $hfm->addExitObserver($ts);
+                $ts->addTickObserver($pw[0]);
+                $ts->startClock(0);
+            });
+        } else {
+            $this->runPostProcessLoop($hfm, function ($pw) use ($hfm) {
+                $count = $hfm->runOnce();
+                echo "Processed {$count} entries from the most recent session.\n";
+            });
+        }
     }
 
     protected function post_process($filename)
     {
         echo "post processing {$filename}...\n";
 
-        // Use a dependency injection factory which returns TitleFilteredRuntimeCachingSSLTracks
-        // instead of regular RuntimeCachingSSLTracks in order to get nicer titles which scrobble better
-        // TODO: this doesn't feel like the right architecture as it's inheritance based, but title filtering is a behaviour.
-        Inject::map('SSLRepo', new TitleFilteredSSLRepo());
-        
-        // Use the caching version via Dependency Injection. This means that all 
-        // new SSLTracks created using a SSLTrackFactory will get a RuntimeCachingSSLTrack
-        // that knows how to ask the cache about expensive lookups (such as getID3 stuff). 
-        Inject::map('SSLTrackFactory', new SSLTrackCache());
-        
-        if($this->manual_tick) 
-        {
-            // tick when the user presses enter
-            $ts = new CrankHandle();
-        }
-        else
-        {
-            // no-delay ticks
-            $ts = new InstantTickSource();
-        }
+        $ts = $this->manual_tick ? new CrankHandle() : new InstantTickSource();
+        $hfm = $this->csv
+            ? new SSLHistoryFileCSVInjector($filename)
+            : new SSLHistoryFileReplayer($filename);
 
-        if($this->csv)
-        {
-            $hfm = new SSLHistoryFileCSVInjector($filename);
-        }
-        else
-        {
-            $hfm = new SSLHistoryFileReplayer($filename);
-        }
-
-        $ism = new ImmediateScrobbleModel(); // deal with PLAYED tracks one by one
-        $inp = new ImmediateNowPlayingModel(); // deal with PLAYED tracks one by one
-
-        $ts->addTickObserver($hfm);
-        $hfm->addExitObserver($ts);
-
-        $hfm->addDiffObserver($ism);
-        $hfm->addDiffObserver($inp);
-        
-        // get the PluginWrapper that wraps all other plugins.
-        $pw = $this->plugin_manager->getObservers();
-        
-        // add all of the PluginWrappers to the various places.
-        $ts->addTickObserver($pw[0]);
-        $hfm->addDiffObserver($pw[0]);
-        $ism->addScrobbleObserver($pw[0]);
-        $inp->addNowPlayingObserver($pw[0]);
-        
-        $this->plugin_manager->onStart();
-
-        // Tick tick tick. This only returns if a signal is caught
-        $ts->startClock($this->sleep);
-        
-        $this->plugin_manager->onStop();
-    }    
+        $this->runPostProcessLoop($hfm, function ($pw) use ($ts, $hfm) {
+            $ts->addTickObserver($hfm);
+            $hfm->addExitObserver($ts);
+            $ts->addTickObserver($pw[0]);
+            // Tick tick tick. This only returns if a signal is caught
+            // or the replayer notifies exit when it reaches EOF.
+            $ts->startClock($this->sleep);
+        });
+    }
     
     protected function getMostRecentFile($from_dir, $type)
     {
