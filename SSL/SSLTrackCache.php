@@ -74,14 +74,17 @@ class SSLTrackCache extends SSLTrackFactory
 
     public function setLengthByFullpath($fullpath, $length)
     {
+        if($fullpath === null) return;
         $this->file_lengths[$fullpath] = $length;
     }
 
     public function getLengthByFullpath($fullpath)
     {
+        if($fullpath === null) return null;
         if(isset($this->file_lengths[$fullpath]))
         {
             return $this->file_lengths[$fullpath];
         }
+        return null;
     }
 }

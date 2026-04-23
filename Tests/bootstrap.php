@@ -32,6 +32,7 @@ error_reporting(E_ALL);
 
 require_once 'External/getID3/getid3.php';
 require_once 'SSL/Autoloader.php';
+require_once 'Tests/RTM/SSLTrackMockTrait.php';
 
 function ___autoload($class)
 {

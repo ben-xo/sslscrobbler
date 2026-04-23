@@ -29,29 +29,21 @@ use PHPUnit\Framework\TestCase;
 
 class ScrobblerTrackModelTest extends TestCase
 {
+    use SSLTrackMockTrait;
+
     protected $stm;
     protected $track;
-    
+
     protected $scrobble_time;
     protected $now_playing_time;
-    
+
     public function setUp(): void
     {
         $this->track = $this->trackMock(123);
         $this->stm = new ScrobblerTrackModel($this->track);
-        
+
         $this->now_playing_time = ScrobblerTrackModel::NOW_PLAYING_MIN;
         $this->scrobble_time = (int) (300 / ScrobblerTrackModel::SCROBBLE_DIVIDER);
-    }
-    
-    public function trackMock($id, $length=300, $played=false, $playtime=null)
-    {
-        $t = $this->createMock('SSLTrack');
-        $t->expects($this->any()) ->method('getRow')             ->willReturn($id);
-        $t->expects($this->any()) ->method('getLengthInSeconds') ->willReturn($length);
-        $t->expects($this->any()) ->method('getPlayed')          ->willReturn($played);
-        $t->expects($this->any()) ->method('getPlaytime')        ->willReturn($playtime);
-        return $t;
     }
     
     public function test_getTrack_returns_what_was_constructed_with()

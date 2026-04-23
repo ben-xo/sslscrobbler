@@ -36,6 +36,7 @@ class SSLTrackTest_ExternalRepo extends ExternalRepo
     }
 }
 
+#[PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class SSLTrackTest extends PHPUnit\Framework\TestCase
 {
     var $external_repo;
@@ -180,5 +181,60 @@ class SSLTrackTest extends PHPUnit\Framework\TestCase
         // shouldn't trigger second getID3 Analyse
         $this->assertSame('1:23', $t->getLength(SSLTrack::TRY_HARD));
         $this->assertSame(83, $t->getLengthInSeconds(SSLTrack::TRY_HARD));
+    }
+
+    // Regression: the XOUP parser stores 'starttime' and 'endtime' as
+    // lowercase keys (see SSLTrackAdat.xoup fields 28 and 29), but
+    // GetterSetter::__call looks up 'startTime' / 'endTime' (camelCase after
+    // lcfirst). For years that silently returned null from getStartTime() /
+    // getEndTime() on XOUP-parsed tracks — Last.fm scrobbles went out with no
+    // timestamp, HistoryAnalyzer wrote NULL into its SQL dump, and
+    // SSLTrack::getFullStartTime() / getFullEndTime() formatted the epoch.
+    // Fixed by explicit accessors on SSLTrack; these tests guard it.
+
+    function test_getStartTime_reads_lowercase_starttime_field()
+    {
+        $t = $this->newSSLTrack();
+        $t->populateFrom(array('starttime' => 1700000123));
+        $this->assertSame(1700000123, $t->getStartTime());
+    }
+
+    function test_getEndTime_reads_lowercase_endtime_field()
+    {
+        $t = $this->newSSLTrack();
+        $t->populateFrom(array('endtime' => 1700000999));
+        $this->assertSame(1700000999, $t->getEndTime());
+    }
+
+    function test_getStartTime_returns_null_when_field_absent()
+    {
+        $t = $this->newSSLTrack();
+        $t->populateFrom(array('row' => 1));
+        $this->assertNull($t->getStartTime());
+    }
+
+    function test_getEndTime_returns_null_when_field_absent()
+    {
+        $t = $this->newSSLTrack();
+        $t->populateFrom(array('row' => 1));
+        $this->assertNull($t->getEndTime());
+    }
+
+    function test_getFullStartTime_renders_from_starttime_field()
+    {
+        $t = $this->newSSLTrack();
+        // Use a fixed UTC timestamp — main() sets the default timezone to
+        // UTC, matching the production render path.
+        date_default_timezone_set('UTC');
+        $t->populateFrom(array('starttime' => 1700000000));
+        $this->assertSame('2023-11-14 22:13:20', $t->getFullStartTime());
+    }
+
+    function test_getFullEndTime_renders_from_endtime_field()
+    {
+        $t = $this->newSSLTrack();
+        date_default_timezone_set('UTC');
+        $t->populateFrom(array('endtime' => 1700000000));
+        $this->assertSame('2023-11-14 22:13:20', $t->getFullEndTime());
     }
 }

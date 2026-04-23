@@ -26,6 +26,7 @@
 
 require_once 'SSLTrackTest.php';
 
+#[PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class RuntimeCachingSSLTrackTest extends SSLTrackTest
 {
     var $cache;
