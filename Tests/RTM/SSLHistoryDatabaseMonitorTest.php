@@ -276,6 +276,47 @@ class SSLHistoryDatabaseMonitorTest extends TestCase
     }
 
     // ------------------------------------------------------------------
+    // runOnce / post-process mode
+    // ------------------------------------------------------------------
+
+    public function test_runOnce_emits_entire_session_as_single_diff()
+    {
+        $this->insertSession(1, 1700000000, null);
+        $this->insertEntry(1, 1, array('artist' => 'A', 'name' => 'T1', 'played' => 1));
+        $this->insertEntry(2, 1, array('artist' => 'B', 'name' => 'T2', 'played' => 1));
+        $this->insertEntry(3, 1, array('artist' => 'C', 'name' => 'T3', 'played' => 0));
+
+        $count = $this->monitor->runOnce();
+
+        $this->assertSame(3, $count);
+        $this->assertCount(1, $this->obs->notifications,
+            'runOnce should emit a single diff containing every entry');
+        $tracks = $this->getLastDiffTracks();
+        $this->assertCount(3, $tracks);
+        $this->assertSame('T1', $tracks[1]->getTitle());
+        $this->assertSame('T2', $tracks[2]->getTitle());
+        $this->assertSame('T3', $tracks[3]->getTitle());
+    }
+
+    public function test_runOnce_on_empty_db_returns_zero_and_emits_nothing()
+    {
+        $count = $this->monitor->runOnce();
+        $this->assertSame(0, $count);
+        $this->assertCount(0, $this->obs->notifications);
+    }
+
+    public function test_runOnce_falls_back_to_most_recent_closed_session()
+    {
+        $this->insertSession(1, 1700000000, 1700003600);
+        $this->insertEntry(1, 1, array('artist' => 'A', 'name' => 'Old track'));
+
+        $count = $this->monitor->runOnce();
+
+        $this->assertSame(1, $count);
+        $this->assertSame('Old track', $this->getLastDiffTracks()[1]->getTitle());
+    }
+
+    // ------------------------------------------------------------------
     // Fullpath join
     // ------------------------------------------------------------------
 

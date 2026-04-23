@@ -178,7 +178,13 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
                     throw new InvalidArgumentException("Serato database not readable at {$this->database_path}");
                 }
                 echo "Using Serato 4.x database at {$this->database_path} ...\n";
-                $this->monitor_database($this->database_path);
+
+                if ($this->post_process) {
+                    $this->plugin_manager->setOptions(array('post_process' => true));
+                    $this->post_process_database($this->database_path);
+                } else {
+                    $this->monitor_database($this->database_path);
+                }
                 return;
             }
 
@@ -709,6 +715,41 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         $real_ts->startClock($this->sleep, $sh);
 
         $rtm->shutdown();
+
+        $this->plugin_manager->onStop();
+    }
+
+    /**
+     * DB-mode equivalent of post_process(). Replays the active (or most-recent)
+     * session's rows once through the ImmediateScrobbleModel /
+     * ImmediateNowPlayingModel path, so a set played offline or captured
+     * after-the-fact can be scrobbled without needing Serato to re-emit events.
+     */
+    protected function post_process_database($db_path)
+    {
+        echo "post processing {$db_path}...\n";
+
+        Inject::map('SSLRepo', new TitleFilteredSSLRepo());
+        Inject::map('SSLTrackFactory', new SSLTrackCache());
+
+        $pdo = SSLHistoryDatabaseMonitor::openReadOnly($db_path);
+        $hfm = new SSLHistoryDatabaseMonitor($pdo);
+
+        $ism = new ImmediateScrobbleModel();
+        $inp = new ImmediateNowPlayingModel();
+
+        $hfm->addDiffObserver($ism);
+        $hfm->addDiffObserver($inp);
+
+        $pw = $this->plugin_manager->getObservers();
+        $hfm->addDiffObserver($pw[0]);
+        $ism->addScrobbleObserver($pw[0]);
+        $inp->addNowPlayingObserver($pw[0]);
+
+        $this->plugin_manager->onStart();
+
+        $count = $hfm->runOnce();
+        echo "Processed {$count} entries from the most recent session.\n";
 
         $this->plugin_manager->onStop();
     }

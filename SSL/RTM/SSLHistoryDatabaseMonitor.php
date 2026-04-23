@@ -126,6 +126,39 @@ class SSLHistoryDatabaseMonitor implements TickObserver, SSLDiffObservable
     }
 
     /**
+     * One-shot post-process mode: emit every entry in the current session as
+     * a single SSLHistoryDiffDom. Intended for --post-process, where we want
+     * to run the whole session once through ImmediateScrobbleModel /
+     * ImmediateNowPlayingModel and then exit. Ignores the snapshot cache
+     * since each runOnce() is an independent session replay.
+     *
+     * @return int number of entries emitted
+     */
+    public function runOnce()
+    {
+        $session_id = $this->findCurrentSessionId();
+        if ($session_id === null) {
+            return 0;
+        }
+
+        L::level(L::INFO, __CLASS__) &&
+            L::log(L::INFO, __CLASS__, 'Post-processing session %d', array($session_id));
+
+        $rows = $this->fetchSessionEntries($session_id);
+        if (empty($rows)) {
+            return 0;
+        }
+
+        $tracks = array();
+        foreach ($rows as $row) {
+            $track = $this->rowToTrack($row);
+            $tracks[$track->getRow()] = $track;
+        }
+        $this->notifyObservers(new SSLHistoryDiffDom($tracks));
+        return count($tracks);
+    }
+
+    /**
      * Pick the currently-active session. Prefers a session with no end_time
      * (Serato is still adding to it). Falls back to the most recent session
      * (used by --post-process / --immediate against a closed session).
