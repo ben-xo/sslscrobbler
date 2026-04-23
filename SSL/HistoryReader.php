@@ -61,6 +61,12 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
     protected $appname;
     protected $filename;
     protected $historydir;
+
+    // Serato 4.x uses a SQLite database instead of binary .session files.
+    // If $database_path is set (auto-detected or passed via --database), the
+    // DB-mode event source is used. --legacy forces the file-tailing path.
+    protected $database_path;
+    protected $force_legacy = false;
                 
     /**
      * @var Logger
@@ -146,7 +152,14 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
                 // guess history file (always go for the most recently modified)
                 $this->historydir = $this->getDefaultHistoryDir();
             }
-            
+
+            // Serato 4.x auto-detect: if a master.sqlite is present and the
+            // user hasn't forced --legacy, switch to the DB event source. An
+            // explicit --database <path> is honoured even with --legacy off.
+            if (!$this->force_legacy && empty($this->database_path) && !$this->dump_and_exit) {
+                $this->database_path = $this->getDefaultDatabasePath();
+            }
+
             // yield CLI configured plugins.
             foreach($this->cli_plugins as $plugin)
             {
@@ -154,9 +167,21 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
                 $plugin->addPluginsTo($this->plugin_manager);
             }
             $this->cli_plugins = array();
-            
+
             $this->plugin_manager->onSetup();
-            
+
+            if (!empty($this->database_path) && !$this->force_legacy) {
+                if (!is_file($this->database_path)) {
+                    throw new InvalidArgumentException("Serato database not found at {$this->database_path}");
+                }
+                if (!is_readable($this->database_path)) {
+                    throw new InvalidArgumentException("Serato database not readable at {$this->database_path}");
+                }
+                echo "Using Serato 4.x database at {$this->database_path} ...\n";
+                $this->monitor_database($this->database_path);
+                return;
+            }
+
             $filename = $this->filename;
             
             if(empty($filename))
@@ -265,6 +290,9 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         echo "                               You want this if Serato is already running.\n\n";
         echo "          --dir:               Use the most recent session file from this here instead.\n";
         echo "                               This is the option for you if we couldn't correctly guess where your Serato data lives.\n\n";
+        echo "          --database <path>:   Path to Serato 4.x master.sqlite. Auto-detected if omitted.\n";
+        echo "          --legacy:            Force the legacy .session-file tail-monitoring path, even if a\n";
+        echo "                               Serato 4.x database is present. Useful for --post-process on old sets.\n\n";
         echo "          --plugin-help:       Show help for for all of the activated plugins\n";
         echo "                               e.g. Twitter, Last FM, Discord, etc - all the good stuff.\n\n";
         echo "          --debug-help:        Show help for options not usually used during a DJ set.\n";
@@ -300,6 +328,34 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         return $this->getMostRecentFile($this->historydir, 'session');
     }
     
+    /**
+     * Serato DJ 4.x writes history into a SQLite database at this location
+     * instead of the binary .session files older versions used. If the file
+     * exists we default to DB-mode monitoring; --legacy forces the old path.
+     *
+     * @return string|null
+     */
+    protected function getDefaultDatabasePath()
+    {
+        // macOS
+        $home = getenv('HOME');
+        if ($home) {
+            $path = $home . '/Library/Application Support/Serato/Library/master.sqlite';
+            if (is_file($path)) return $path;
+        }
+
+        // Windows
+        $user_profile = getenv('USERPROFILE');
+        if ($user_profile) {
+            $path = $user_profile . '\AppData\Roaming\Serato\Library\master.sqlite';
+            if (is_file($path)) return $path;
+            $path = $user_profile . '\AppData\Local\Serato\Library\master.sqlite';
+            if (is_file($path)) return $path;
+        }
+
+        return null;
+    }
+
     protected function getDefaultHistoryDir()
     {
         // OSX
@@ -418,6 +474,18 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
             {
                 $this->dir_provided = true;
                 $this->historydir = array_shift($argv);
+                continue;
+            }
+
+            if($arg == '--database')
+            {
+                $this->database_path = array_shift($argv);
+                continue;
+            }
+
+            if($arg == '--legacy')
+            {
+                $this->force_legacy = true;
                 continue;
             }
 
@@ -585,6 +653,66 @@ class HistoryReader implements SSLPluggable, SSLFilenameSource
         $this->plugin_manager->onStop();
     }
     
+    /**
+     * DB-mode equivalent of monitor(). Serato 4.x writes history to a SQLite
+     * database instead of appending binary chunks to a .session file, so we
+     * swap the file-tailing SSLHistoryFileMonitor + DiffMonitor pair for a
+     * single SSLHistoryDatabaseMonitor that polls the active session on each
+     * tick. Everything downstream of the SSLDiffObservable seam (realtime
+     * model, plugins, scrobble / now-playing models) is untouched.
+     */
+    protected function monitor_database($db_path)
+    {
+        // Same title-filtering and caching setup as monitor().
+        Inject::map('SSLRepo', new TitleFilteredSSLRepo());
+        Inject::map('SSLTrackFactory', new SSLTrackCache());
+
+        if($this->manual_tick)
+        {
+            $pseudo_ts = $real_ts = new CrankHandle();
+        }
+        else
+        {
+            $pseudo_ts = $real_ts = new TickSource($this->time_multiplier);
+        }
+
+        $pdo = SSLHistoryDatabaseMonitor::openReadOnly($db_path);
+        $hfm = new SSLHistoryDatabaseMonitor($pdo);
+
+        $sh = new SignalHandler();
+
+        $rtm = new SSLRealtimeModel();
+        $rtm_printer = new SSLRealtimeModelPrinter($rtm);
+        $npm = new NowPlayingModel();
+        $sm = new ScrobbleModel();
+
+        // Ordering mirrors monitor() — see README collaboration diagram.
+        $pseudo_ts->addTickObserver($this->plugin_manager);
+        $real_ts->addTickObserver($hfm);
+        $pseudo_ts->addTickObserver($npm);
+        $hfm->addDiffObserver($rtm);
+        $rtm->addTrackChangeObserver($rtm_printer);
+        $rtm->addTrackChangeObserver($npm);
+        $rtm->addTrackChangeObserver($sm);
+
+        $pw = $this->plugin_manager->getObservers();
+        $pseudo_ts->addTickObserver($pw[0]);
+        $hfm->addDiffObserver($pw[0]);
+        $rtm->addTrackChangeObserver($pw[0]);
+        $npm->addNowPlayingObserver($pw[0]);
+        $sm->addScrobbleObserver($pw[0]);
+
+        $sh->install();
+
+        $this->plugin_manager->onStart();
+
+        $real_ts->startClock($this->sleep, $sh);
+
+        $rtm->shutdown();
+
+        $this->plugin_manager->onStop();
+    }
+
     protected function post_process($filename)
     {
         echo "post processing {$filename}...\n";
