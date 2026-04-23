@@ -100,6 +100,8 @@ class NowPlayingModelTest_SSLRepo extends SSLRepo
 
 class NowPlayingModelTest extends PHPUnit\Framework\TestCase implements NowPlayingObserver
 {
+    use SSLTrackMockTrait;
+
     /**
      * @var NowPlayingModel
      */
@@ -125,12 +127,11 @@ class NowPlayingModelTest extends PHPUnit\Framework\TestCase implements NowPlayi
     public function setUp(): void
     {
         // tracks
-        $stm_test = new ScrobblerTrackModelTest('NowPlayingModelTest');
-        $this->track123_PLAYING = $stm_test->trackMock(123, 300, true, 125);
-        $this->track456_PLAYING = $stm_test->trackMock(456, 300, true, 125);
-        $this->track789_PLAYING = $stm_test->trackMock(789, 300, true, 125);
-        $this->track123_START   = $stm_test->trackMock(123, 300, false, 0);
-        $this->track456_START   = $stm_test->trackMock(456, 300, false, 0);
+        $this->track123_PLAYING = $this->trackMock(123, 300, true, 125);
+        $this->track456_PLAYING = $this->trackMock(456, 300, true, 125);
+        $this->track789_PLAYING = $this->trackMock(789, 300, true, 125);
+        $this->track123_START   = $this->trackMock(123, 300, false, 0);
+        $this->track456_START   = $this->trackMock(456, 300, false, 0);
         
         // deck models
         $this->stm_factory = new NowPlayingModelTest_SSLRepo();

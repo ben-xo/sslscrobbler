@@ -39,14 +39,14 @@ class SSLRealtimeModelDeckTest extends PHPUnit\Framework\TestCase
     public function trackMock($id, $state)
     {
         $t = $this->createMock('SSLTrack');
-        
+
         // these shouldn't really be needed by SSLRealtimeModelDeck
         $t->expects($this->never()) ->method('getLengthInSeconds');
         $t->expects($this->never()) ->method('getPlayed');
         $t->expects($this->never()) ->method('getPlaytime');
-        
-        $t->expects($this->any()) ->method('getRow')   ->willReturn($id);
-        $t->expects($this->any()) ->method('getStatus')->willReturn($state);
+
+        $t->method('getRow')   ->willReturn($id);
+        $t->method('getStatus')->willReturn($state);
         return $t;
     }
     

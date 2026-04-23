@@ -38,6 +38,7 @@ class SSLRealtimeModelTest_SSLRepo extends SSLRepo
     }
 }
 
+#[PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class SSLRealtimeModelTest extends PHPUnit\Framework\TestCase implements TrackChangeObserver
 {
     protected $rtm;
@@ -59,15 +60,7 @@ class SSLRealtimeModelTest extends PHPUnit\Framework\TestCase implements TrackCh
         $this->rtm->addTrackChangeObserver($this);
         foreach( array(0, 1, 2) as $i)
         {
-            $this->decks[$i] = $this->createMock(
-            	'SSLRealtimeModelDeck', 
-                array(
-                	'notify', 
-                	'trackStarted', 'trackStopped', 'trackUpdated', 
-                	'getCurrentTrack', 'getPreviousTrack'
-                ), 
-                array($i)
-            );
+            $this->decks[$i] = $this->createMock('SSLRealtimeModelDeck');
         }
         $this->repo->decks = $this->decks;
     }
@@ -85,14 +78,14 @@ class SSLRealtimeModelTest extends PHPUnit\Framework\TestCase implements TrackCh
     public function trackMock($id, $deck)
     {
         $t = $this->createMock('SSLTrack');
-        
+
         // these shouldn't really be needed by SSLRealtimeModelDeck
         $t->expects($this->never()) ->method('getLengthInSeconds');
         $t->expects($this->never()) ->method('getPlayed');
         $t->expects($this->never()) ->method('getPlaytime');
 
-        $t->expects($this->any()) ->method('getRow') ->willReturn($id);
-        $t->expects($this->any()) ->method('getDeck')->willReturn($deck);
+        $t->method('getRow') ->willReturn($id);
+        $t->method('getDeck')->willReturn($deck);
         return $t;
     }    
     
