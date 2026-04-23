@@ -333,58 +333,80 @@ class SSLHistoryDatabaseMonitor implements TickObserver, SSLDiffObservable, Exit
 
     /**
      * Map a history_entry DB row (plus the joined location.path) onto an
-     * SSLTrack via the XOUP field-name vocabulary. Only fields actually
-     * consumed by downstream models/plugins are populated; unknown XOUP
-     * fields remain unset as SSLTrack's getters already tolerate that.
+     * SSLTrack via the XOUP field-name vocabulary. Only the fields that
+     * downstream models/plugins actually consume are populated; unmapped
+     * XOUP fields remain unset, which SSLTrack's getters already tolerate.
      */
     protected function rowToTrack(array $row)
     {
-        $start = isset($row['start_time']) ? (int) $row['start_time'] : null;
-        $end_raw = isset($row['end_time']) ? $row['end_time'] : null;
-        $end = ($end_raw === null || $end_raw === '' || (int) $end_raw <= 0)
-            ? null : (int) $end_raw;
-        $playtime = ($end !== null && $start !== null) ? max(0, $end - $start) : 0;
+        // ---- Normalise the tricky columns up front. ---------------------
+        //
+        // Serato uses a small family of "unset" sentinels: NULL, empty
+        // string, -1 (the schema default for history_entry.end_time) and
+        // 0 (observed on end_time for freshly-loaded tracks). normalise()
+        // collapses all of them to a single PHP null.
+        $start = $this->normaliseTimestamp($row, 'start_time');
+        $end   = $this->normaliseTimestamp($row, 'end_time');
 
-        $length_sec = isset($row['length_sec']) && $row['length_sec'] !== null
-            ? (int) $row['length_sec'] : null;
-        $length_str = ($length_sec !== null && $length_sec > 0)
-            ? sprintf('%d:%02d.00', intdiv($length_sec, 60), $length_sec % 60)
-            : null;
+        // Playtime is derived: seconds between start and end if the track
+        // has been ejected, else 0 (= "still on deck").
+        $playtime = ($start !== null && $end !== null) ? max(0, $end - $start) : 0;
 
+        // Length: SSLTrack expects the legacy string form "MM:SS.cc"
+        // because SSLTrack::getLengthInSeconds() parses it with a regex.
+        // Serato 4 stores an integer (length_sec), so rebuild the string.
+        $length_str = $this->formatLegacyLengthString($this->nullableInt($row, 'length_sec'));
+
+        // Fullpath = location.path (JOINed in) + "/" + history_entry.file_name.
+        // Either side missing -> null, which triggers the SSLTrack
+        // guess-length-from-file fallback.
         $file_name = isset($row['file_name']) ? $row['file_name'] : null;
-        $path = isset($row['location_path']) ? $row['location_path'] : null;
-        $fullpath = ($path !== null && $file_name !== null && $path !== '' && $file_name !== '')
-            ? rtrim($path, '/') . '/' . $file_name : null;
+        $fullpath  = $this->joinFullpath(
+            isset($row['location_path']) ? $row['location_path'] : null,
+            $file_name
+        );
 
-        $deck_raw = isset($row['deck']) ? $row['deck'] : '';
-        $deck = ($deck_raw !== '' && $deck_raw !== null && is_numeric($deck_raw))
-            ? (int) $deck_raw : null;
+        // Deck: stored as TEXT in Serato 4 ("1", "2", ...). Downstream
+        // code wants an int; non-numeric (including empty) -> null.
+        $deck = $this->parseDeck(isset($row['deck']) ? $row['deck'] : '');
 
+        // ---- XOUP-keyed fields that SSLTrack's getters look up. --------
+        //
+        // Field naming follows SSL/Structs/SSLTrackAdat.xoup — mostly
+        // all-lowercase single words. Two subtleties are called out below.
         $fields = array(
             'row'       => (int) $row['id'],
-            'artist'    => isset($row['artist']) ? (string) $row['artist'] : '',
-            'title'     => isset($row['name']) ? (string) $row['name'] : '',
-            'album'     => isset($row['album']) ? (string) $row['album'] : '',
-            'genre'     => isset($row['genre']) ? (string) $row['genre'] : '',
+            'artist'    => (string) (isset($row['artist']) ? $row['artist'] : ''),
+            'title'     => (string) (isset($row['name'])   ? $row['name']   : ''),  // DB 'name' -> XOUP 'title'
+            'album'     => (string) (isset($row['album'])  ? $row['album']  : ''),
+            'genre'     => (string) (isset($row['genre'])  ? $row['genre']  : ''),
             'length'    => $length_str,
-            'bpm'       => isset($row['bpm']) && $row['bpm'] !== null ? (int) $row['bpm'] : null,
+            'bpm'       => $this->nullableInt($row, 'bpm'),
             'deck'      => $deck,
-            'played'    => isset($row['played']) ? (int) $row['played'] : 0,
+            'played'    => (int) (isset($row['played']) ? $row['played'] : 0),
             'playtime'  => $playtime,
-            // NB: the XOUP field names 'starttime' and 'endtime' are lowercase,
-            // while SSLTrack::getStartTime() and getEndTime() would look up
-            // 'startTime' / 'endTime' (camelCase) via __call. That mismatch is
-            // a long-standing latent bug in the legacy path — those two getters
-            // return NULL on XOUP-parsed tracks too. We faithfully replicate
-            // the legacy keying here; fixing the getters is a separate concern.
+
+            // The XOUP field names are 'starttime' and 'endtime' (fully
+            // lowercase). SSLTrack has explicit getStartTime() and
+            // getEndTime() accessors (added in the same PR that introduced
+            // this monitor) that read these keys directly, side-stepping
+            // the camelCase mismatch that GetterSetter::__call would have.
             'starttime' => $start,
             'endtime'   => $end,
+
             'filename'  => $file_name,
             'fullpath'  => $fullpath,
-            'key'       => isset($row['key']) ? (string) $row['key'] : '',
-            'sessionId' => isset($row['session_id']) ? (int) $row['session_id'] : 0,
-            // time_modified is the asset file's mtime, not the DB row's; start_time
-            // is the best monotonic-within-session proxy for updatedAt.
+            'key'       => (string) (isset($row['key']) ? $row['key'] : ''),
+            'sessionId' => (int) (isset($row['session_id']) ? $row['session_id'] : 0),
+
+            // history_entry.time_modified mirrors the underlying audio
+            // file's mtime (empirically verified), not the DB row's
+            // modification time — so it's useless as an "updated at". We
+            // fall back to start_time as a monotonic-within-session proxy.
+            // getUpdatedAt() is only read by paths we don't exercise from
+            // the DB monitor (SSLHistoryDom::getNewOrUpdatedTracksSince
+            // and the legacy replayer's group-by-timestamp batching), so
+            // strict fidelity here doesn't matter.
             'updatedAt' => $start !== null ? $start : 0,
         );
 
@@ -392,6 +414,74 @@ class SSLHistoryDatabaseMonitor implements TickObserver, SSLDiffObservable, Exit
         $track = $factory->newTrack();
         $track->populateFrom($fields);
         return $track;
+    }
+
+    /**
+     * Read an integer timestamp from $row[$col], collapsing all of
+     * Serato's "unset" sentinels (NULL, '', 0, -1) to PHP null.
+     *
+     * @return int|null
+     */
+    protected function normaliseTimestamp(array $row, $col)
+    {
+        if (!isset($row[$col]) || $row[$col] === null || $row[$col] === '') {
+            return null;
+        }
+        $value = (int) $row[$col];
+        return $value > 0 ? $value : null;
+    }
+
+    /**
+     * @return int|null
+     */
+    protected function nullableInt(array $row, $col)
+    {
+        if (!isset($row[$col]) || $row[$col] === null || $row[$col] === '') {
+            return null;
+        }
+        return (int) $row[$col];
+    }
+
+    /**
+     * Rebuild the legacy "MM:SS.cc" string form that SSLTrack's getters
+     * expect. A null or non-positive seconds count returns null, matching
+     * how XOUP-parsed tracks behave when Serato hasn't analysed the file.
+     *
+     * @return string|null
+     */
+    protected function formatLegacyLengthString($length_sec)
+    {
+        if ($length_sec === null || $length_sec <= 0) {
+            return null;
+        }
+        return sprintf('%d:%02d.00', intdiv($length_sec, 60), $length_sec % 60);
+    }
+
+    /**
+     * @return string|null
+     */
+    protected function joinFullpath($location_path, $file_name)
+    {
+        if ($location_path === null || $location_path === ''
+            || $file_name === null || $file_name === '') {
+            return null;
+        }
+        return rtrim($location_path, '/') . '/' . $file_name;
+    }
+
+    /**
+     * Serato 4 stores history_entry.deck as TEXT ("1", "2", ...). Downstream
+     * code expects an int; non-numeric values (including empty) collapse to
+     * null.
+     *
+     * @return int|null
+     */
+    protected function parseDeck($deck_raw)
+    {
+        if ($deck_raw === null || $deck_raw === '' || !is_numeric($deck_raw)) {
+            return null;
+        }
+        return (int) $deck_raw;
     }
 
     protected function notifyObservers(SSLDom $changes)

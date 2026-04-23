@@ -159,6 +159,12 @@ class SSLHistoryDatabaseMonitorTest extends TestCase
         $this->assertTrue($t->isPlayed());
         $this->assertSame('3:35.00', $t->getLength());
         $this->assertSame(215, $t->getLengthInSeconds());
+        // End-to-end: the DB monitor populates 'starttime' / 'endtime' as
+        // all-lowercase XOUP keys, and SSLTrack's explicit getStartTime /
+        // getEndTime accessors read those keys directly. Regression guard
+        // for the case mismatch noted in rowToTrack().
+        $this->assertSame(1700000100, $t->getStartTime());
+        $this->assertNull($t->getEndTime(), 'end_time NULL at tick time = still on deck');
     }
 
     public function test_idempotent_tick_emits_no_further_diff()
