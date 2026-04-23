@@ -324,7 +324,11 @@ class SSLHistoryDatabaseMonitor implements TickObserver, SSLDiffObservable, Exit
         foreach (self::$FINGERPRINT_COLUMNS as $col) {
             $bits[] = isset($row[$col]) && $row[$col] !== null ? (string) $row[$col] : '';
         }
-        return sha1(implode("\x1f", $bits));
+        // crc32 is plenty: we only compare a row's fingerprint against its
+        // OWN previous fingerprint, so collisions are bounded by a row's
+        // lifetime (a handful of state transitions). No cryptographic
+        // requirement — cheapest PHP-stdlib hash wins.
+        return crc32(implode("\x1f", $bits));
     }
 
     /**
