@@ -370,10 +370,12 @@ class SSLHistoryDatabaseMonitor implements TickObserver, SSLDiffObservable, Exit
         // older or partially-analysed rows expose only the integer
         // length_sec. Prefer ms so the row's value is used and the
         // expensive guess-from-file fallback can stay dormant.
-        $length_str = $this->formatLegacyLengthString(
-            $this->nullableInt($row, 'length_ms'),
-            $this->nullableInt($row, 'length_sec')
-        );
+        $length_ms = $this->nullableInt($row, 'length_ms');
+        if ($length_ms === null) {
+            $length_sec = $this->nullableInt($row, 'length_sec');
+            $length_ms = $length_sec !== null ? $length_sec * 1000 : null;
+        }
+        $length_str = $this->formatLegacyLengthString($length_ms);
 
         // Build the on-disk path to the audio file.
         //
@@ -472,24 +474,21 @@ class SSLHistoryDatabaseMonitor implements TickObserver, SSLDiffObservable, Exit
 
     /**
      * Rebuild the legacy "MM:SS.cc" string form that SSLTrack's getters
-     * expect, preferring millisecond precision when Serato provides it.
-     * A null or non-positive value returns null, matching how XOUP-parsed
-     * tracks behave when Serato hasn't analysed the file.
+     * expect from a millisecond duration. A null or non-positive value
+     * returns null, matching how XOUP-parsed tracks behave when Serato
+     * hasn't analysed the file.
      *
      * @return string|null
      */
-    protected function formatLegacyLengthString($length_ms, $length_sec)
+    protected function formatLegacyLengthString($length_ms)
     {
-        if ($length_ms !== null && $length_ms > 0) {
-            $minutes = intdiv($length_ms, 60000);
-            $seconds = intdiv($length_ms % 60000, 1000);
-            $centis  = intdiv($length_ms % 1000, 10);
-            return sprintf('%d:%02d.%02d', $minutes, $seconds, $centis);
+        if ($length_ms === null || $length_ms <= 0) {
+            return null;
         }
-        if ($length_sec !== null && $length_sec > 0) {
-            return sprintf('%d:%02d.00', intdiv($length_sec, 60), $length_sec % 60);
-        }
-        return null;
+        $minutes = intdiv($length_ms, 60000);
+        $seconds = intdiv($length_ms % 60000, 1000);
+        $centis  = intdiv($length_ms % 1000, 10);
+        return sprintf('%d:%02d.%02d', $minutes, $seconds, $centis);
     }
 
     /**
