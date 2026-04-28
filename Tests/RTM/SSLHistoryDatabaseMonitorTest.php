@@ -408,7 +408,7 @@ class SSLHistoryDatabaseMonitorTest extends TestCase
     // Fullpath join
     // ------------------------------------------------------------------
 
-    public function test_fullpath_is_joined_from_location_table()
+    public function test_fullpath_is_joined_from_location_path_when_set()
     {
         $this->pdo->exec("INSERT INTO location (id, path) VALUES (7, '/Users/dj/Music/Tunes')");
         $this->insertSession(1, 1700000000, null);
@@ -423,6 +423,88 @@ class SSLHistoryDatabaseMonitorTest extends TestCase
         $t = $this->getLastDiffTracks()[1];
         $this->assertSame('mixdown.mp3', $t->getFilename());
         $this->assertSame('/Users/dj/Music/Tunes/mixdown.mp3', $t->getFullpath());
+    }
+
+    public function test_fullpath_uses_portable_id_relative_to_volume_root_from_connection()
+    {
+        // Real Serato 4 install: location.path is empty; the volume root
+        // comes from connection.database_uri, and the per-track path lives
+        // in history_entry.portable_id.
+        $this->pdo->exec("INSERT INTO location (id, path) VALUES (7, '')");
+        $this->pdo->exec(
+            "INSERT INTO connection (location_id, database_uri) VALUES "
+            . "(7, '/Volumes/MUSIC/_Serato_/Library/location.sqlite')"
+        );
+        $this->insertSession(1, 1700000000, null);
+        $this->insertEntry(1, 1, array(
+            'artist' => 'A', 'name' => 'B',
+            'file_name' => 'track.aif',
+            'portable_id' => 'DNB/2026/album/track.aif',
+            'location_id' => 7,
+        ));
+
+        $this->monitor->notifyTick(2);
+
+        $t = $this->getLastDiffTracks()[1];
+        $this->assertSame('/Volumes/MUSIC/DNB/2026/album/track.aif', $t->getFullpath());
+    }
+
+    public function test_fullpath_uses_root_sqlite_for_boot_drive_library()
+    {
+        // The boot-drive library uses database_uri ending in /Library/root.sqlite,
+        // and stores portable_ids relative to "/" (e.g. "Users/dj/Music/...").
+        $this->pdo->exec("INSERT INTO location (id, path) VALUES (2, '')");
+        $this->pdo->exec(
+            "INSERT INTO connection (location_id, database_uri) VALUES "
+            . "(2, '/Users/dj/Library/Application Support/Serato/Library/root.sqlite')"
+        );
+        $this->insertSession(1, 1700000000, null);
+        $this->insertEntry(1, 1, array(
+            'artist' => 'A', 'name' => 'B',
+            'file_name' => 'song.mp3',
+            'portable_id' => 'Users/dj/Music/song.mp3',
+            'location_id' => 2,
+        ));
+
+        $this->monitor->notifyTick(2);
+
+        $t = $this->getLastDiffTracks()[1];
+        $this->assertSame('/Users/dj/Music/song.mp3', $t->getFullpath());
+    }
+
+    public function test_length_uses_length_ms_when_present()
+    {
+        // Real Serato 4 fills length_ms; length_sec stays NULL on freshly
+        // imported tracks. The DB monitor must read ms so SSLTrack doesn't
+        // fall through to the (slow) guess-from-file path on every track.
+        $this->insertSession(1, 1700000000, null);
+        $this->insertEntry(1, 1, array(
+            'artist' => 'A', 'name' => 'B',
+            'length_ms' => 215500,
+            'length_sec' => null,
+        ));
+
+        $this->monitor->notifyTick(2);
+
+        $t = $this->getLastDiffTracks()[1];
+        $this->assertSame('3:35.50', $t->getLength());
+        $this->assertSame(215, $t->getLengthInSeconds());
+    }
+
+    public function test_length_falls_back_to_length_sec_when_ms_missing()
+    {
+        $this->insertSession(1, 1700000000, null);
+        $this->insertEntry(1, 1, array(
+            'artist' => 'A', 'name' => 'B',
+            'length_ms' => null,
+            'length_sec' => 215,
+        ));
+
+        $this->monitor->notifyTick(2);
+
+        $t = $this->getLastDiffTracks()[1];
+        $this->assertSame('3:35.00', $t->getLength());
+        $this->assertSame(215, $t->getLengthInSeconds());
     }
 
     // ------------------------------------------------------------------
