@@ -277,9 +277,12 @@ class SSLHistoryDatabaseMonitor implements TickObserver, SSLDiffObservable, Exit
     protected function fetchSessionEntries($session_id)
     {
         $stmt = $this->pdo->prepare(
-            'SELECT he.*, loc.path AS location_path
+            'SELECT he.*,
+                    loc.path AS location_path,
+                    conn.database_uri AS connection_uri
              FROM history_entry he
              LEFT JOIN location loc ON loc.id = he.location_id
+             LEFT JOIN connection conn ON conn.location_id = he.location_id
              WHERE he.session_id = :sid
              ORDER BY he.id'
         );
@@ -363,17 +366,33 @@ class SSLHistoryDatabaseMonitor implements TickObserver, SSLDiffObservable, Exit
 
         // Length: SSLTrack expects the legacy string form "MM:SS.cc"
         // because SSLTrack::getLengthInSeconds() parses it with a regex.
-        // Serato 4 stores an integer (length_sec), so rebuild the string.
-        $length_str = $this->formatLegacyLengthString($this->nullableInt($row, 'length_sec'));
-
-        // Fullpath = location.path (JOINed in) + "/" + history_entry.file_name.
-        // Either side missing -> null, which triggers the SSLTrack
-        // guess-length-from-file fallback.
-        $file_name = isset($row['file_name']) ? $row['file_name'] : null;
-        $fullpath  = $this->joinFullpath(
-            isset($row['location_path']) ? $row['location_path'] : null,
-            $file_name
+        // Serato 4 stores it as length_ms (millisecond precision); some
+        // older or partially-analysed rows expose only the integer
+        // length_sec. Prefer ms so the row's value is used and the
+        // expensive guess-from-file fallback can stay dormant.
+        $length_str = $this->formatLegacyLengthString(
+            $this->nullableInt($row, 'length_ms'),
+            $this->nullableInt($row, 'length_sec')
         );
+
+        // Build the on-disk path to the audio file.
+        //
+        // Real Serato 4 installs leave location.path empty and instead
+        // store the volume root in connection.database_uri (e.g.
+        // "/Volumes/MUSIC/_Serato_/Library/location.sqlite"). The
+        // per-track relative path lives in history_entry.portable_id
+        // ("DNB/foo/bar.aif"), with file_name only the basename.
+        //
+        // Falling back to location.path / file_name keeps tests and
+        // hypothetical future schema variants working.
+        $location_root = $this->resolveLocationRoot(
+            isset($row['location_path']) ? $row['location_path'] : null,
+            isset($row['connection_uri']) ? $row['connection_uri'] : null
+        );
+        $portable_id = isset($row['portable_id']) ? $row['portable_id'] : '';
+        $file_name   = isset($row['file_name']) ? $row['file_name'] : null;
+        $relative    = $portable_id !== '' ? $portable_id : $file_name;
+        $fullpath    = $this->joinFullpath($location_root, $relative);
 
         // Deck: stored as TEXT in Serato 4 ("1", "2", ...). Downstream
         // code wants an int; non-numeric (including empty) -> null.
@@ -453,29 +472,72 @@ class SSLHistoryDatabaseMonitor implements TickObserver, SSLDiffObservable, Exit
 
     /**
      * Rebuild the legacy "MM:SS.cc" string form that SSLTrack's getters
-     * expect. A null or non-positive seconds count returns null, matching
-     * how XOUP-parsed tracks behave when Serato hasn't analysed the file.
+     * expect, preferring millisecond precision when Serato provides it.
+     * A null or non-positive value returns null, matching how XOUP-parsed
+     * tracks behave when Serato hasn't analysed the file.
      *
      * @return string|null
      */
-    protected function formatLegacyLengthString($length_sec)
+    protected function formatLegacyLengthString($length_ms, $length_sec)
     {
-        if ($length_sec === null || $length_sec <= 0) {
+        if ($length_ms !== null && $length_ms > 0) {
+            $minutes = intdiv($length_ms, 60000);
+            $seconds = intdiv($length_ms % 60000, 1000);
+            $centis  = intdiv($length_ms % 1000, 10);
+            return sprintf('%d:%02d.%02d', $minutes, $seconds, $centis);
+        }
+        if ($length_sec !== null && $length_sec > 0) {
+            return sprintf('%d:%02d.00', intdiv($length_sec, 60), $length_sec % 60);
+        }
+        return null;
+    }
+
+    /**
+     * Resolve the on-disk root for a history entry. Prefer a populated
+     * location.path; otherwise infer the root from connection.database_uri
+     * by stripping Serato's well-known suffixes:
+     *
+     *   - "<volume>/_Serato_/Library/location.sqlite" -> "<volume>"
+     *   - "<anywhere>/Library/root.sqlite"            -> "/" (boot drive,
+     *     where portable_ids like "Users/dj/Music/..." are relative-to-root)
+     *
+     * Backslashes in the URI (Windows installs) are normalised to forward
+     * slashes for matching; PHP's filesystem functions accept either.
+     *
+     * @return string|null
+     */
+    protected function resolveLocationRoot($location_path, $connection_uri)
+    {
+        if ($location_path !== null && $location_path !== '') {
+            return $location_path;
+        }
+        if ($connection_uri === null || $connection_uri === '') {
             return null;
         }
-        return sprintf('%d:%02d.00', intdiv($length_sec, 60), $length_sec % 60);
+        $uri = str_replace('\\', '/', $connection_uri);
+        if (preg_match('#^(.*?)/_Serato_/Library/location\.sqlite$#i', $uri, $m)) {
+            return $m[1] !== '' ? $m[1] : '/';
+        }
+        if (preg_match('#/Library/root\.sqlite$#i', $uri)) {
+            return '/';
+        }
+        return null;
     }
 
     /**
      * @return string|null
      */
-    protected function joinFullpath($location_path, $file_name)
+    protected function joinFullpath($location_path, $relative)
     {
-        if ($location_path === null || $location_path === ''
-            || $file_name === null || $file_name === '') {
+        if ($location_path === null
+            || $relative === null || $relative === '') {
             return null;
         }
-        return rtrim($location_path, '/') . '/' . $file_name;
+        $relative = ltrim($relative, '/');
+        if ($location_path === '/') {
+            return '/' . $relative;
+        }
+        return rtrim($location_path, '/') . '/' . $relative;
     }
 
     /**

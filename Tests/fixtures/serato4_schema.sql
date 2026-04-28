@@ -32,6 +32,12 @@ CREATE TABLE location
     last_sync_secret        INTEGER NOT NULL DEFAULT 0
 );
 
+CREATE TABLE connection
+(
+    location_id     INTEGER PRIMARY KEY NOT NULL,
+    database_uri    TEXT NOT NULL
+);
+
 CREATE TABLE history_entry
 (
     id                  INTEGER PRIMARY KEY AUTOINCREMENT,
