@@ -34,13 +34,58 @@
  * SSLHistoryDiffDom of populated SSLTracks for anything that changed since
  * the previous tick.
  *
- * Change detection strategy: the `history_entry.time_modified` column turns
- * out to mirror the underlying audio file's mtime, not the DB row's mtime,
- * so we can't use it as a watermark. Instead we keep an in-memory snapshot
- * of the active session's rows and emit a diff when any fingerprinted column
- * changes. The snapshot is bounded by the size of a single DJ session
- * (typically tens to low hundreds of rows), so re-reading every tick is
- * cheap.
+ * ----------------------------------------------------------------------
+ * Multi-SQLite layout (the bit that surprises every reader)
+ * ----------------------------------------------------------------------
+ *
+ * Serato 4 doesn't keep all metadata in master.sqlite. It shards across
+ * one SQLite database per drive:
+ *
+ *   - boot drive: ~/Library/Application Support/Serato/Library/root.sqlite
+ *   - external drives: <volume>/_Serato_/Library/location.sqlite
+ *
+ * master.sqlite holds the history tables (history_session, history_entry)
+ * plus pointers into those per-drive databases via two indirections:
+ *
+ *   history_entry.location_id  -->  location.id  (one row per drive)
+ *   history_entry.location_id  -->  connection.location_id
+ *                                   .database_uri = absolute path of the
+ *                                   per-drive SQLite file
+ *
+ * The intuitive column for "where on disk this track is" — location.path —
+ * is empty in every real install observed. The drive root has to be
+ * recovered from the *path of the other SQLite file*, which is what
+ * resolveLocationRoot() does:
+ *
+ *   "/Volumes/MUSIC/_Serato_/Library/location.sqlite"  ->  /Volumes/MUSIC
+ *   ".../Library/root.sqlite"                          ->  /
+ *
+ * The per-track path within the drive lives in history_entry.portable_id,
+ * stored relative to that recovered root. file_name is just the basename
+ * (kept as a fallback for hypothetical future schema variants).
+ *
+ * Worked examples (real rows from a populated master.sqlite):
+ *
+ *   location_id=1
+ *     connection.database_uri = /Volumes/MUSIC/_Serato_/Library/location.sqlite
+ *     portable_id             = DNB/2026-04-28/.../track.aif
+ *     fullpath                = /Volumes/MUSIC/DNB/2026-04-28/.../track.aif
+ *
+ *   location_id=2
+ *     connection.database_uri = /Users/ben/Library/Application Support/Serato/Library/root.sqlite
+ *     portable_id             = Users/ben/Downloads/track.wav
+ *     fullpath                = /Users/ben/Downloads/track.wav
+ *
+ * ----------------------------------------------------------------------
+ * Change detection
+ * ----------------------------------------------------------------------
+ *
+ * The `history_entry.time_modified` column turns out to mirror the
+ * underlying audio file's mtime, not the DB row's mtime, so we can't use
+ * it as a watermark. Instead we keep an in-memory snapshot of the active
+ * session's rows and emit a diff when any fingerprinted column changes.
+ * The snapshot is bounded by the size of a single DJ session (typically
+ * tens to low hundreds of rows), so re-reading every tick is cheap.
  */
 class SSLHistoryDatabaseMonitor implements TickObserver, SSLDiffObservable, ExitObservable
 {
@@ -272,6 +317,13 @@ class SSLHistoryDatabaseMonitor implements TickObserver, SSLDiffObservable, Exit
     }
 
     /**
+     * Fetch every history_entry for the session, plus the two columns
+     * needed to reconstruct an absolute file path: `location.path`
+     * (which is empty on real installs but kept for fallback) and
+     * `connection.database_uri` (the path of the per-drive SQLite file
+     * Serato uses to anchor portable_id). See class docblock for why
+     * both are needed.
+     *
      * @return array<int, array<string, mixed>>
      */
     protected function fetchSessionEntries($session_id)
@@ -377,16 +429,9 @@ class SSLHistoryDatabaseMonitor implements TickObserver, SSLDiffObservable, Exit
         }
         $length_str = $this->formatLegacyLengthString($length_ms);
 
-        // Build the on-disk path to the audio file.
-        //
-        // Real Serato 4 installs leave location.path empty and instead
-        // store the volume root in connection.database_uri (e.g.
-        // "/Volumes/MUSIC/_Serato_/Library/location.sqlite"). The
-        // per-track relative path lives in history_entry.portable_id
-        // ("DNB/foo/bar.aif"), with file_name only the basename.
-        //
-        // Falling back to location.path / file_name keeps tests and
-        // hypothetical future schema variants working.
+        // Build the on-disk path: drive root (from connection.database_uri,
+        // see class docblock) + portable_id, falling back to file_name when
+        // portable_id is empty.
         $location_root = $this->resolveLocationRoot(
             isset($row['location_path']) ? $row['location_path'] : null,
             isset($row['connection_uri']) ? $row['connection_uri'] : null
@@ -492,13 +537,22 @@ class SSLHistoryDatabaseMonitor implements TickObserver, SSLDiffObservable, Exit
     }
 
     /**
-     * Resolve the on-disk root for a history entry. Prefer a populated
-     * location.path; otherwise infer the root from connection.database_uri
-     * by stripping Serato's well-known suffixes:
+     * Resolve the on-disk drive root that a history_entry's portable_id
+     * is relative to. See class docblock for the multi-SQLite layout that
+     * makes this necessary.
      *
-     *   - "<volume>/_Serato_/Library/location.sqlite" -> "<volume>"
-     *   - "<anywhere>/Library/root.sqlite"            -> "/" (boot drive,
-     *     where portable_ids like "Users/dj/Music/..." are relative-to-root)
+     * Strategy:
+     *   1. If location.path is non-empty, trust it. (Empty on every real
+     *      install observed, but populated by the test fixtures and kept
+     *      as a path forward for hypothetical future schema variants.)
+     *   2. Otherwise strip a well-known suffix from connection.database_uri:
+     *        "<volume>/_Serato_/Library/location.sqlite" -> "<volume>"
+     *        "<anywhere>/Library/root.sqlite"            -> "/"
+     *      The first form covers per-drive databases; the second covers
+     *      the boot-drive database, where portable_ids are stored relative
+     *      to filesystem root (e.g. "Users/dj/Music/...").
+     *   3. Anything else -> null, falling through to SSLTrack's
+     *      guess-from-file path.
      *
      * Backslashes in the URI (Windows installs) are normalised to forward
      * slashes for matching; PHP's filesystem functions accept either.
